@@ -1,0 +1,30 @@
+on: [push, pull_request]
+jobs:
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        task:
+          - dir: protocol
+            target: x86_64-unknown-linux-gnu
+            features: native-serial
+            test: true
+          - dir: tui
+            target: x86_64-unknown-linux-gnu
+            features: ''
+            test: false
+          - dir: home
+            target: riscv32imc-unknown-none-elf
+            features: esp32c3
+            test: false
+          - dir: home
+            target: riscv32imac-unknown-none-elf
+            features: esp32c6
+            test: false
+    name: CI (${{ matrix.task.dir }}, ${{ matrix.task.target }}, ${{ matrix.task.features || 'none' }})
+    uses: ./.github/workflows/build.yml
+    with:
+      dir: ${{ matrix.task.dir }}
+      target: ${{ matrix.task.target }}
+      features: ${{ matrix.task.features }}
+      test: ${{ matrix.task.test }}

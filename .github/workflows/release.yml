@@ -1,0 +1,42 @@
+on:
+  release:
+    types: [created]
+permissions:
+  contents: write
+jobs:
+  release:
+    name: Release (${{ matrix.platform.os-name }})
+    if: ${{ startsWith(github.event.release.tag_name, 'tui-v') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - os-name: linux_x86_64
+            runs-on: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os-name: linux_aarch64
+            runs-on: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - os-name: windows_x86_64
+            runs-on: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary_suffix: .exe
+          - os-name: mac_aarch64
+            runs-on: macos-latest
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.platform.runs-on }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          working-directory: tui
+          args: "--locked --release"
+          strip: true
+      - name: Upload binary
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: tui/target/${{ matrix.platform.target }}/release/freemdu-tui${{ matrix.platform.binary_suffix }}
+          asset_name: freemdu-tui_${{ matrix.platform.os-name }}${{ matrix.platform.binary_suffix }}

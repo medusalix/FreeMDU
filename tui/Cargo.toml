@@ -1,0 +1,29 @@
+[package]
+name = "freemdu-tui"
+version = "0.1.0"
+edition = "2024"
+repository = "https://github.com/medusalix/FreeMDU"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+anyhow = "1.0.100"
+clap = { version = "4.5.51", features = ["derive"] }
+crossterm = { version = "0.29.0", features = ["event-stream"] }
+env_logger = { version = "0.11.8", default-features = false, features = [
+    "auto-color",
+    "humantime",
+] }
+freemdu = { path = "../protocol", features = ["native-serial"] }
+futures = "0.3.31"
+log = "0.4.28"
+ratatui = { version = "0.30.0-beta.0", features = ["unstable-rendered-line-info"] }
+tokio = { version = "1.48.0", features = ["rt", "sync", "time", "macros"] }
+tui-input = { version = "0.14.0", default-features = false, features = ["crossterm"] }
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+cast_possible_truncation = "allow"
+
+[profile.release]
+lto = true
+codegen-units = 1

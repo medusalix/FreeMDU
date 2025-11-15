@@ -1,0 +1,27 @@
+[build]
+# Unset default target
+target = ""
+
+[env]
+ESP_LOG = "info"
+
+PIN_LED_STATUS = "10"
+PIN_OPTICAL_RX = "0"
+PIN_OPTICAL_TX = "1"
+
+WIFI_SSID = ""
+WIFI_PASSWORD = ""
+MQTT_HOSTNAME = ""
+MQTT_USERNAME = ""
+MQTT_PASSWORD = ""
+
+# Interval (in seconds) for publishing device properties and actions
+DEVICE_PUBLISH_INTERVAL = "60"
+
+[target.'cfg(target_arch = "riscv32")']
+runner = "espflash flash --monitor"
+rustflags = [
+  # Required to obtain backtraces
+  "-C", "force-frame-pointers",
+  "-C", "link-arg=-Tlinkall.x",
+]

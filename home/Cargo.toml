@@ -1,0 +1,80 @@
+[package]
+name = "freemdu-home"
+version = "0.1.0"
+edition = "2024"
+repository = "https://github.com/medusalix/FreeMDU"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+anyhow = { version = "1.0.100", default-features = false }
+embassy-executor = { version = "0.9.1", features = ["log"] }
+embassy-futures = { version = "0.1.2", features = ["log"] }
+embassy-net = { version = "0.7.1", features = [
+  "dhcpv4-hostname",
+  "log",
+] }
+embassy-sync = { version = "0.7.2", features = ["log"] }
+embassy-time = { version = "0.5.0", features = ["log"] }
+embedded-io-async = "0.7.0"
+esp-alloc = "0.9.0"
+esp-backtrace = { version = "0.18.1", features = [
+  "panic-handler",
+  "println",
+] }
+esp-bootloader-esp-idf = { version = "0.4.0", features = ["log-04"] }
+esp-hal = { version = "1.0.0", features = ["log-04", "unstable"] }
+esp-println = { version = "0.16.1", features = ["log-04"] }
+esp-rtos = { version = "0.2.0", features = [
+  "embassy",
+  "esp-radio",
+  "log-04",
+] }
+esp-radio = { version = "0.17.0", features = [
+  "log-04",
+  "unstable",
+  "wifi",
+] }
+freemdu = { path = "../protocol" }
+log = "0.4.28"
+mcutie = { version = "0.3.0", features = ["log"] }
+static_cell = "2.1.1"
+
+[features]
+esp32c3 = [
+  "esp-backtrace/esp32c3",
+  "esp-bootloader-esp-idf/esp32c3",
+  "esp-hal/esp32c3",
+  "esp-println/esp32c3",
+  "esp-radio/esp32c3",
+  "esp-rtos/esp32c3",
+]
+esp32c6 = [
+  "esp-backtrace/esp32c6",
+  "esp-bootloader-esp-idf/esp32c6",
+  "esp-hal/esp32c6",
+  "esp-println/esp32c6",
+  "esp-radio/esp32c6",
+  "esp-rtos/esp32c6",
+]
+
+[lints.clippy]
+# mem::forget is not safe with esp-hal types
+mem_forget = "deny"
+pedantic = { level = "warn", priority = -1 }
+manual_string_new = "allow"
+missing_errors_doc = "allow"
+
+[profile.dev]
+opt-level = "s"
+
+[profile.dev.package.esp-radio]
+opt-level = 3
+
+[profile.release]
+opt-level = "s"
+debug = 2
+debug-assertions = false
+overflow-checks = false
+lto = true
+incremental = false
+codegen-units = 1

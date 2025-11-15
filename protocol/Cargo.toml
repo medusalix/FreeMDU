@@ -1,0 +1,47 @@
+[package]
+name = "freemdu"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85.0"
+description = "Communicate with Miele appliances via their proprietary diagnostic interface."
+repository = "https://github.com/medusalix/FreeMDU"
+license = "MIT OR Apache-2.0"
+keywords = ["async", "embedded", "embedded-hal", "protocol"]
+categories = ["asynchronous", "embedded", "no-std"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+async-trait = { version = "0.1.89" }
+bitflags = { version = "2.10.0" }
+bitflags-derive = "0.0.4"
+embedded-io-adapters = { version = "0.7.0", features = ["tokio-1"], optional = true }
+embedded-io-async = "0.7.0"
+log = "0.4.28"
+serial2-tokio = { version = "0.1.19", optional = true }
+strum = { version = "0.27.2", default-features = false, features = ["derive"] }
+
+[dev-dependencies]
+env_logger = "0.11.8"
+tokio = { version = "1.48.0", features = ["rt-multi-thread", "macros", "time"] }
+
+[features]
+native-serial = ["dep:serial2-tokio", "dep:embedded-io-adapters"]
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+missing_errors_doc = "allow"
+
+[[example]]
+name = "find_keys"
+required-features = ["native-serial"]
+
+[[example]]
+name = "dump_memory"
+required-features = ["native-serial"]
+
+[[example]]
+name = "dump_eeprom"
+required-features = ["native-serial"]
