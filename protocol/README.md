@@ -1,4 +1,4 @@
-# FreeMDU Protocol ![crates.io version](https://img.shields.io/crates/v/freemdu?logo=rust) ![docs.rs](https://img.shields.io/docsrs/freemdu?logo=rust) ![crates.io MSRV](https://img.shields.io/crates/msrv/freemdu?logo=rust)
+# FreeMDU Protocol [![crates.io](https://img.shields.io/crates/v/freemdu?logo=rust)](https://crates.io/crates/freemdu) [![docs.rs](https://img.shields.io/docsrs/freemdu?logo=rust)](https://docs.rs/freemdu) [![MSRV](https://img.shields.io/crates/msrv/freemdu?logo=rust)](https://crates.io/crates/freemdu)
 
 The FreeMDU protocol crate implements the proprietary Miele diagnostic protocol. It offers an asynchronous, platform-agnostic API for communicating with Miele appliances via the diagnostic interface.
 
