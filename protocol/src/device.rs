@@ -12,6 +12,7 @@ pub mod id360;
 pub mod id419;
 pub mod id605;
 pub mod id629;
+pub mod id1998;
 
 use crate::{Error as ProtocolError, Interface, Read, Write};
 use alloc::{boxed::Box, string::String};
@@ -383,6 +384,9 @@ pub async fn connect<'a, P: 'a + Read + Write>(
         }
         id629::compatible_software_ids!() => {
             Ok(Box::new(id629::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
+        }
+        id1998::compatible_software_ids!() => {
+            Ok(Box::new(id1998::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
         }
         _ => Err(Error::UnknownSoftwareId(id)),
     }
