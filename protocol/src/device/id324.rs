@@ -397,6 +397,8 @@ bitflags::bitflags! {
         const FieldSwitch = 0x0001;
         /// Drain pump actuator.
         const DrainPump = 0x0002;
+        /// Motor protection relay actuator.
+        const MotorProtection = 0x0008;
         /// Reverse relay actuator.
         const Reverse = 0x0010;
         /// Heater actuator.
