@@ -214,15 +214,15 @@ pub enum OperatingMode {
     ProgramFinished = 0x03,
     /// Service programming mode, providing access to all machine and program options.
     ///
-    /// Entered by holding the _Water plus_ and _Start_ buttons when turning on the machine.
+    /// Entered by holding the _Pre-wash_ and _Short_ buttons when turning on the machine.
     ServiceProgramming = 0x04,
     /// Service mode. Allows viewing stored faults and testing actuators.
     ///
-    /// Entered by holding the _Short_ and _Start_ buttons when turning on the machine.
+    /// Entered by holding the _Soak_ and _Short_ buttons when turning on the machine.
     Service = 0x05,
     /// Customer programming mode, with a limited subset of the service programming options.
     ///
-    /// Entered by holding the _Short_ and _Water plus_ buttons when turning on the machine.
+    /// Entered by holding the _Pre-wash_ and _Soak_ buttons when turning on the machine.
     CustomerProgramming = 0x06,
 }
 
