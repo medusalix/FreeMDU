@@ -411,6 +411,8 @@ bitflags::bitflags! {
         const Softener = 0x0040;
         /// Pre-wash compartment actuator.
         const PreWash = 0x0080;
+        /// Ring illumination actuator.
+        const RingIllumination = 0x0100;
         /// Main wash compartment actuator.
         const MainWash = 0x2000;
         /// Warm water actuator.
