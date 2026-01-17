@@ -566,7 +566,7 @@ impl<P: Read + Write> WashingMachine<P> {
         // and the machine's programming configuration at 0x020d in the subroutine at 0xae28.
         let speed: u8 = self.intf.read_memory(0x00a8).await?;
 
-        Ok(speed as u16 * 50)
+        Ok(u16::from(speed) * 50)
     }
 
     /// Queries the program phase.
