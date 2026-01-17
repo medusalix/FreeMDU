@@ -142,6 +142,12 @@ const PROP_WATER_LEVEL: Property = Property {
     name: "Water Level",
     unit: Some("mmH₂O"),
 };
+const PROP_MOTOR_PWM_DUTY_CYCLE: Property = Property {
+    kind: PropertyKind::Io,
+    id: "motor_pwm_duty_cycle",
+    name: "Motor PWM Duty Cycle",
+    unit: Some("%"),
+};
 
 const ACTION_SET_PROGRAM_OPTIONS: Action = Action {
     kind: ActionKind::Operation,
@@ -656,6 +662,16 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok((current, target))
     }
 
+    /// Queries the PWM duty cycle of the drum motor.
+    ///
+    /// The duty cycle ranges from `0 %` to `100 %`.
+    pub async fn query_motor_pwm_duty_cycle(&mut self) -> Result<u8, P::Error> {
+        // The duty cycle determines the value of the PWM register PWML.
+        let duty: u8 = self.intf.read_memory(0x004f).await?;
+
+        Ok((u16::from(duty) * 100 / 0xff).try_into()?)
+    }
+
     /// Starts the selected program.
     ///
     /// As the program cannot be set using the diagnostic interface,
@@ -724,6 +740,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_NTC_RESISTANCE,
             PROP_TEMPERATURE,
             PROP_WATER_LEVEL,
+            PROP_MOTOR_PWM_DUTY_CYCLE,
         ]
     }
 
@@ -762,6 +779,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_NTC_RESISTANCE => Ok(self.query_ntc_resistance().await?.into()),
             PROP_TEMPERATURE => Ok(self.query_temperature().await?.into()),
             PROP_WATER_LEVEL => Ok(self.query_water_level().await?.into()),
+            PROP_MOTOR_PWM_DUTY_CYCLE => Ok(self.query_motor_pwm_duty_cycle().await?.into()),
             _ => Err(Error::UnknownProperty),
         }
     }
