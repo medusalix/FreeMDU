@@ -586,7 +586,7 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// Queries the laundry load level.
     ///
-    /// The load level ranges from 1 to 4 and is calculated by the machine during operation.
+    /// The load level ranges from 1 to 5 and is calculated by the machine during operation.
     /// For some program types, the maximum load level is limited to a lower value.
     pub async fn query_load_level(&mut self) -> Result<u8, P::Error> {
         Ok(self.intf.read_memory(0x000a).await?)
