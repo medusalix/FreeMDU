@@ -88,6 +88,12 @@ const PROP_PROGRAM_SPIN_SETTING: Property = Property {
     name: "Program Spin Setting",
     unit: None,
 };
+const PROP_PROGRAM_SPIN_SPEED: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "program_spin_speed",
+    name: "Program Spin Speed",
+    unit: Some("rpm"),
+};
 const PROP_PROGRAM_PHASE: Property = Property {
     kind: PropertyKind::Operation,
     id: "program_phase",
@@ -544,6 +550,15 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok(self.intf.write_memory(0x0015, speed as u8).await?)
     }
 
+    /// Queries the program spin speed.
+    pub async fn query_program_spin_speed(&mut self) -> Result<u16, P::Error> {
+        // The spin speed is calculated from the spin setting at 0x0015
+        // and the machine's programming configuration at 0x020d in the subroutine at 0xae28.
+        let speed: u8 = self.intf.read_memory(0x00a8).await?;
+
+        Ok(speed as u16 * 50)
+    }
+
     /// Queries the program phase.
     pub async fn query_program_phase(&mut self) -> Result<ProgramPhase, P::Error> {
         // Program phases are defined in a lookup table at address 0xeac3.
@@ -700,6 +715,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_PROGRAM_OPTIONS,
             PROP_BUZZER_ENABLED,
             PROP_PROGRAM_SPIN_SETTING,
+            PROP_PROGRAM_SPIN_SPEED,
             PROP_PROGRAM_PHASE,
             PROP_PROGRAM_LOCKED,
             PROP_LOAD_LEVEL,
@@ -736,6 +752,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_PROGRAM_SPIN_SETTING => {
                 Ok(self.query_program_spin_setting().await?.to_string().into())
             }
+            PROP_PROGRAM_SPIN_SPEED => Ok(self.query_program_spin_speed().await?.into()),
             PROP_PROGRAM_PHASE => Ok(self.query_program_phase().await?.to_string().into()),
             PROP_PROGRAM_LOCKED => Ok(self.query_program_locked().await?.into()),
             PROP_LOAD_LEVEL => Ok(self.query_load_level().await?.into()),
