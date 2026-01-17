@@ -179,23 +179,25 @@ bitflags::bitflags! {
     /// Each flag represents a specific fault condition that can occur in the machine.
     /// Multiple faults may be active simultaneously.
     #[derive(FlagsDisplay, FlagsDebug, PartialEq, Eq, Copy, Clone)]
-    pub struct Fault: u8 {
+    pub struct Fault: u16 {
         /// Analog pressure sensor fault detected.
-        const PressureSensor = 0x01;
+        const PressureSensor = 0x0001;
         /// NTC thermistor (temperature sensor) fault detected.
-        const NtcThermistor = 0x02;
+        const NtcThermistor = 0x0002;
         /// Heater fault detected.
-        const Heater = 0x04;
+        const Heater = 0x0004;
         /// Tachometer generator fault detected.
-        const TachometerGenerator = 0x08;
+        const TachometerGenerator = 0x0008;
         /// Detergent overdose fault detected.
-        const DetergentOverdose = 0x10;
+        const DetergentOverdose = 0x0010;
         /// Inlet fault detected.
-        const Inlet = 0x20;
+        const Inlet = 0x0020;
         /// Drainage fault detected.
-        const Drainage = 0x40;
+        const Drainage = 0x0040;
+        /// No spin-drying possible.
+        const SpinCycle = 0x0080;
         /// EEPROM fault detected.
-        const Eeprom = 0x80;
+        const Eeprom = 0x0100;
     }
 }
 
