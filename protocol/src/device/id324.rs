@@ -208,7 +208,9 @@ bitflags::bitflags! {
 #[derive(FromRepr, Display, PartialEq, Eq, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum OperatingMode {
-    /// Default mode when the machine is turned on.
+    /// The door is open.
+    DoorOpen = 0x00,
+    /// Default mode when the machine is turned on and the door is closed.
     ProgramIdle = 0x01,
     /// A washing program is currently running.
     ProgramRunning = 0x02,
