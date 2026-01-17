@@ -481,7 +481,9 @@ impl<P: Read + Write> WashingMachine<P> {
     ///
     /// The faults are persisted in the EEPROM when turning off the machine.
     pub async fn query_faults(&mut self) -> Result<Fault, P::Error> {
-        Fault::from_bits(self.intf.read_memory(0x000e).await?).ok_or(Error::UnexpectedMemoryValue)
+        let faults: u16 = self.intf.read_memory(0x000e).await?;
+
+        Fault::from_bits(faults & 0x01ff).ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// Queries the operating mode.
