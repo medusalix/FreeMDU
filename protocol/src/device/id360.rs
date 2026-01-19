@@ -40,10 +40,10 @@ const PROP_OPERATING_TIME: Property = Property {
     name: "Operating Time",
     unit: None,
 };
-const PROP_FAULTS: Property = Property {
+const PROP_STORED_FAULTS: Property = Property {
     kind: PropertyKind::Failure,
-    id: "faults",
-    name: "Faults",
+    id: "stored_faults",
+    name: "Stored Faults",
     unit: None,
 };
 const PROP_OPERATING_MODE: Property = Property {
@@ -185,23 +185,25 @@ bitflags::bitflags! {
     /// Each flag represents a specific fault condition that can occur in the machine.
     /// Multiple faults may be active simultaneously.
     #[derive(FlagsDisplay, FlagsDebug, PartialEq, Eq, Copy, Clone)]
-    pub struct Fault: u8 {
+    pub struct Fault: u16 {
         /// Analog pressure sensor fault detected.
-        const PressureSensor = 0x01;
+        const PressureSensor = 0x0001;
         /// NTC thermistor (temperature sensor) fault detected.
-        const NtcThermistor = 0x02;
+        const NtcThermistor = 0x0002;
         /// Heater fault detected.
-        const Heater = 0x04;
+        const Heater = 0x0004;
         /// Tachometer generator fault detected.
-        const TachometerGenerator = 0x08;
+        const TachometerGenerator = 0x0008;
         /// Detergent overdose fault detected.
-        const DetergentOverdose = 0x10;
+        const DetergentOverdose = 0x0010;
         /// Inlet fault detected.
-        const Inlet = 0x20;
+        const Inlet = 0x0020;
         /// Drainage fault detected.
-        const Drainage = 0x40;
+        const Drainage = 0x0040;
+        /// No spin-drying possible.
+        const SpinCycle = 0x0080;
         /// EEPROM fault detected.
-        const Eeprom = 0x80;
+        const Eeprom = 0x0100;
     }
 }
 
@@ -491,8 +493,10 @@ impl<P: Read + Write> WashingMachine<P> {
     /// Queries the stored faults.
     ///
     /// The faults are persisted in the EEPROM when turning off the machine.
-    pub async fn query_faults(&mut self) -> Result<Fault, P::Error> {
-        Fault::from_bits(self.intf.read_memory(0x004e).await?).ok_or(Error::UnexpectedMemoryValue)
+    pub async fn query_stored_faults(&mut self) -> Result<Fault, P::Error> {
+        let faults: u16 = self.intf.read_memory(0x004e).await?;
+
+        Fault::from_bits(faults & 0x01ff).ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// Queries the operating mode.
@@ -752,7 +756,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
         &[
             PROP_ROM_CODE,
             PROP_OPERATING_TIME,
-            PROP_FAULTS,
+            PROP_STORED_FAULTS,
             PROP_OPERATING_MODE,
             PROP_PROGRAM_SELECTOR,
             PROP_PROGRAM_TYPE,
@@ -788,7 +792,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_ROM_CODE => Ok(self.query_rom_code().await?.into()),
             PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
             // Failure
-            PROP_FAULTS => Ok(self.query_faults().await?.to_string().into()),
+            PROP_STORED_FAULTS => Ok(self.query_stored_faults().await?.to_string().into()),
             // Operation
             PROP_OPERATING_MODE => Ok(self.query_operating_mode().await?.to_string().into()),
             PROP_PROGRAM_SELECTOR => Ok(self.query_program_selector().await?.to_string().into()),

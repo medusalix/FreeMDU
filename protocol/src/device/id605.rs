@@ -34,10 +34,10 @@ const PROP_BOARD_NUMBER: Property = Property {
     name: "Board Number",
     unit: None,
 };
-const PROP_FAULTS: Property = Property {
+const PROP_STORED_FAULTS: Property = Property {
     kind: PropertyKind::Failure,
-    id: "faults",
-    name: "Faults",
+    id: "stored_faults",
+    name: "Stored Faults",
     unit: None,
 };
 const PROP_PROGRAM_SELECTOR: Property = Property {
@@ -301,7 +301,7 @@ impl<P: Read + Write> Dishwasher<P> {
     /// Queries the stored faults.
     ///
     /// The faults are persisted in the EEPROM when turning off the machine.
-    pub async fn query_faults(&mut self) -> Result<Fault, P::Error> {
+    pub async fn query_stored_faults(&mut self) -> Result<Fault, P::Error> {
         Fault::from_bits(self.intf.read_memory(0x0082).await?).ok_or(Error::UnexpectedMemoryValue)
     }
 
@@ -467,7 +467,7 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
     fn properties(&self) -> &'static [Property] {
         &[
             PROP_BOARD_NUMBER,
-            PROP_FAULTS,
+            PROP_STORED_FAULTS,
             PROP_PROGRAM_SELECTOR,
             PROP_PROGRAM_TYPE,
             PROP_TOP_SOLO_ENABLED,
@@ -490,7 +490,7 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
             // General
             PROP_BOARD_NUMBER => Ok(self.query_board_number().await?.into()),
             // Failure
-            PROP_FAULTS => Ok(self.query_faults().await?.to_string().into()),
+            PROP_STORED_FAULTS => Ok(self.query_stored_faults().await?.to_string().into()),
             // Operation
             PROP_PROGRAM_SELECTOR => Ok(self.query_program_selector().await?.into()),
             PROP_PROGRAM_TYPE => Ok(self.query_program_type().await?.to_string().into()),
