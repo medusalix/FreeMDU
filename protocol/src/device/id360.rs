@@ -750,9 +750,8 @@ impl<P: Read + Write> WashingMachine<P> {
     /// The speed in `rpm` (revolutions per minute) is only provided
     /// by the machine during the spin phase.
     pub async fn query_tachometer_speed(&mut self) -> Result<(u16, u16), P::Error> {
-        let speed: u32 = self.intf.read_memory(0x01a1).await?;
-        let target = (speed & 0xffff) as u16;
-        let current = (speed >> 16) as u16;
+        let current = self.intf.read_memory(0x01a3).await?;
+        let target = self.intf.read_memory(0x018a).await?;
 
         Ok((current, target))
     }
