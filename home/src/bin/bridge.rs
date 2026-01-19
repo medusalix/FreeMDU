@@ -9,10 +9,10 @@ use embassy_time::{self, Duration, TimeoutError};
 use embedded_io_async::{Read, Write};
 use esp_alloc as _;
 use esp_hal::{
-    Async, Config, gpio::Output, interrupt::software::SoftwareInterruptControl,
-    timer::timg::TimerGroup, usb_serial_jtag::UsbSerialJtag,
+    Async, Config, interrupt::software::SoftwareInterruptControl, timer::timg::TimerGroup,
+    usb_serial_jtag::UsbSerialJtag,
 };
-use freemdu_home::OpticalPort;
+use freemdu_home::{OpticalPort, status_led::StatusLed};
 
 // Buffer size for USB serial and optical port reads
 const BUF_SIZE: usize = 32;
@@ -31,11 +31,11 @@ fn panic(_: &PanicInfo) -> ! {
 }
 
 #[embassy_executor::task]
-async fn led_task(mut led: Output<'static>) -> ! {
+async fn led_task(mut led: StatusLed<'static>) -> ! {
     loop {
         match embassy_time::with_timeout(LED_MIN_ON_DURATION, LED_SIGNAL.wait()).await {
-            Ok(()) => led.set_low(),
-            Err(TimeoutError) => led.set_high(),
+            Ok(()) => led.on(),
+            Err(TimeoutError) => led.off(),
         }
     }
 }
@@ -72,7 +72,10 @@ async fn main(spawner: Spawner) {
 
     esp_rtos::start(timg0.timer0, sw_int.software_interrupt0);
 
-    let led = freemdu_home::new_status_led();
+    let led = freemdu_home::new_status_led(
+        #[cfg(feature = "ws2812led")]
+        peripherals.RMT,
+    );
     let serial = UsbSerialJtag::new(peripherals.USB_DEVICE).into_async();
     let opt = freemdu_home::new_optical_port(peripherals.UART1).unwrap();
 

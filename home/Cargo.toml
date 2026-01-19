@@ -38,6 +38,8 @@ freemdu = { path = "../protocol" }
 log = "0.4.28"
 mcutie = { version = "0.3.0", features = ["log"] }
 static_cell = "2.1.1"
+smart-leds = { version = "0.4.0", optional = true }
+esp-hal-smartled2 = { version = "0.28.1", optional = true }
 
 [features]
 esp32c3 = [
@@ -55,6 +57,10 @@ esp32c6 = [
   "esp-println/esp32c6",
   "esp-radio/esp32c6",
   "esp-rtos/esp32c6",
+]
+ws2812led = [
+  "smart-leds",
+  "esp-hal-smartled2",
 ]
 
 [lints.clippy]

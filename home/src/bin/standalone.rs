@@ -18,7 +18,7 @@ use embassy_time::{Duration, Ticker, WithTimeout};
 use esp_alloc as _;
 use esp_backtrace as _;
 use esp_hal::{
-    gpio::Output, interrupt::software::SoftwareInterruptControl, peripherals::WIFI, rng::Rng,
+    interrupt::software::SoftwareInterruptControl, peripherals::WIFI, rng::Rng,
     timer::timg::TimerGroup,
 };
 use esp_println::logger;
@@ -30,7 +30,7 @@ use esp_radio::{
     },
 };
 use freemdu::device::{self, Action, ActionKind, Property, PropertyKind, Value};
-use freemdu_home::OpticalPort;
+use freemdu_home::{OpticalPort, status_led::StatusLed};
 use log::{error, info};
 use mcutie::{
     McutieBuilder, McutieReceiver, McutieTask, MqttMessage, PublishBytes, Publishable, Topic,
@@ -74,7 +74,7 @@ async fn mqtt_message_task(
     receiver: McutieReceiver,
     hostname: String,
     mut port: OpticalPort<'static>,
-    mut led: Output<'static>,
+    mut led: StatusLed<'static>,
 ) -> ! {
     let mut ticker = Ticker::every(DEVICE_PUBLISH_INTERVAL);
     let mut connected = false;
@@ -113,7 +113,7 @@ async fn mqtt_message_task(
             _ => {}
         }
 
-        led.set_level((!connected).into());
+        led.set_connected(connected.into());
     }
 }
 
@@ -378,7 +378,10 @@ async fn main(spawner: Spawner) {
     esp_rtos::start(timg0.timer0, sw_int.software_interrupt0);
 
     let port = freemdu_home::new_optical_port(peripherals.UART1).unwrap();
-    let led = freemdu_home::new_status_led();
+    let led = freemdu_home::new_status_led(
+        #[cfg(feature = "ws2812led")]
+        peripherals.RMT,
+    );
     let (wifi_controller, wifi_dev) = init_wifi(peripherals.WIFI).unwrap();
     let hostname = hostname_from_wifi(&wifi_dev).unwrap();
     let (net_stack, net_runner) = init_network(wifi_dev, &hostname).unwrap();

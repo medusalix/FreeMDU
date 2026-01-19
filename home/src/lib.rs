@@ -1,6 +1,8 @@
 #![no_std]
 
 use embedded_io_async::{ErrorType, Read, ReadExactError, Write};
+#[cfg(feature = "ws2812led")]
+use esp_hal::peripherals::RMT;
 use esp_hal::{
     Async,
     gpio::{AnyPin, Input, InputConfig, Level, Output, OutputConfig},
@@ -61,12 +63,91 @@ impl Write for OpticalPort<'_> {
     }
 }
 
+pub mod status_led {
+    use esp_hal::gpio::Output;
+    #[cfg(feature = "ws2812led")]
+    use {
+        esp_hal::{Blocking, peripherals::RMT, rmt::Rmt, time::Rate},
+        esp_hal_smartled::{Ws2812SmartLeds, buffer_size},
+        smart_leds::{
+            RGB8, SmartLedsWrite,
+            colors::{BLACK, GREEN, RED},
+        },
+    };
+
+    // Define the internal driver based on the feature.
+    enum LedDriver<'a> {
+        #[cfg(feature = "ws2812led")]
+        Smart(Ws2812SmartLeds<'a, { buffer_size::<RGB8>(1) }, Blocking>),
+        Plain(Output<'a>),
+    }
+
+    pub struct StatusLed<'a> {
+        driver: LedDriver<'a>,
+    }
+
+    impl<'a> StatusLed<'a> {
+        #[cfg(feature = "ws2812led")]
+        pub fn new_smart(rmt: RMT<'a>, output: Output<'a>) -> Self {
+            let rmt = Rmt::new(rmt, Rate::from_mhz(80)).unwrap();
+            let led = Ws2812SmartLeds::new(rmt.channel0, output).unwrap();
+            Self {
+                driver: LedDriver::Smart(led),
+            }
+        }
+
+        pub fn new_plain(output: Output<'a>) -> Self {
+            Self {
+                driver: LedDriver::Plain(output),
+            }
+        }
+
+        pub fn on(&mut self) {
+            match &mut self.driver {
+                #[cfg(feature = "ws2812led")]
+                LedDriver::Smart(led) => {
+                    led.write([RED]).ok();
+                }
+                LedDriver::Plain(pin) => pin.set_low(),
+            }
+        }
+
+        pub fn off(&mut self) {
+            match &mut self.driver {
+                #[cfg(feature = "ws2812led")]
+                LedDriver::Smart(led) => {
+                    led.write([BLACK]).ok();
+                }
+                LedDriver::Plain(pin) => pin.set_high(),
+            }
+        }
+
+        pub fn set_connected(&mut self, connected: bool) {
+            match &mut self.driver {
+                #[cfg(feature = "ws2812led")]
+                LedDriver::Smart(led) => {
+                    led.write([if connected { GREEN } else { BLACK }]).ok();
+                }
+                LedDriver::Plain(pin) => pin.set_low(),
+            }
+        }
+    }
+}
+
 #[must_use]
-pub fn new_status_led<'a>() -> Output<'a> {
+pub fn new_status_led<'a>(#[cfg(feature = "ws2812led")] rmt: RMT<'a>) -> status_led::StatusLed<'a> {
     const PIN: u8 = num_from_env!("PIN_LED_STATUS", u8);
     let led = unsafe { AnyPin::steal(PIN) };
+    let output = Output::new(led, Level::High, OutputConfig::default());
 
-    Output::new(led, Level::High, OutputConfig::default())
+    #[cfg(feature = "ws2812led")]
+    {
+        status_led::StatusLed::new_smart(rmt, output)
+    }
+    #[cfg(not(feature = "ws2812led"))]
+    {
+        status_led::StatusLed::new_plain(output)
+    }
 }
 
 pub fn new_optical_port<'a>(uart: impl Instance + 'a) -> Result<OpticalPort<'a>, ConfigError> {
