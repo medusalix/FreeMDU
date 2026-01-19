@@ -118,6 +118,12 @@ const PROP_LOAD_LEVEL: Property = Property {
     name: "Load Level",
     unit: None,
 };
+const PROP_IMBALANCE_SPIN_SPEED_LIMIT: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "imbalance_spin_speed_limit",
+    name: "Imbalance Spin Speed Limit",
+    unit: Some("rpm"),
+};
 const PROP_DISPLAY_CONTENTS: Property = Property {
     kind: PropertyKind::Operation,
     id: "display_contents",
@@ -644,6 +650,16 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok(self.intf.read_memory(0x004a).await?)
     }
 
+    /// Queries the motor speed spin limit due to imbalance.
+    ///
+    /// The speed limit is provided in `rpm` (revolutions per minute)
+    /// and is calculated by the machine based on the determined imbalance.
+    pub async fn query_imbalance_spin_speed_limit(&mut self) -> Result<u16, P::Error> {
+        let limit: u8 = self.intf.read_memory(0x0200).await?;
+
+        Ok(u16::from(limit) * 50)
+    }
+
     /// Queries the contents of the seven-segment display.
     ///
     /// The machine typically displays the time of the selected program in hours and minutes.
@@ -820,6 +836,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_PROGRAM_PHASE,
             PROP_PROGRAM_LOCKED,
             PROP_LOAD_LEVEL,
+            PROP_IMBALANCE_SPIN_SPEED_LIMIT,
             PROP_DISPLAY_CONTENTS,
             PROP_ACTIVE_ACTUATORS,
             PROP_NTC_RESISTANCE,
@@ -862,6 +879,9 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_PROGRAM_PHASE => Ok(self.query_program_phase().await?.to_string().into()),
             PROP_PROGRAM_LOCKED => Ok(self.query_program_locked().await?.into()),
             PROP_LOAD_LEVEL => Ok(self.query_load_level().await?.into()),
+            PROP_IMBALANCE_SPIN_SPEED_LIMIT => {
+                Ok(self.query_imbalance_spin_speed_limit().await?.into())
+            }
             PROP_DISPLAY_CONTENTS => Ok(self.query_display_contents().await?.into()),
             // Input/output
             PROP_ACTIVE_ACTUATORS => Ok(self.query_active_actuators().await?.to_string().into()),
