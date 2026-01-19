@@ -148,6 +148,12 @@ const PROP_ACTIVE_ACTUATORS: Property = Property {
     name: "Active Actuators",
     unit: None,
 };
+const PROP_WATER_DIVERTER_POSITION: Property = Property {
+    kind: PropertyKind::Io,
+    id: "water_diverter_position",
+    name: "Water Diverter Position",
+    unit: None,
+};
 const PROP_NTC_RESISTANCE: Property = Property {
     kind: PropertyKind::Io,
     id: "ntc_resistance",
@@ -464,6 +470,25 @@ bitflags::bitflags! {
     }
 }
 
+/// Water diverter position.
+///
+/// The water diverter changes its position when the
+/// [`Actuator::WaterDiverter`] is activated.
+#[derive(FromRepr, Display, PartialEq, Eq, Copy, Clone, Debug)]
+#[repr(u8)]
+pub enum WaterDiverterPosition {
+    /// Unknown position (diverter is moving).
+    Unknown,
+    /// Door glass position.
+    DoorGlass,
+    /// Pre-wash compartment position.
+    PreWash,
+    /// Main wash compartment position.
+    MainWash,
+    /// Softener compartment position.
+    Softener,
+}
+
 /// Washing machine device implementation.
 ///
 /// Connect to a compatible washing machine using [`WashingMachine::connect`].
@@ -739,6 +764,14 @@ impl<P: Read + Write> WashingMachine<P> {
             .ok_or(Error::UnexpectedMemoryValue)
     }
 
+    /// Queries the current water diverter position.
+    pub async fn query_water_diverter_position(
+        &mut self,
+    ) -> Result<WaterDiverterPosition, P::Error> {
+        WaterDiverterPosition::from_repr(self.intf.read_memory(0x0245).await?)
+            .ok_or(Error::UnexpectedMemoryValue)
+    }
+
     /// Queries the NTC thermistor resistance.
     ///
     /// The resistance in `Ω` (ohms) is calculated from the ADC voltage.
@@ -880,6 +913,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_IMBALANCE_SPIN_SPEED_LIMIT,
             PROP_DISPLAY_CONTENTS,
             PROP_ACTIVE_ACTUATORS,
+            PROP_WATER_DIVERTER_POSITION,
             PROP_NTC_RESISTANCE,
             PROP_TEMPERATURE,
             PROP_PRESSURE_SENSOR_VALUE,
@@ -928,6 +962,11 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_DISPLAY_CONTENTS => Ok(self.query_display_contents().await?.into()),
             // Input/output
             PROP_ACTIVE_ACTUATORS => Ok(self.query_active_actuators().await?.to_string().into()),
+            PROP_WATER_DIVERTER_POSITION => Ok(self
+                .query_water_diverter_position()
+                .await?
+                .to_string()
+                .into()),
             PROP_NTC_RESISTANCE => Ok(self.query_ntc_resistance().await?.into()),
             PROP_TEMPERATURE => Ok(self.query_temperature().await?.into()),
             PROP_PRESSURE_SENSOR_VALUE => Ok(self.query_pressure_sensor_value().await?.into()),
