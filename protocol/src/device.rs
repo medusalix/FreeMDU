@@ -490,6 +490,18 @@ mod utils {
             _ => None,
         }
     }
+
+    /// Computes the motor speed in rpm from a raw motor speed value.
+    pub(super) fn rpm_from_motor_speed(speed: u32) -> Option<u16> {
+        // This constant can be found by minimizing the error between the values
+        // in the device's motor speed lookup table and the actual speed in rpm.
+        const RPM_CONVERSION: u32 = 442_500;
+
+        match speed {
+            0x0000_0000 | 0x0000_ffff => Some(0x0000), // No speed set
+            s => (RPM_CONVERSION / s).try_into().ok(),
+        }
+    }
 }
 
 mod private {

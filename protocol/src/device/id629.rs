@@ -172,6 +172,12 @@ const PROP_MOTOR_PWM_DUTY_CYCLE: Property = Property {
     name: "Motor PWM Duty Cycle",
     unit: Some("%"),
 };
+const PROP_MOTOR_TARGET_SPEED: Property = Property {
+    kind: PropertyKind::Io,
+    id: "motor_target_speed",
+    name: "Motor Target Speed",
+    unit: Some("rpm"),
+};
 const PROP_TACHOMETER_SPEED: Property = Property {
     kind: PropertyKind::Io,
     id: "tachometer_speed",
@@ -769,6 +775,17 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok((u16::from(duty) * 100 / 0xff).try_into()?)
     }
 
+    /// Queries the target speed of the drum motor.
+    ///
+    /// The speed is provided in `rpm` (revolutions per minute).
+    /// In contrast to the tachometer speed, this value is also
+    /// available when the motor is running at a very low speed.
+    pub async fn query_motor_target_speed(&mut self) -> Result<u16, P::Error> {
+        let target: u16 = self.intf.read_memory(0x00d5).await?;
+
+        utils::rpm_from_motor_speed(u32::from(target)).ok_or(Error::UnexpectedMemoryValue)
+    }
+
     /// Queries the current speed sensed by the tachometer generator and the target speed.
     ///
     /// The speed in `rpm` (revolutions per minute) is only provided
@@ -854,6 +871,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_PRESSURE_SENSOR_VALUE,
             PROP_WATER_LEVEL,
             PROP_MOTOR_PWM_DUTY_CYCLE,
+            PROP_MOTOR_TARGET_SPEED,
             PROP_TACHOMETER_SPEED,
         ]
     }
@@ -898,6 +916,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_PRESSURE_SENSOR_VALUE => Ok(self.query_pressure_sensor_value().await?.into()),
             PROP_WATER_LEVEL => Ok(self.query_water_level().await?.into()),
             PROP_MOTOR_PWM_DUTY_CYCLE => Ok(self.query_motor_pwm_duty_cycle().await?.into()),
+            PROP_MOTOR_TARGET_SPEED => Ok(self.query_motor_target_speed().await?.into()),
             PROP_TACHOMETER_SPEED => Ok(self.query_tachometer_speed().await?.into()),
             _ => Err(Error::UnknownProperty),
         }
