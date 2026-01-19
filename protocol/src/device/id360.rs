@@ -9,7 +9,7 @@
 //! the device's software ID and return an appropriate device instance.
 
 use crate::device::{
-    Action, ActionKind, ActionParameters, Device, DeviceKind, Error, Interface, Property,
+    Action, ActionKind, ActionParameters, Date, Device, DeviceKind, Error, Interface, Property,
     PropertyKind, Result, Value, private, utils,
 };
 use alloc::{
@@ -28,6 +28,12 @@ macro_rules! compatible_software_ids {
 }
 pub(super) use compatible_software_ids;
 
+const PROP_MANUFACTURING_DATE: Property = Property {
+    kind: PropertyKind::General,
+    id: "manufacturing_date",
+    name: "Manufacturing Date",
+    unit: None,
+};
 const PROP_ROM_CODE: Property = Property {
     kind: PropertyKind::General,
     id: "rom_code",
@@ -465,6 +471,17 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok(Self { intf, software_id })
     }
 
+    /// Queries the manufacturing/inspection date of the machine.
+    pub async fn query_manufacturing_date(&mut self) -> Result<Date, P::Error> {
+        let date: [u8; 4] = self.intf.read_eeprom(0x01ce).await?;
+
+        Ok(Date::new(
+            u16::from(date[0]) + u16::from(date[1]) * 100,
+            date[2],
+            date[3],
+        ))
+    }
+
     /// Queries the ROM code of the machine's microcontroller.
     ///
     /// The ROM code is typically a small number, e.g. `4`.
@@ -754,6 +771,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
 
     fn properties(&self) -> &'static [Property] {
         &[
+            PROP_MANUFACTURING_DATE,
             PROP_ROM_CODE,
             PROP_OPERATING_TIME,
             PROP_STORED_FAULTS,
@@ -789,6 +807,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
     async fn query_property(&mut self, prop: &Property) -> Result<Value, P::Error> {
         match *prop {
             // General
+            PROP_MANUFACTURING_DATE => Ok(self.query_manufacturing_date().await?.into()),
             PROP_ROM_CODE => Ok(self.query_rom_code().await?.into()),
             PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
             // Failure
