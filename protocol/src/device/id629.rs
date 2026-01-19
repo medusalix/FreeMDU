@@ -46,12 +46,6 @@ const PROP_MODEL_NUMBER: Property = Property {
     name: "Model Number",
     unit: None,
 };
-const PROP_BOARD_NUMBER: Property = Property {
-    kind: PropertyKind::General,
-    id: "board_number",
-    name: "Board Number",
-    unit: None,
-};
 const PROP_ROM_CODE: Property = Property {
     kind: PropertyKind::General,
     id: "rom_code",
@@ -522,17 +516,6 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok(model.trim_end().to_string())
     }
 
-    /// Queries the electronics board number of the machine.
-    ///
-    /// The board number consists of 8 characters, e.g. `56554705`.
-    /// It can also be found on the sticker on the back side of the PCB.
-    pub async fn query_board_number(&mut self) -> Result<String, P::Error> {
-        let data: [u8; 8] = self.intf.read_eeprom(0x01ca).await?;
-        let board = str::from_utf8(&data).map_err(|_| Error::UnexpectedMemoryValue)?;
-
-        Ok(board.to_string())
-    }
-
     /// Queries the ROM code of the machine's microcontroller.
     ///
     /// The ROM code is typically a small number, e.g. `4`.
@@ -815,7 +798,6 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_SERIAL_NUMBER,
             PROP_SERIAL_NUMBER_INDEX,
             PROP_MODEL_NUMBER,
-            PROP_BOARD_NUMBER,
             PROP_ROM_CODE,
             PROP_OPERATING_TIME,
             PROP_STORED_FAULTS,
@@ -853,7 +835,6 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_SERIAL_NUMBER => Ok(self.query_serial_number().await?.into()),
             PROP_SERIAL_NUMBER_INDEX => Ok(self.query_serial_number_index().await?.into()),
             PROP_MODEL_NUMBER => Ok(self.query_model_number().await?.into()),
-            PROP_BOARD_NUMBER => Ok(self.query_board_number().await?.into()),
             PROP_ROM_CODE => Ok(self.query_rom_code().await?.into()),
             PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
             // Failure

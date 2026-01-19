@@ -12,10 +12,7 @@ use crate::device::{
     Action, ActionKind, Device, DeviceKind, Error, Interface, Property, PropertyKind, Result,
     Value, private, utils,
 };
-use alloc::{
-    boxed::Box,
-    string::{String, ToString},
-};
+use alloc::{boxed::Box, string::ToString};
 use bitflags_derive::{FlagsDebug, FlagsDisplay};
 use core::str;
 use embedded_io_async::{Read, Write};
@@ -28,12 +25,6 @@ macro_rules! compatible_software_ids {
 }
 pub(super) use compatible_software_ids;
 
-const PROP_BOARD_NUMBER: Property = Property {
-    kind: PropertyKind::General,
-    id: "board_number",
-    name: "Board Number",
-    unit: None,
-};
 const PROP_STORED_FAULTS: Property = Property {
     kind: PropertyKind::Failure,
     id: "stored_faults",
@@ -287,17 +278,6 @@ impl<P: Read + Write> Dishwasher<P> {
         Ok(Self { intf, software_id })
     }
 
-    /// Queries the electronics board number of the machine.
-    ///
-    /// The board number consists of 8 characters, e.g. `56554705`.
-    /// It can also be found on the sticker on the back side of the PCB.
-    pub async fn query_board_number(&mut self) -> Result<String, P::Error> {
-        let data: [u8; 8] = self.intf.read_eeprom(0x00ec).await?;
-        let board = str::from_utf8(&data).map_err(|_| Error::UnexpectedMemoryValue)?;
-
-        Ok(board.to_string())
-    }
-
     /// Queries the stored faults.
     ///
     /// The faults are persisted in the EEPROM when turning off the machine.
@@ -466,7 +446,6 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
 
     fn properties(&self) -> &'static [Property] {
         &[
-            PROP_BOARD_NUMBER,
             PROP_STORED_FAULTS,
             PROP_PROGRAM_SELECTOR,
             PROP_PROGRAM_TYPE,
@@ -488,7 +467,6 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
     async fn query_property(&mut self, prop: &Property) -> Result<Value, P::Error> {
         match *prop {
             // General
-            PROP_BOARD_NUMBER => Ok(self.query_board_number().await?.into()),
             // Failure
             PROP_STORED_FAULTS => Ok(self.query_stored_faults().await?.to_string().into()),
             // Operation
