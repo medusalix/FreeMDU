@@ -479,11 +479,13 @@ impl<P: Read + Write> WashingMachine<P> {
         //   - Minutes: binary value at 0x0052
         //   - Hours: BCD values from 0x0053 to 0x0055
         // When the minutes counter reaches 60, the hour value is incremented.
-        let time: u32 = self.intf.read_memory(0x0052).await?;
-        let mins = time & 0x0000_00ff;
-        let hours = utils::decode_bcd_value((time & 0xffff_ff00) >> 8);
+        let time: [u8; 4] = self.intf.read_memory(0x0052).await?;
+        let mins = time[0];
+        let hours = utils::decode_bcd_value(u32::from_le_bytes([time[1], time[2], time[3], 0x00]));
 
-        Ok(Duration::from_secs(u64::from(hours * 60 * 60 + mins * 60)))
+        Ok(Duration::from_secs(
+            (u64::from(hours) * 60 + u64::from(mins)) * 60,
+        ))
     }
 
     /// Queries the stored faults.
@@ -602,14 +604,14 @@ impl<P: Read + Write> WashingMachine<P> {
     /// The machine typically displays the time of the selected program in hours and minutes.
     /// In other operating modes, the display can also show special characters, e.g. `P`.
     pub async fn query_display_contents(&mut self) -> Result<String, P::Error> {
-        let display: u32 = self.intf.read_memory(0x009e).await?;
-        let points = (display & 0x0070_0000) >> 20;
-        let d1_code = (display & 0x0000_000f) as u8;
-        let d2_code = ((display & 0x0000_00f0) >> 4) as u8;
-        let d3_code = ((display & 0x0000_0f00) >> 8) as u8;
-        let d1_special = (display & 0x0200_0000) != 0x0000_0000;
-        let d2_special = (display & 0x0400_0000) != 0x0000_0000;
-        let d3_special = (display & 0x0800_0000) != 0x0000_0000;
+        let display: [u8; 4] = self.intf.read_memory(0x009e).await?;
+        let points = (display[2] & 0x70) >> 4;
+        let d1_code = display[0] & 0x0f;
+        let d2_code = (display[0] & 0xf0) >> 4;
+        let d3_code = display[1] & 0x0f;
+        let d1_special = (display[3] & 0x02) != 0x00;
+        let d2_special = (display[3] & 0x04) != 0x00;
+        let d3_special = (display[3] & 0x08) != 0x00;
         let d1_point = points == 0x01 || points == 0x07;
         let d2_point = points == 0x02 || points == 0x07;
         let d3_point = points == 0x03 || points == 0x07;

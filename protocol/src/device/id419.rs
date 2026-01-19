@@ -441,11 +441,13 @@ impl<P: Read + Write> WashingMachine<P> {
         //   - Minutes: binary value at 0x0014
         //   - Hours: BCD values from 0x0015 to 0x0017
         // When the minutes counter reaches 60, the hour value is incremented.
-        let time: u32 = self.intf.read_memory(0x0014).await?;
-        let mins = time & 0x0000_00ff;
-        let hours = utils::decode_bcd_value((time & 0xffff_ff00) >> 8);
+        let time: [u8; 4] = self.intf.read_memory(0x0014).await?;
+        let mins = time[0];
+        let hours = utils::decode_bcd_value(u32::from_le_bytes([time[1], time[2], time[3], 0x00]));
 
-        Ok(Duration::from_secs(u64::from(hours * 60 * 60 + mins * 60)))
+        Ok(Duration::from_secs(
+            (u64::from(hours) * 60 + u64::from(mins)) * 60,
+        ))
     }
 
     /// Queries the stored faults.
