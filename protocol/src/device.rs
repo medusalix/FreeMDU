@@ -195,6 +195,27 @@ pub enum Value {
     String(String),
     /// Duration value.
     Duration(Duration),
+    /// Date value.
+    Date(Date),
+}
+
+/// A simple date, consisting of year, month and day.
+#[derive(PartialEq, Eq, Debug)]
+pub struct Date {
+    /// Year value.
+    pub year: u16,
+    /// Month value.
+    pub month: u8,
+    /// Day value.
+    pub day: u8,
+}
+
+impl Date {
+    /// Constructs a new date.
+    #[must_use]
+    pub fn new(year: u16, month: u8, day: u8) -> Self {
+        Self { year, month, day }
+    }
 }
 
 impl From<bool> for Value {
@@ -248,6 +269,12 @@ impl From<String> for Value {
 impl From<Duration> for Value {
     fn from(dur: Duration) -> Self {
         Self::Duration(dur)
+    }
+}
+
+impl From<Date> for Value {
+    fn from(date: Date) -> Self {
+        Self::Date(date)
     }
 }
 

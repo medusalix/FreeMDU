@@ -1,4 +1,4 @@
-use freemdu::device::{Property, Value};
+use freemdu::device::{Date, Property, Value};
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
@@ -107,6 +107,7 @@ impl PropertyTable {
 
                 (format!("{hours}h {mins}min"), None)
             }
+            Value::Date(Date { year, month, day }) => (format!("{year}-{month:02}-{day:02}"), None),
         }
     }
 
