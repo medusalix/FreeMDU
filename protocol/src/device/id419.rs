@@ -49,12 +49,6 @@ const PROP_OPERATING_MODE: Property = Property {
     name: "Operating Mode",
     unit: None,
 };
-const PROP_LOAD_LEVEL: Property = Property {
-    kind: PropertyKind::Operation,
-    id: "load_level",
-    name: "Load Level",
-    unit: None,
-};
 const PROP_PROGRAM_SELECTOR: Property = Property {
     kind: PropertyKind::Operation,
     id: "program_selector",
@@ -95,6 +89,12 @@ const PROP_PROGRAM_LOCKED: Property = Property {
     kind: PropertyKind::Operation,
     id: "program_locked",
     name: "Program Locked",
+    unit: None,
+};
+const PROP_LOAD_LEVEL: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "load_level",
+    name: "Load Level",
     unit: None,
 };
 const PROP_ACTIVE_ACTUATORS: Property = Property {
@@ -482,10 +482,11 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// Queries the program temperature.
     ///
-    /// The program temperature is set according to the program selector position.
+    /// The program temperature is set according to the program
+    /// selector position and provided in `°C` (degrees Celsius).
     /// Some programs use a slightly lower temperature than selected.
     pub async fn query_program_temperature(&mut self) -> Result<u8, P::Error> {
-        // Program temperatures are defined in a lookup table at address 0x593f.
+        // Program temperatures are defined in a lookup table at address 0xa7b6.
         // The current temperature is determined by reading the value at 0x0001
         // to index into this table.
         Ok(self.intf.read_memory(0x009f).await?)

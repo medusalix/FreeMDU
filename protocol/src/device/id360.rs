@@ -52,12 +52,6 @@ const PROP_OPERATING_MODE: Property = Property {
     name: "Operating Mode",
     unit: None,
 };
-const PROP_LOAD_LEVEL: Property = Property {
-    kind: PropertyKind::Operation,
-    id: "load_level",
-    name: "Load Level",
-    unit: None,
-};
 const PROP_PROGRAM_SELECTOR: Property = Property {
     kind: PropertyKind::Operation,
     id: "program_selector",
@@ -104,6 +98,12 @@ const PROP_PROGRAM_LOCKED: Property = Property {
     kind: PropertyKind::Operation,
     id: "program_locked",
     name: "Program Locked",
+    unit: None,
+};
+const PROP_LOAD_LEVEL: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "load_level",
+    name: "Load Level",
     unit: None,
 };
 const PROP_DISPLAY_CONTENTS: Property = Property {
@@ -520,7 +520,8 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// Queries the program temperature.
     ///
-    /// The program temperature is set according to the program selector position.
+    /// The program temperature is set according to the program
+    /// selector position and provided in `°C` (degrees Celsius).
     /// Some programs use a slightly lower temperature than selected.
     pub async fn query_program_temperature(&mut self) -> Result<u8, P::Error> {
         // Program temperatures are defined in a lookup table at address 0x593f.
@@ -630,9 +631,9 @@ impl<P: Read + Write> WashingMachine<P> {
     pub async fn query_active_actuators(&mut self) -> Result<Actuator, P::Error> {
         // The active actuators at 0x007d and 0x007e are
         // directly written to ports 8 and 3, respectively.
-        // The lowest two bits are unused and always set.
         let actuators: u16 = self.intf.read_memory(0x007d).await?;
 
+        // The lowest two bits are unused and always set.
         Actuator::from_bits(actuators & !0x03u16).ok_or(Error::UnexpectedMemoryValue)
     }
 
