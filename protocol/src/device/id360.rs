@@ -423,8 +423,8 @@ bitflags::bitflags! {
     pub struct Actuator: u16 {
         /// Drain pump actuator.
         const DrainPump = 0x0004;
-        /// Drum lights actuator.
-        const DrumLights = 0x0008;
+        /// PWM short circuit relay actuator.
+        const PwmShortCircuit = 0x0008;
         /// Reverse relay actuator.
         const Reverse = 0x0010;
         /// Heater actuator.

@@ -441,22 +441,20 @@ bitflags::bitflags! {
     pub struct Actuator: u16 {
         /// Drain pump actuator.
         const DrainPump = 0x0004;
-        /// Drum lights actuator.
-        const DrumLights = 0x0008;
+        /// PWM short circuit relay actuator.
+        const PwmShortCircuit = 0x0008;
         /// Reverse relay actuator.
         const Reverse = 0x0010;
         /// Heater actuator.
         const Heater = 0x0020;
-        /// Softener compartment actuator.
-        const Softener = 0x0040;
-        /// Pre-wash compartment actuator.
-        const PreWash = 0x0080;
+        /// Water diverter motor actuator.
+        const WaterDiverter = 0x0080;
         /// Motor field switch relay actuator.
         const FieldSwitch = 0x0100;
-        /// Warm water actuator.
+        /// Warm water valve actuator.
         const WarmWater = 0x0200;
-        /// Main wash compartment actuator.
-        const MainWash = 0x0400;
+        /// Cold water valve actuator.
+        const ColdWater = 0x0400;
     }
 }
 
