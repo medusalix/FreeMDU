@@ -9,6 +9,7 @@
 //! implementation based on the devices's software ID.
 
 pub mod common;
+pub mod id1998;
 pub mod id2088;
 pub mod id324;
 pub mod id360;
@@ -465,6 +466,9 @@ pub async fn connect<'a, P: 'a + Read + Write>(
         }
         id629::compatible_software_ids!() => {
             Ok(Box::new(id629::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
+        }
+        id1998::compatible_software_ids!() => {
+            Ok(Box::new(id1998::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
         }
         id2088::compatible_software_ids!() => {
             Ok(Box::new(id2088::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
