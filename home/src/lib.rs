@@ -128,7 +128,7 @@ pub mod status_led {
                 LedDriver::Smart(led) => {
                     led.write([if connected { GREEN } else { BLACK }]).ok();
                 }
-                LedDriver::Plain(pin) => pin.set_low(),
+                LedDriver::Plain(pin) => pin.set_level((!connected).into()),
             }
         }
     }
