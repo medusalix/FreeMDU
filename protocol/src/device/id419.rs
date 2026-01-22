@@ -37,22 +37,16 @@ const PROP_OPERATING_TIME: Property = Property {
     name: "Operating Time",
     unit: None,
 };
-const PROP_FAULTS: Property = Property {
+const PROP_STORED_FAULTS: Property = Property {
     kind: PropertyKind::Failure,
-    id: "faults",
-    name: "Faults",
+    id: "stored_faults",
+    name: "Stored Faults",
     unit: None,
 };
 const PROP_OPERATING_MODE: Property = Property {
     kind: PropertyKind::Operation,
     id: "operating_mode",
     name: "Operating Mode",
-    unit: None,
-};
-const PROP_LOAD_LEVEL: Property = Property {
-    kind: PropertyKind::Operation,
-    id: "load_level",
-    name: "Load Level",
     unit: None,
 };
 const PROP_PROGRAM_SELECTOR: Property = Property {
@@ -85,6 +79,12 @@ const PROP_PROGRAM_SPIN_SETTING: Property = Property {
     name: "Program Spin Setting",
     unit: None,
 };
+const PROP_PROGRAM_SPIN_SPEED: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "program_spin_speed",
+    name: "Program Spin Speed",
+    unit: Some("rpm"),
+};
 const PROP_PROGRAM_PHASE: Property = Property {
     kind: PropertyKind::Operation,
     id: "program_phase",
@@ -95,6 +95,12 @@ const PROP_PROGRAM_LOCKED: Property = Property {
     kind: PropertyKind::Operation,
     id: "program_locked",
     name: "Program Locked",
+    unit: None,
+};
+const PROP_LOAD_LEVEL: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "load_level",
+    name: "Load Level",
     unit: None,
 };
 const PROP_ACTIVE_ACTUATORS: Property = Property {
@@ -152,23 +158,25 @@ bitflags::bitflags! {
     /// Each flag represents a specific fault condition that can occur in the machine.
     /// Multiple faults may be active simultaneously.
     #[derive(FlagsDisplay, FlagsDebug, PartialEq, Eq, Copy, Clone)]
-    pub struct Fault: u8 {
+    pub struct Fault: u16 {
         /// Analog pressure sensor fault detected.
-        const PressureSensor = 0x01;
+        const PressureSensor = 0x0001;
         /// NTC thermistor (temperature sensor) fault detected.
-        const NtcThermistor = 0x02;
+        const NtcThermistor = 0x0002;
         /// Heater fault detected.
-        const Heater = 0x04;
+        const Heater = 0x0004;
         /// Tachometer generator fault detected.
-        const TachometerGenerator = 0x08;
+        const TachometerGenerator = 0x0008;
         /// Detergent overdose fault detected.
-        const DetergentOverdose = 0x10;
+        const DetergentOverdose = 0x0010;
         /// Inlet fault detected.
-        const Inlet = 0x20;
+        const Inlet = 0x0020;
         /// Drainage fault detected.
-        const Drainage = 0x40;
+        const Drainage = 0x0040;
+        /// No spin-drying possible.
+        const SpinCycle = 0x0080;
         /// EEPROM fault detected.
-        const Eeprom = 0x80;
+        const Eeprom = 0x0100;
     }
 }
 
@@ -441,18 +449,22 @@ impl<P: Read + Write> WashingMachine<P> {
         //   - Minutes: binary value at 0x0014
         //   - Hours: BCD values from 0x0015 to 0x0017
         // When the minutes counter reaches 60, the hour value is incremented.
-        let time: u32 = self.intf.read_memory(0x0014).await?;
-        let mins = time & 0x0000_00ff;
-        let hours = utils::decode_bcd_value((time & 0xffff_ff00) >> 8);
+        let time: [u8; 4] = self.intf.read_memory(0x0014).await?;
+        let mins = time[0];
+        let hours = utils::decode_bcd_value(u32::from_le_bytes([time[1], time[2], time[3], 0x00]));
 
-        Ok(Duration::from_secs(u64::from(hours * 60 * 60 + mins * 60)))
+        Ok(Duration::from_secs(
+            (u64::from(hours) * 60 + u64::from(mins)) * 60,
+        ))
     }
 
     /// Queries the stored faults.
     ///
     /// The faults are persisted in the EEPROM when turning off the machine.
-    pub async fn query_faults(&mut self) -> Result<Fault, P::Error> {
-        Fault::from_bits(self.intf.read_memory(0x000e).await?).ok_or(Error::UnexpectedMemoryValue)
+    pub async fn query_stored_faults(&mut self) -> Result<Fault, P::Error> {
+        let faults: u16 = self.intf.read_memory(0x000e).await?;
+
+        Fault::from_bits(faults & 0x01ff).ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// Queries the operating mode.
@@ -482,10 +494,11 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// Queries the program temperature.
     ///
-    /// The program temperature is set according to the program selector position.
+    /// The program temperature is set according to the program
+    /// selector position and provided in `°C` (degrees Celsius).
     /// Some programs use a slightly lower temperature than selected.
     pub async fn query_program_temperature(&mut self) -> Result<u8, P::Error> {
-        // Program temperatures are defined in a lookup table at address 0x593f.
+        // Program temperatures are defined in a lookup table at address 0xa7b6.
         // The current temperature is determined by reading the value at 0x0001
         // to index into this table.
         Ok(self.intf.read_memory(0x009f).await?)
@@ -522,6 +535,18 @@ impl<P: Read + Write> WashingMachine<P> {
     /// The actual spin speed depends on the machine's programming options.
     pub async fn set_program_spin_setting(&mut self, speed: SpinSetting) -> Result<(), P::Error> {
         Ok(self.intf.write_memory(0x0011, speed as u8).await?)
+    }
+
+    /// Queries the program spin speed.
+    ///
+    /// The spin speed is provided in `rpm` (revolutions per minute)
+    /// and may not correspond exactly to the labels on the front panel.
+    pub async fn query_program_spin_speed(&mut self) -> Result<u16, P::Error> {
+        // The spin speed is calculated from the spin setting at 0x0011
+        // and the machine's programming configuration at 0x020d in the subroutine at 0xadf5.
+        let speed: u8 = self.intf.read_memory(0x00a6).await?;
+
+        Ok(u16::from(speed) * 50)
     }
 
     /// Queries the program phase.
@@ -642,13 +667,14 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
         &[
             PROP_ROM_CODE,
             PROP_OPERATING_TIME,
-            PROP_FAULTS,
+            PROP_STORED_FAULTS,
             PROP_OPERATING_MODE,
             PROP_PROGRAM_SELECTOR,
             PROP_PROGRAM_TYPE,
             PROP_PROGRAM_TEMPERATURE,
             PROP_PROGRAM_OPTIONS,
             PROP_PROGRAM_SPIN_SETTING,
+            PROP_PROGRAM_SPIN_SPEED,
             PROP_PROGRAM_PHASE,
             PROP_PROGRAM_LOCKED,
             PROP_LOAD_LEVEL,
@@ -673,7 +699,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_ROM_CODE => Ok(self.query_rom_code().await?.into()),
             PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
             // Failure
-            PROP_FAULTS => Ok(self.query_faults().await?.to_string().into()),
+            PROP_STORED_FAULTS => Ok(self.query_stored_faults().await?.to_string().into()),
             // Operation
             PROP_OPERATING_MODE => Ok(self.query_operating_mode().await?.to_string().into()),
             PROP_PROGRAM_SELECTOR => Ok(self.query_program_selector().await?.to_string().into()),
@@ -683,6 +709,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_PROGRAM_SPIN_SETTING => {
                 Ok(self.query_program_spin_setting().await?.to_string().into())
             }
+            PROP_PROGRAM_SPIN_SPEED => Ok(self.query_program_spin_speed().await?.into()),
             PROP_PROGRAM_PHASE => Ok(self.query_program_phase().await?.to_string().into()),
             PROP_PROGRAM_LOCKED => Ok(self.query_program_locked().await?.into()),
             PROP_LOAD_LEVEL => Ok(self.query_load_level().await?.into()),

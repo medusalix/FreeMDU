@@ -9,7 +9,7 @@
 //! the device's software ID and return an appropriate device instance.
 
 use crate::device::{
-    Action, ActionKind, ActionParameters, Device, DeviceKind, Error, Interface, Property,
+    Action, ActionKind, ActionParameters, Date, Device, DeviceKind, Error, Interface, Property,
     PropertyKind, Result, Value, private, utils,
 };
 use alloc::{
@@ -46,10 +46,10 @@ const PROP_MODEL_NUMBER: Property = Property {
     name: "Model Number",
     unit: None,
 };
-const PROP_BOARD_NUMBER: Property = Property {
+const PROP_MANUFACTURING_DATE: Property = Property {
     kind: PropertyKind::General,
-    id: "board_number",
-    name: "Board Number",
+    id: "manufacturing_date",
+    name: "Manufacturing Date",
     unit: None,
 };
 const PROP_ROM_CODE: Property = Property {
@@ -64,22 +64,16 @@ const PROP_OPERATING_TIME: Property = Property {
     name: "Operating Time",
     unit: None,
 };
-const PROP_FAULTS: Property = Property {
+const PROP_STORED_FAULTS: Property = Property {
     kind: PropertyKind::Failure,
-    id: "faults",
-    name: "Faults",
+    id: "stored_faults",
+    name: "Stored Faults",
     unit: None,
 };
 const PROP_OPERATING_MODE: Property = Property {
     kind: PropertyKind::Operation,
     id: "operating_mode",
     name: "Operating Mode",
-    unit: None,
-};
-const PROP_LOAD_LEVEL: Property = Property {
-    kind: PropertyKind::Operation,
-    id: "load_level",
-    name: "Load Level",
     unit: None,
 };
 const PROP_PROGRAM_SELECTOR: Property = Property {
@@ -112,6 +106,12 @@ const PROP_PROGRAM_SPIN_SETTING: Property = Property {
     name: "Program Spin Setting",
     unit: None,
 };
+const PROP_PROGRAM_SPIN_SPEED: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "program_spin_speed",
+    name: "Program Spin Speed",
+    unit: Some("rpm"),
+};
 const PROP_PROGRAM_PHASE: Property = Property {
     kind: PropertyKind::Operation,
     id: "program_phase",
@@ -124,6 +124,18 @@ const PROP_PROGRAM_LOCKED: Property = Property {
     name: "Program Locked",
     unit: None,
 };
+const PROP_LOAD_LEVEL: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "load_level",
+    name: "Load Level",
+    unit: None,
+};
+const PROP_IMBALANCE_SPIN_SPEED_LIMIT: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "imbalance_spin_speed_limit",
+    name: "Imbalance Spin Speed Limit",
+    unit: Some("rpm"),
+};
 const PROP_DISPLAY_CONTENTS: Property = Property {
     kind: PropertyKind::Operation,
     id: "display_contents",
@@ -134,6 +146,12 @@ const PROP_ACTIVE_ACTUATORS: Property = Property {
     kind: PropertyKind::Io,
     id: "active_actuators",
     name: "Active Actuators",
+    unit: None,
+};
+const PROP_WATER_DIVERTER_POSITION: Property = Property {
+    kind: PropertyKind::Io,
+    id: "water_diverter_position",
+    name: "Water Diverter Position",
     unit: None,
 };
 const PROP_NTC_RESISTANCE: Property = Property {
@@ -165,6 +183,12 @@ const PROP_MOTOR_PWM_DUTY_CYCLE: Property = Property {
     id: "motor_pwm_duty_cycle",
     name: "Motor PWM Duty Cycle",
     unit: Some("%"),
+};
+const PROP_MOTOR_TARGET_SPEED: Property = Property {
+    kind: PropertyKind::Io,
+    id: "motor_target_speed",
+    name: "Motor Target Speed",
+    unit: Some("rpm"),
 };
 const PROP_TACHOMETER_SPEED: Property = Property {
     kind: PropertyKind::Io,
@@ -429,23 +453,40 @@ bitflags::bitflags! {
     pub struct Actuator: u16 {
         /// Drain pump actuator.
         const DrainPump = 0x0004;
-        /// Drum lights actuator.
-        const DrumLights = 0x0008;
+        /// PWM short circuit relay actuator.
+        const PwmShortCircuit = 0x0008;
         /// Reverse relay actuator.
         const Reverse = 0x0010;
         /// Heater actuator.
         const Heater = 0x0020;
-        /// Softener compartment actuator.
-        const Softener = 0x0040;
-        /// Pre-wash compartment actuator.
-        const PreWash = 0x0080;
+        /// Water diverter motor actuator.
+        const WaterDiverter = 0x0080;
         /// Motor field switch relay actuator.
         const FieldSwitch = 0x0100;
-        /// Warm water actuator.
+        /// Warm water valve actuator.
         const WarmWater = 0x0200;
-        /// Main wash compartment actuator.
-        const MainWash = 0x0400;
+        /// Cold water valve actuator.
+        const ColdWater = 0x0400;
     }
+}
+
+/// Water diverter position.
+///
+/// The water diverter changes its position when the
+/// [`Actuator::WaterDiverter`] is activated.
+#[derive(FromRepr, Display, PartialEq, Eq, Copy, Clone, Debug)]
+#[repr(u8)]
+pub enum WaterDiverterPosition {
+    /// Unknown position (diverter is moving).
+    Unknown,
+    /// Door glass position.
+    DoorGlass,
+    /// Pre-wash compartment position.
+    PreWash,
+    /// Main wash compartment position.
+    MainWash,
+    /// Softener compartment position.
+    Softener,
 }
 
 /// Washing machine device implementation.
@@ -522,15 +563,15 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok(model.trim_end().to_string())
     }
 
-    /// Queries the electronics board number of the machine.
-    ///
-    /// The board number consists of 8 characters, e.g. `56554705`.
-    /// It can also be found on the sticker on the back side of the PCB.
-    pub async fn query_board_number(&mut self) -> Result<String, P::Error> {
-        let data: [u8; 8] = self.intf.read_eeprom(0x01ca).await?;
-        let board = str::from_utf8(&data).map_err(|_| Error::UnexpectedMemoryValue)?;
+    /// Queries the manufacturing/inspection date of the machine.
+    pub async fn query_manufacturing_date(&mut self) -> Result<Date, P::Error> {
+        let date: [u8; 4] = self.intf.read_eeprom(0x01ce).await?;
 
-        Ok(board.to_string())
+        Ok(Date::new(
+            u16::from(date[0]) + u16::from(date[1]) * 100,
+            date[2],
+            date[3],
+        ))
     }
 
     /// Queries the ROM code of the machine's microcontroller.
@@ -549,18 +590,22 @@ impl<P: Read + Write> WashingMachine<P> {
         //   - Minutes: binary value at 0x0052
         //   - Hours: BCD values from 0x0053 to 0x0055
         // When the minutes counter reaches 60, the hour value is incremented.
-        let time: u32 = self.intf.read_memory(0x0052).await?;
-        let mins = time & 0x0000_00ff;
-        let hours = utils::decode_bcd_value((time & 0xffff_ff00) >> 8);
+        let time: [u8; 4] = self.intf.read_memory(0x0052).await?;
+        let mins = time[0];
+        let hours = utils::decode_bcd_value(u32::from_le_bytes([time[1], time[2], time[3], 0x00]));
 
-        Ok(Duration::from_secs(u64::from(hours * 60 * 60 + mins * 60)))
+        Ok(Duration::from_secs(
+            (u64::from(hours) * 60 + u64::from(mins)) * 60,
+        ))
     }
 
     /// Queries the stored faults.
     ///
     /// The faults are persisted in the EEPROM when turning off the machine.
-    pub async fn query_faults(&mut self) -> Result<Fault, P::Error> {
-        Fault::from_bits(self.intf.read_memory(0x004e).await?).ok_or(Error::UnexpectedMemoryValue)
+    pub async fn query_stored_faults(&mut self) -> Result<Fault, P::Error> {
+        let faults: u16 = self.intf.read_memory(0x004e).await?;
+
+        Fault::from_bits(faults & 0x01ff).ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// Queries the operating mode.
@@ -590,7 +635,8 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// Queries the program temperature.
     ///
-    /// The program temperature is set according to the program selector position.
+    /// The program temperature is set according to the program
+    /// selector position and provided in `°C` (degrees Celsius).
     /// Some programs use a slightly lower temperature than selected.
     pub async fn query_program_temperature(&mut self) -> Result<u8, P::Error> {
         // Program temperatures are defined in a lookup table at address 0x2f92.
@@ -632,6 +678,18 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok(self.intf.write_memory(0x0057, speed as u8).await?)
     }
 
+    /// Queries the program spin speed.
+    ///
+    /// The spin speed is provided in `rpm` (revolutions per minute)
+    /// and may not correspond exactly to the labels on the front panel.
+    pub async fn query_program_spin_speed(&mut self) -> Result<u16, P::Error> {
+        // The spin speed is calculated from the spin setting at 0x0057
+        // and the machine's programming configuration at 0x021b in the subroutine at 0x3820.
+        let speed: u8 = self.intf.read_memory(0x00e9).await?;
+
+        Ok(u16::from(speed) * 50)
+    }
+
     /// Queries the program phase.
     pub async fn query_program_phase(&mut self) -> Result<ProgramPhase, P::Error> {
         // Program phases are defined in a lookup table at address 0x93a3.
@@ -659,19 +717,29 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok(self.intf.read_memory(0x004a).await?)
     }
 
+    /// Queries the motor speed spin limit due to imbalance.
+    ///
+    /// The speed limit is provided in `rpm` (revolutions per minute)
+    /// and is calculated by the machine based on the determined imbalance.
+    pub async fn query_imbalance_spin_speed_limit(&mut self) -> Result<u16, P::Error> {
+        let limit: u8 = self.intf.read_memory(0x0200).await?;
+
+        Ok(u16::from(limit) * 50)
+    }
+
     /// Queries the contents of the seven-segment display.
     ///
     /// The machine typically displays the time of the selected program in hours and minutes.
     /// In other operating modes, the display can also show special characters, e.g. `P`.
     pub async fn query_display_contents(&mut self) -> Result<String, P::Error> {
-        let display: u32 = self.intf.read_memory(0x009e).await?;
-        let points = (display & 0x0070_0000) >> 20;
-        let d1_code = (display & 0x0000_000f) as u8;
-        let d2_code = ((display & 0x0000_00f0) >> 4) as u8;
-        let d3_code = ((display & 0x0000_0f00) >> 8) as u8;
-        let d1_special = (display & 0x0200_0000) != 0x0000_0000;
-        let d2_special = (display & 0x0400_0000) != 0x0000_0000;
-        let d3_special = (display & 0x0800_0000) != 0x0000_0000;
+        let display: [u8; 4] = self.intf.read_memory(0x009e).await?;
+        let points = (display[2] & 0x70) >> 4;
+        let d1_code = display[0] & 0x0f;
+        let d2_code = (display[0] & 0xf0) >> 4;
+        let d3_code = display[1] & 0x0f;
+        let d1_special = (display[3] & 0x02) != 0x00;
+        let d2_special = (display[3] & 0x04) != 0x00;
+        let d3_special = (display[3] & 0x08) != 0x00;
         let d1_point = points == 0x01 || points == 0x07;
         let d2_point = points == 0x02 || points == 0x07;
         let d3_point = points == 0x03 || points == 0x07;
@@ -693,6 +761,14 @@ impl<P: Read + Write> WashingMachine<P> {
     pub async fn query_active_actuators(&mut self) -> Result<Actuator, P::Error> {
         // The active actuators are used to set the outputs at 0x02c6.
         Actuator::from_bits(self.intf.read_memory(0x007d).await?)
+            .ok_or(Error::UnexpectedMemoryValue)
+    }
+
+    /// Queries the current water diverter position.
+    pub async fn query_water_diverter_position(
+        &mut self,
+    ) -> Result<WaterDiverterPosition, P::Error> {
+        WaterDiverterPosition::from_repr(self.intf.read_memory(0x0245).await?)
             .ok_or(Error::UnexpectedMemoryValue)
     }
 
@@ -746,14 +822,24 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok((u16::from(duty) * 100 / 0xff).try_into()?)
     }
 
+    /// Queries the target speed of the drum motor.
+    ///
+    /// The speed is provided in `rpm` (revolutions per minute).
+    /// In contrast to the tachometer speed, this value is also
+    /// available when the motor is running at a very low speed.
+    pub async fn query_motor_target_speed(&mut self) -> Result<u16, P::Error> {
+        let target: u16 = self.intf.read_memory(0x00d5).await?;
+
+        utils::rpm_from_motor_speed(u32::from(target)).ok_or(Error::UnexpectedMemoryValue)
+    }
+
     /// Queries the current speed sensed by the tachometer generator and the target speed.
     ///
     /// The speed in `rpm` (revolutions per minute) is only provided
     /// by the machine during the spin phase.
     pub async fn query_tachometer_speed(&mut self) -> Result<(u16, u16), P::Error> {
-        let speed: u32 = self.intf.read_memory(0x01a4).await?;
-        let target = (speed & 0xffff) as u16;
-        let current = (speed >> 16) as u16;
+        let current = self.intf.read_memory(0x01a6).await?;
+        let target = self.intf.read_memory(0x018c).await?;
 
         Ok((current, target))
     }
@@ -810,26 +896,30 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_SERIAL_NUMBER,
             PROP_SERIAL_NUMBER_INDEX,
             PROP_MODEL_NUMBER,
-            PROP_BOARD_NUMBER,
+            PROP_MANUFACTURING_DATE,
             PROP_ROM_CODE,
             PROP_OPERATING_TIME,
-            PROP_FAULTS,
+            PROP_STORED_FAULTS,
             PROP_OPERATING_MODE,
             PROP_PROGRAM_SELECTOR,
             PROP_PROGRAM_TYPE,
             PROP_PROGRAM_TEMPERATURE,
             PROP_PROGRAM_OPTIONS,
             PROP_PROGRAM_SPIN_SETTING,
+            PROP_PROGRAM_SPIN_SPEED,
             PROP_PROGRAM_PHASE,
             PROP_PROGRAM_LOCKED,
             PROP_LOAD_LEVEL,
+            PROP_IMBALANCE_SPIN_SPEED_LIMIT,
             PROP_DISPLAY_CONTENTS,
             PROP_ACTIVE_ACTUATORS,
+            PROP_WATER_DIVERTER_POSITION,
             PROP_NTC_RESISTANCE,
             PROP_TEMPERATURE,
             PROP_PRESSURE_SENSOR_VALUE,
             PROP_WATER_LEVEL,
             PROP_MOTOR_PWM_DUTY_CYCLE,
+            PROP_MOTOR_TARGET_SPEED,
             PROP_TACHOMETER_SPEED,
         ]
     }
@@ -848,11 +938,11 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_SERIAL_NUMBER => Ok(self.query_serial_number().await?.into()),
             PROP_SERIAL_NUMBER_INDEX => Ok(self.query_serial_number_index().await?.into()),
             PROP_MODEL_NUMBER => Ok(self.query_model_number().await?.into()),
-            PROP_BOARD_NUMBER => Ok(self.query_board_number().await?.into()),
+            PROP_MANUFACTURING_DATE => Ok(self.query_manufacturing_date().await?.into()),
             PROP_ROM_CODE => Ok(self.query_rom_code().await?.into()),
             PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
             // Failure
-            PROP_FAULTS => Ok(self.query_faults().await?.to_string().into()),
+            PROP_STORED_FAULTS => Ok(self.query_stored_faults().await?.to_string().into()),
             // Operation
             PROP_OPERATING_MODE => Ok(self.query_operating_mode().await?.to_string().into()),
             PROP_PROGRAM_SELECTOR => Ok(self.query_program_selector().await?.to_string().into()),
@@ -862,17 +952,27 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_PROGRAM_SPIN_SETTING => {
                 Ok(self.query_program_spin_setting().await?.to_string().into())
             }
+            PROP_PROGRAM_SPIN_SPEED => Ok(self.query_program_spin_speed().await?.into()),
             PROP_PROGRAM_PHASE => Ok(self.query_program_phase().await?.to_string().into()),
             PROP_PROGRAM_LOCKED => Ok(self.query_program_locked().await?.into()),
             PROP_LOAD_LEVEL => Ok(self.query_load_level().await?.into()),
+            PROP_IMBALANCE_SPIN_SPEED_LIMIT => {
+                Ok(self.query_imbalance_spin_speed_limit().await?.into())
+            }
             PROP_DISPLAY_CONTENTS => Ok(self.query_display_contents().await?.into()),
             // Input/output
             PROP_ACTIVE_ACTUATORS => Ok(self.query_active_actuators().await?.to_string().into()),
+            PROP_WATER_DIVERTER_POSITION => Ok(self
+                .query_water_diverter_position()
+                .await?
+                .to_string()
+                .into()),
             PROP_NTC_RESISTANCE => Ok(self.query_ntc_resistance().await?.into()),
             PROP_TEMPERATURE => Ok(self.query_temperature().await?.into()),
             PROP_PRESSURE_SENSOR_VALUE => Ok(self.query_pressure_sensor_value().await?.into()),
             PROP_WATER_LEVEL => Ok(self.query_water_level().await?.into()),
             PROP_MOTOR_PWM_DUTY_CYCLE => Ok(self.query_motor_pwm_duty_cycle().await?.into()),
+            PROP_MOTOR_TARGET_SPEED => Ok(self.query_motor_target_speed().await?.into()),
             PROP_TACHOMETER_SPEED => Ok(self.query_tachometer_speed().await?.into()),
             _ => Err(Error::UnknownProperty),
         }

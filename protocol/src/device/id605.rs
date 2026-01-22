@@ -9,13 +9,10 @@
 //! the device's software ID and return an appropriate device instance.
 
 use crate::device::{
-    Action, ActionKind, Device, DeviceKind, Error, Interface, Property, PropertyKind, Result,
+    Action, ActionKind, Date, Device, DeviceKind, Error, Interface, Property, PropertyKind, Result,
     Value, private, utils,
 };
-use alloc::{
-    boxed::Box,
-    string::{String, ToString},
-};
+use alloc::{boxed::Box, string::ToString};
 use bitflags_derive::{FlagsDebug, FlagsDisplay};
 use core::str;
 use embedded_io_async::{Read, Write};
@@ -28,16 +25,16 @@ macro_rules! compatible_software_ids {
 }
 pub(super) use compatible_software_ids;
 
-const PROP_BOARD_NUMBER: Property = Property {
+const PROP_MANUFACTURING_DATE: Property = Property {
     kind: PropertyKind::General,
-    id: "board_number",
-    name: "Board Number",
+    id: "manufacturing_date",
+    name: "Manufacturing Date",
     unit: None,
 };
-const PROP_FAULTS: Property = Property {
+const PROP_STORED_FAULTS: Property = Property {
     kind: PropertyKind::Failure,
-    id: "faults",
-    name: "Faults",
+    id: "stored_faults",
+    name: "Stored Faults",
     unit: None,
 };
 const PROP_PROGRAM_SELECTOR: Property = Property {
@@ -287,21 +284,21 @@ impl<P: Read + Write> Dishwasher<P> {
         Ok(Self { intf, software_id })
     }
 
-    /// Queries the electronics board number of the machine.
-    ///
-    /// The board number consists of 8 characters, e.g. `56554705`.
-    /// It can also be found on the sticker on the back side of the PCB.
-    pub async fn query_board_number(&mut self) -> Result<String, P::Error> {
-        let data: [u8; 8] = self.intf.read_eeprom(0x00ec).await?;
-        let board = str::from_utf8(&data).map_err(|_| Error::UnexpectedMemoryValue)?;
+    /// Queries the manufacturing/inspection date of the machine.
+    pub async fn query_manufacturing_date(&mut self) -> Result<Date, P::Error> {
+        let date: [u8; 4] = self.intf.read_eeprom(0x00fe).await?;
 
-        Ok(board.to_string())
+        Ok(Date::new(
+            u16::from(date[0]) + u16::from(date[1]) * 100,
+            date[2],
+            date[3],
+        ))
     }
 
     /// Queries the stored faults.
     ///
     /// The faults are persisted in the EEPROM when turning off the machine.
-    pub async fn query_faults(&mut self) -> Result<Fault, P::Error> {
+    pub async fn query_stored_faults(&mut self) -> Result<Fault, P::Error> {
         Fault::from_bits(self.intf.read_memory(0x0082).await?).ok_or(Error::UnexpectedMemoryValue)
     }
 
@@ -466,8 +463,8 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
 
     fn properties(&self) -> &'static [Property] {
         &[
-            PROP_BOARD_NUMBER,
-            PROP_FAULTS,
+            PROP_MANUFACTURING_DATE,
+            PROP_STORED_FAULTS,
             PROP_PROGRAM_SELECTOR,
             PROP_PROGRAM_TYPE,
             PROP_TOP_SOLO_ENABLED,
@@ -488,9 +485,9 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
     async fn query_property(&mut self, prop: &Property) -> Result<Value, P::Error> {
         match *prop {
             // General
-            PROP_BOARD_NUMBER => Ok(self.query_board_number().await?.into()),
+            PROP_MANUFACTURING_DATE => Ok(self.query_manufacturing_date().await?.into()),
             // Failure
-            PROP_FAULTS => Ok(self.query_faults().await?.to_string().into()),
+            PROP_STORED_FAULTS => Ok(self.query_stored_faults().await?.to_string().into()),
             // Operation
             PROP_PROGRAM_SELECTOR => Ok(self.query_program_selector().await?.into()),
             PROP_PROGRAM_TYPE => Ok(self.query_program_type().await?.to_string().into()),

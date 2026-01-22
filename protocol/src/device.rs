@@ -195,6 +195,27 @@ pub enum Value {
     String(String),
     /// Duration value.
     Duration(Duration),
+    /// Date value.
+    Date(Date),
+}
+
+/// A simple date, consisting of year, month and day.
+#[derive(PartialEq, Eq, Debug)]
+pub struct Date {
+    /// Year value.
+    pub year: u16,
+    /// Month value.
+    pub month: u8,
+    /// Day value.
+    pub day: u8,
+}
+
+impl Date {
+    /// Constructs a new date.
+    #[must_use]
+    pub fn new(year: u16, month: u8, day: u8) -> Self {
+        Self { year, month, day }
+    }
 }
 
 impl From<bool> for Value {
@@ -248,6 +269,12 @@ impl From<String> for Value {
 impl From<Duration> for Value {
     fn from(dur: Duration) -> Self {
         Self::Duration(dur)
+    }
+}
+
+impl From<Date> for Value {
+    fn from(date: Date) -> Self {
+        Self::Date(date)
     }
 }
 
@@ -461,6 +488,18 @@ mod utils {
             (0x0e, true) => Some('='),
             (0x0f, true) => Some('°'),
             _ => None,
+        }
+    }
+
+    /// Computes the motor speed in rpm from a raw motor speed value.
+    pub(super) fn rpm_from_motor_speed(speed: u32) -> Option<u16> {
+        // This constant can be found by minimizing the error between the values
+        // in the device's motor speed lookup table and the actual speed in rpm.
+        const RPM_CONVERSION: u32 = 442_500;
+
+        match speed {
+            0x0000_0000 | 0x0000_ffff => Some(0x0000), // No speed set
+            s => (RPM_CONVERSION / s).try_into().ok(),
         }
     }
 }

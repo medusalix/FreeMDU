@@ -445,9 +445,7 @@ impl<P: Read + Write> Interface<P> {
         &mut self,
         addr: u16,
     ) -> Result<L, P::Error> {
-        let Ok(len) = N.try_into() else {
-            return Err(Error::InvalidArgument);
-        };
+        let len = N.try_into().map_err(|_| Error::InvalidArgument)?;
 
         self.send(Request::new(Command::ReadMemory, addr, len).into())
             .await?;
@@ -457,9 +455,10 @@ impl<P: Read + Write> Interface<P> {
 
     /// Reads data from the device's EEPROM.
     ///
-    /// The address must be specified in words, not bytes.
-    /// For example, to read a byte at address `0x64`, provide the word address `0x32`.
-    /// The payload length must be even and cannot exceed 255 bytes.
+    /// For older devices, the address must be specified in words, not bytes.
+    /// As an example, to read a byte at address `0x64`, provide the word address `0x32`.
+    ///
+    /// The payload length cannot exceed 255 bytes.
     ///
     /// # Errors
     ///
@@ -468,10 +467,7 @@ impl<P: Read + Write> Interface<P> {
         &mut self,
         addr: u16,
     ) -> Result<L, P::Error> {
-        let len = match N.try_into() {
-            Ok(n) if n % 2 == 0 => n,
-            _ => return Err(Error::InvalidArgument),
-        };
+        let len = N.try_into().map_err(|_| Error::InvalidArgument)?;
 
         self.send(Request::new(Command::ReadEeprom, addr, len).into())
             .await?;
@@ -510,9 +506,7 @@ impl<P: Read + Write> Interface<P> {
         addr: u16,
         payload: L,
     ) -> Result<(), P::Error> {
-        let Ok(len) = N.try_into() else {
-            return Err(Error::InvalidArgument);
-        };
+        let len = N.try_into().map_err(|_| Error::InvalidArgument)?;
 
         self.send(Request::new(Command::WriteMemory, addr, len).into())
             .await?;
@@ -521,9 +515,10 @@ impl<P: Read + Write> Interface<P> {
 
     /// Writes data to the device's EEPROM.
     ///
-    /// The address must be specified in words, not bytes.
-    /// For example, to write a byte at address `0x64`, provide the word address `0x32`.
-    /// The payload length must be even and cannot exceed 255 bytes.
+    /// For older devices, the address must be specified in words, not bytes.
+    /// As an example, to write a byte at address `0x64`, provide the word address `0x32`.
+    ///
+    /// The payload length cannot exceed 255 bytes.
     ///
     /// # Errors
     ///
@@ -533,10 +528,7 @@ impl<P: Read + Write> Interface<P> {
         addr: u16,
         payload: L,
     ) -> Result<(), P::Error> {
-        let len = match N.try_into() {
-            Ok(n) if n % 2 == 0 => n,
-            _ => return Err(Error::InvalidArgument),
-        };
+        let len = N.try_into().map_err(|_| Error::InvalidArgument)?;
 
         self.send(Request::new(Command::WriteEeprom, addr, len).into())
             .await?;
@@ -963,23 +955,7 @@ mod tests {
             "result should be invalid argument error"
         );
 
-        let res: Result<u8, _> = intf.read_eeprom(0xabcd).await;
-
-        assert_eq!(
-            res.unwrap_err(),
-            Error::InvalidArgument,
-            "result should be invalid argument error"
-        );
-
         let res = intf.write_memory(0xabcd, [0x00; 256]).await;
-
-        assert_eq!(
-            res.unwrap_err(),
-            Error::InvalidArgument,
-            "result should be invalid argument error"
-        );
-
-        let res = intf.write_eeprom(0xabcd, 0x11u8).await;
 
         assert_eq!(
             res.unwrap_err(),

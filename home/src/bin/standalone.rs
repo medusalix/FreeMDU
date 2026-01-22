@@ -29,7 +29,7 @@ use esp_radio::{
         WifiEvent,
     },
 };
-use freemdu::device::{self, Action, ActionKind, Property, PropertyKind, Value};
+use freemdu::device::{self, Action, ActionKind, Date, Property, PropertyKind, Value};
 use freemdu_home::{OpticalPort, status_led::StatusLed};
 use log::{error, info};
 use mcutie::{
@@ -209,8 +209,13 @@ async fn publish_property_value(prop: &Property, val: &Value) -> Result<()> {
                 .publish()
                 .await
         }
-        // Sensor values should not be published
-        Value::Sensor(_, _) => Ok(()),
+        Value::Sensor(_, _) => Ok(()), // Sensor values should not be published
+        Value::Date(Date { year, month, day }) => {
+            topic
+                .with_display(format!("{year}-{month:02}-{day:02}"))
+                .publish()
+                .await
+        }
     }
     .map_err(|err| anyhow::anyhow!("Failed to publish property value: {err:?}"))
 }
