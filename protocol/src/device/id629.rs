@@ -759,7 +759,12 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// Queries the currently active actuators.
     pub async fn query_active_actuators(&mut self) -> Result<Actuator, P::Error> {
-        // The active actuators are used to set the outputs at 0x02c6.
+        // The actuators are controlled by a Thesys TH 2030 ASIC, which
+        // is connected to the main microcontroller via a serial interface.
+        // The active actuator bits are converted into a value
+        // for the ASIC by a subroutine at 0x21d3.
+        // After this conversion, the data from 0x02c6 to 0x02cd
+        // is sent to the ASIC by a subroutine at 0x24f9.
         Actuator::from_bits(self.intf.read_memory(0x007d).await?)
             .ok_or(Error::UnexpectedMemoryValue)
     }
