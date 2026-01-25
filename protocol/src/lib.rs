@@ -150,7 +150,7 @@ use core::{
     num::Wrapping,
 };
 use embedded_io_async::{Read, ReadExactError, Write};
-use log::debug;
+use log::trace;
 use strum::FromRepr;
 
 /// A specialized [`Result`] type for [`Interface`] operations.
@@ -242,7 +242,7 @@ impl Request {
     pub fn new(cmd: Command, param: u16, len: u8) -> Self {
         let req = Self { cmd, param, len };
 
-        debug!("New request: {req:x?}");
+        trace!("New request: {req:x?}");
 
         req
     }
@@ -643,14 +643,14 @@ impl<P: Read + Write> Interface<P> {
     /// Reads data from the port into the provided buffer.
     async fn read(&mut self, buf: &mut [u8]) -> Result<(), P::Error> {
         self.port.read_exact(buf).await?;
-        debug!("Read from port: {buf:02x?}");
+        trace!("Read from port: {buf:02x?}");
 
         Ok(())
     }
 
     /// Writes the provided buffer to the port.
     async fn write(&mut self, buf: &[u8]) -> Result<(), P::Error> {
-        debug!("Write to port: {buf:02x?}");
+        trace!("Write to port: {buf:02x?}");
         self.port.write_all(buf).await?;
 
         Ok(())
@@ -662,10 +662,11 @@ mod tests {
     use super::*;
     use alloc::collections::vec_deque::VecDeque;
     use core::convert::Infallible;
+    use log::LevelFilter;
 
     pub fn init_logger() {
         let _ = env_logger::builder()
-            .filter_level(log::LevelFilter::max())
+            .filter_level(LevelFilter::max())
             .is_test(true)
             .try_init();
     }

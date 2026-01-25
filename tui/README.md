@@ -43,10 +43,10 @@ Device actions can be triggered using the function keys `F1` through `F10`. If t
 
 ## Troubleshooting
 
-If the application behaves unexpectedly, debug logging can be enabled using the `RUST_LOG` environment variable:
+If the application behaves unexpectedly, trace logging can be enabled using the `RUST_LOG` environment variable:
 
 ```shell
-RUST_LOG=debug ./freemdu-tui /dev/ttyACM0 2> log.txt
+RUST_LOG='freemdu=trace' ./freemdu-tui /dev/ttyACM0 2> log.txt
 ```
 
 > [!NOTE]
