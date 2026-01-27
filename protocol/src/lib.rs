@@ -133,6 +133,7 @@
 
 #![no_std]
 #![warn(missing_docs)]
+#![allow(missing_docs, unused)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 extern crate alloc;
@@ -211,9 +212,10 @@ impl<E> From<ReadExactError<E>> for Error<E> {
 }
 
 /// Command code used by the diagnostic interface.
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 #[repr(u8)]
 enum Command {
+    /// Base command set.
     Lock = 0x10,
     QuerySoftwareId = 0x11,
     UnlockReadAccess = 0x20,
@@ -226,6 +228,19 @@ enum Command {
     Halt = 0x45,
     SetBaudRate2400 = 0x46,
     SetBaudRate9600 = 0x47,
+
+    /// Extended command set.
+    UnlockSmartHome = 0x21,
+    ReadMemoryAlt1 = 0x33,
+    ReadMemoryAlt2 = 0x34,
+    ExtendAddress = 0x37,
+    QueryMaxBaudRate = 0x38,
+    WriteMemoryAlt1 = 0x43,
+    WriteMemoryAlt2 = 0x44,
+    SetChunkSize = 0x4a,
+    SetBaudRate = 0x4b,
+    HaltAlt = 0x4e,
+    SendSmartHome = 0x85,
 }
 
 /// Request message sent to the diagnostic interface.
@@ -264,7 +279,7 @@ impl From<Request> for Payload<4> {
 ///
 /// Used in communication with the device, both when
 /// sending requests and when interpreting responses.
-#[derive(FromRepr, Debug)]
+#[derive(FromRepr, PartialEq, Eq, Copy, Clone, Debug)]
 #[repr(u8)]
 enum ResponseCode {
     Success,
@@ -443,12 +458,31 @@ impl<P: Read + Write> Interface<P> {
     /// - [`Error::InvalidArgument`] if the payload length is greater than 255 bytes.
     pub async fn read_memory<L: From<Payload<N>>, const N: usize>(
         &mut self,
-        addr: u16,
+        addr: u32,
     ) -> Result<L, P::Error> {
-        let len = N.try_into().map_err(|_| Error::InvalidArgument)?;
+        let len: u16 = N.try_into().map_err(|_| Error::InvalidArgument)?;
 
-        self.send(Request::new(Command::ReadMemory, addr, len).into())
+        if addr > 0xffff || len > 0xff {
+            self.send(
+                Request::new(
+                    Command::ExtendAddress,
+                    (addr >> 16) as u16,
+                    (len >> 8) as u8,
+                )
+                .into(),
+            )
             .await?;
+        }
+
+        self.send(
+            Request::new(
+                Command::ReadMemory,
+                (addr & 0xffff) as u16,
+                (len & 0xff) as u8,
+            )
+            .into(),
+        )
+        .await?;
 
         Ok(self.receive().await?.into())
     }
@@ -503,13 +537,32 @@ impl<P: Read + Write> Interface<P> {
     /// - [`Error::InvalidArgument`] if the payload length is greater than 255 bytes.
     pub async fn write_memory<L: Into<Payload<N>>, const N: usize>(
         &mut self,
-        addr: u16,
+        addr: u32,
         payload: L,
     ) -> Result<(), P::Error> {
-        let len = N.try_into().map_err(|_| Error::InvalidArgument)?;
+        let len: u16 = N.try_into().map_err(|_| Error::InvalidArgument)?;
 
-        self.send(Request::new(Command::WriteMemory, addr, len).into())
+        if addr > 0xffff || len > 0xff {
+            self.send(
+                Request::new(
+                    Command::ExtendAddress,
+                    (addr >> 16) as u16,
+                    (len >> 8) as u8,
+                )
+                .into(),
+            )
             .await?;
+        }
+
+        self.send(
+            Request::new(
+                Command::WriteMemory,
+                (addr & 0xffff) as u16,
+                (len & 0xff) as u8,
+            )
+            .into(),
+        )
+        .await?;
         self.send(payload.into()).await
     }
 
@@ -540,9 +593,14 @@ impl<P: Read + Write> Interface<P> {
     /// This resets the device's diagnostic access level.
     /// The interface must be unlocked again after this operation
     /// to perform further diagnostic commands.
-    pub async fn jump_to_subroutine(&mut self, addr: u16) -> Result<(), P::Error> {
+    pub async fn jump_to_subroutine(&mut self, addr: u32) -> Result<(), P::Error> {
+        if addr > 0xffff {
+            self.send(Request::new(Command::ExtendAddress, (addr >> 16) as u16, 0x00).into())
+                .await?;
+        }
+
         // Response is sent once subroutine returns
-        self.send(Request::new(Command::JumpToSubroutine, addr, 0x00).into())
+        self.send(Request::new(Command::JumpToSubroutine, (addr & 0xffff) as u16, 0x00).into())
             .await?;
         self.read(&mut [0x00]).await
     }
@@ -948,7 +1006,7 @@ mod tests {
 
         let mut deque = VecDeque::from([]);
         let mut intf = Interface::new(&mut deque);
-        let res: Result<[u8; 256], _> = intf.read_memory(0xabcd).await;
+        let res: Result<[u8; 65536], _> = intf.read_memory(0xabcd).await;
 
         assert_eq!(
             res.unwrap_err(),
@@ -956,7 +1014,7 @@ mod tests {
             "result should be invalid argument error"
         );
 
-        let res = intf.write_memory(0xabcd, [0x00; 256]).await;
+        let res = intf.write_memory(0xabcd, [0x00; 65536]).await;
 
         assert_eq!(
             res.unwrap_err(),
