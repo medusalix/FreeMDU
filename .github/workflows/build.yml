@@ -30,5 +30,5 @@ jobs:
       - name: Lint code
         run: cargo clippy --target "${{ inputs.target }}" --features "${{ inputs.features }}" -- -D warnings
       - name: Run tests
-        run: cargo test --target "${{ inputs.target }}" --features "${{ inputs.features }}"
+        run: RUST_MIN_STACK=4000000 cargo test --target "${{ inputs.target }}" --features "${{ inputs.features }}"
         if: inputs.test
