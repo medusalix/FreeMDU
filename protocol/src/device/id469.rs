@@ -702,7 +702,8 @@ impl<P: Read + Write> WashingMachine<P> {
 
         // The machine uses a frequency converter for motor control
         // and the reverse and field switch actuator bits are always set.
-        Actuator::from_bits(actuators & !0x0110u16).ok_or(Error::UnexpectedMemoryValue)
+        // Additionally, bits 0 and 1 are used for the load sensor.
+        Actuator::from_bits(actuators & !0x0113u16).ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// TODO.
