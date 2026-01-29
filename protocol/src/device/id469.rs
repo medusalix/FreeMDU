@@ -244,7 +244,7 @@ bitflags::bitflags! {
 #[derive(FromRepr, Display, PartialEq, Eq, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum OperatingMode {
-    /// The door is open.
+    /// The door is open. Washing programs cannot be started.
     DoorOpen = 0x00,
     /// Default mode when the machine is turned on.
     ProgramIdle = 0x01,
@@ -708,6 +708,7 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// TODO.
     pub async fn query_load_sensor_weight(&mut self) -> Result<u8, P::Error> {
+        // Load percentages stored in mem_a8ef
         Ok(self.intf.read_memory(0x02b0).await?)
     }
 
@@ -763,6 +764,7 @@ impl<P: Read + Write> WashingMachine<P> {
     /// In contrast to the tachometer speed, this value is also
     /// available when the motor is running at a very low speed.
     pub async fn query_motor_target_speed(&mut self) -> Result<u16, P::Error> {
+        // Motor control serial done in sub_c25d.
         let target: u16 = self.intf.read_memory(0x00d6).await?;
 
         utils::rpm_from_motor_speed(u32::from(target)).ok_or(Error::UnexpectedMemoryValue)
