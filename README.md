@@ -27,12 +27,13 @@ When a connection is established via the diagnostic interface, the appliance res
 
 The following table lists the software IDs and device/board combinations that have been confirmed to work with FreeMDU:
 
-| Software ID | Device         | Board      | Microcontroller           | Optical interface location   | Status             |
-|-------------|----------------|------------|---------------------------|------------------------------|--------------------|
-| 360         | Bare board     | EDPW 223-A | Mitsubishi M38078MC-065FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
-| 419         | Bare board     | EDPW 206   | Mitsubishi M37451MC-804FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
-| 605         | G 651 I PLUS-3 | EGPL 542-C | Mitsubishi M38027M8       | *Salt (PC)* indicator        | 🟢 Fully supported |
-| 629         | W 2446         | EDPL 126-B | Mitsubishi M38079MF-308FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
+| Software ID | Device         | Board        | Microcontroller           | Optical interface location   | Status             |
+|-------------|----------------|--------------|---------------------------|------------------------------|--------------------|
+| 360         | Bare board     | EDPW 223-A   | Mitsubishi M38078MC-065FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
+| 419         | Bare board     | EDPW 206     | Mitsubishi M37451MC-804FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
+| 605         | G 651 I PLUS-3 | EGPL 542-C   | Mitsubishi M38027M8       | *Salt (PC)* indicator        | 🟢 Fully supported |
+| 629         | W 2446         | EDPL 126-B   | Mitsubishi M38079MF-308FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
+| 1998        | W 627 F        | ELP 165-T KD | Mitsubishi M3062LFGPFP    | *(PC)* indicator             | 🟢 Fully supported |
 
 If your appliance is not listed here but has a model number similar to one of the above, it might already be compatible. In all other cases, determining the **software ID** is the first step toward adding support for new devices.
 
