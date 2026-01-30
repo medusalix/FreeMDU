@@ -238,6 +238,8 @@ bitflags::bitflags! {
 #[derive(FromRepr, Display, PartialEq, Eq, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum OperatingMode {
+    /// The door is open. Washing programs cannot be started.
+    DoorOpen = 0x00,
     /// Default mode when the machine is turned on.
     ProgramIdle = 0x01,
     /// A washing program is currently running.
