@@ -28,24 +28,6 @@ macro_rules! compatible_software_ids {
 }
 pub(super) use compatible_software_ids;
 
-const PROP_SERIAL_NUMBER: Property = Property {
-    kind: PropertyKind::General,
-    id: "serial_number",
-    name: "Serial Number",
-    unit: None,
-};
-const PROP_SERIAL_NUMBER_INDEX: Property = Property {
-    kind: PropertyKind::General,
-    id: "serial_number_index",
-    name: "Serial Number Index",
-    unit: None,
-};
-const PROP_MODEL_NUMBER: Property = Property {
-    kind: PropertyKind::General,
-    id: "model_number",
-    name: "Model Number",
-    unit: None,
-};
 const PROP_MANUFACTURING_DATE: Property = Property {
     kind: PropertyKind::General,
     id: "manufacturing_date",
@@ -507,39 +489,6 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok(Self { intf, software_id })
     }
 
-    /// Queries the serial number of the machine.
-    ///
-    /// The serial number consists of 8 digits, e.g. `93140239`.
-    /// It can also be found on the sticker on the back side of the machine's door.
-    pub async fn query_serial_number(&mut self) -> Result<String, P::Error> {
-        let data: [u8; 10] = self.intf.read_eeprom(0x01ba).await?;
-        let serial = str::from_utf8(&data[1..9]).map_err(|_| Error::UnexpectedMemoryValue)?;
-
-        Ok(serial.to_string())
-    }
-
-    /// Queries the serial number index of the machine.
-    ///
-    /// The serial number index consists of 2 digits, e.g. `03`.
-    /// It can also be found on the sticker on the back side of the machine's door.
-    pub async fn query_serial_number_index(&mut self) -> Result<String, P::Error> {
-        let data: [u8; 4] = self.intf.read_eeprom(0x01be).await?;
-        let idx = str::from_utf8(&data[1..3]).map_err(|_| Error::UnexpectedMemoryValue)?;
-
-        Ok(idx.to_string())
-    }
-
-    /// Queries the model number of the machine.
-    ///
-    /// The model number has a maximum length of 15 characters, e.g. `W363`.
-    /// It can also be found on the sticker on the back side of the machine's door.
-    pub async fn query_model_number(&mut self) -> Result<String, P::Error> {
-        let data: [u8; 16] = self.intf.read_eeprom(0x01bf).await?;
-        let model = str::from_utf8(&data[1..]).map_err(|_| Error::UnexpectedMemoryValue)?;
-
-        Ok(model.trim_end().to_string())
-    }
-
     /// Queries the manufacturing/inspection date of the machine.
     pub async fn query_manufacturing_date(&mut self) -> Result<Date, P::Error> {
         let date: [u8; 4] = self.intf.read_eeprom(0x01ce).await?;
@@ -872,9 +821,6 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
 
     fn properties(&self) -> &'static [Property] {
         &[
-            PROP_SERIAL_NUMBER,
-            PROP_SERIAL_NUMBER_INDEX,
-            PROP_MODEL_NUMBER,
             PROP_MANUFACTURING_DATE,
             PROP_ROM_CODE,
             PROP_OPERATING_TIME,
@@ -914,9 +860,6 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
     async fn query_property(&mut self, prop: &Property) -> Result<Value, P::Error> {
         match *prop {
             // General
-            PROP_SERIAL_NUMBER => Ok(self.query_serial_number().await?.into()),
-            PROP_SERIAL_NUMBER_INDEX => Ok(self.query_serial_number_index().await?.into()),
-            PROP_MODEL_NUMBER => Ok(self.query_model_number().await?.into()),
             PROP_MANUFACTURING_DATE => Ok(self.query_manufacturing_date().await?.into()),
             PROP_ROM_CODE => Ok(self.query_rom_code().await?.into()),
             PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
