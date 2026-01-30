@@ -370,29 +370,12 @@ fn compute_checksum(data: &[u8]) -> u8 {
 #[derive(Debug)]
 pub struct Interface<P> {
     port: P,
-    send_dummy_bytes: bool,
 }
 
 impl<P: Read + Write> Interface<P> {
     /// Constructs a new diagnostic interface.
     pub fn new(port: P) -> Self {
-        Self {
-            port,
-            send_dummy_bytes: false,
-        }
-    }
-
-    /// Enables transmission of dummy bytes during communication.
-    ///
-    /// Some older devices require dummy bytes as part of the
-    /// diagnostic protocol (e.g. devices with software ID 419).
-    /// Calling this method ensures that these bytes are automatically sent when needed.
-    ///
-    /// The first dummy bytes are sent immediately as a response
-    /// to the query software ID command.
-    pub async fn enable_dummy_bytes(&mut self) -> Result<(), P::Error> {
-        self.send_dummy_bytes = true;
-        self.write(&[0x00, 0x00, 0x00, 0x00]).await
+        Self { port }
     }
 
     /// Locks the diagnostic interface.
@@ -600,10 +583,6 @@ impl<P: Read + Write> Interface<P> {
                 Some(ResponseCode::InvalidCommand) => Err(Error::InvalidCommand),
                 None => Err(Error::UnknownResponseCode),
             }?;
-
-            if self.send_dummy_bytes {
-                self.write(&[0x00]).await?;
-            }
         }
 
         Ok(())
@@ -624,12 +603,6 @@ impl<P: Read + Write> Interface<P> {
 
             if checksum[0] != compute_checksum(chunk) {
                 return Err(Error::IncorrectChecksum);
-            }
-
-            if self.send_dummy_bytes {
-                for _ in 0..=chunk.len() {
-                    self.write(&[0x00]).await?;
-                }
             }
 
             // Acknowledge reception of chunk
@@ -669,33 +642,6 @@ mod tests {
             .filter_level(LevelFilter::max())
             .is_test(true)
             .try_init();
-    }
-
-    #[tokio::test]
-    async fn enable_dummy_bytes() -> Result<(), Infallible> {
-        init_logger();
-
-        let mut deque = VecDeque::from([0x00, 0xa3, 0x01, 0xa4, 0x00, 0x11, 0x22, 0x33]);
-        let mut intf = Interface::new(&mut deque);
-        let id = intf.query_software_id().await?;
-
-        intf.enable_dummy_bytes().await?;
-
-        let data: [u8; 2] = intf.read_memory(0xabcd).await?;
-
-        assert_eq!(id, 419, "software ID should be correct");
-        assert_eq!(
-            deque,
-            [
-                0x11, 0x00, 0x00, 0x02, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0xcd, 0xab, 0x02,
-                0xaa, 0x00, 0x00, 0x00, 0x00, 0x00
-            ],
-            "deque contents should be correct"
-        );
-
-        assert_eq!(data, [0x11, 0x22], "memory contents should be correct");
-
-        Ok(())
     }
 
     #[tokio::test]

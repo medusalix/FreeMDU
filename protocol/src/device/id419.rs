@@ -424,9 +424,6 @@ impl<P: Read + Write> WashingMachine<P> {
         mut intf: Interface<P>,
         software_id: u16,
     ) -> Result<Self, P::Error> {
-        // Legacy protocol requires dummy bytes
-        intf.enable_dummy_bytes().await?;
-
         intf.unlock_read_access(0xb4ee).await?;
         intf.unlock_full_access(0x4e83).await?;
 
