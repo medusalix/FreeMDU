@@ -697,7 +697,7 @@ impl<P: Read + Write> WashingMachine<P> {
         let actuators: u16 = self.intf.read_memory(0x007d).await?;
 
         // The lowest two bits are unused and always set.
-        Actuator::from_bits(actuators & !0x03u16).ok_or(Error::UnexpectedMemoryValue)
+        Actuator::from_bits(actuators & !0x0003u16).ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// Queries the NTC thermistor resistance.
