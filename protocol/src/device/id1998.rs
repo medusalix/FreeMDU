@@ -17,7 +17,7 @@ use alloc::{
     string::{String, ToString},
 };
 use bitflags_derive::{FlagsDebug, FlagsDisplay, FlagsFromStr};
-use core::str;
+use core::{str, time::Duration};
 use embedded_io_async::{Read, Write};
 use strum::{Display, FromRepr};
 
@@ -56,6 +56,12 @@ const PROP_MANUFACTURING_DATE: Property = Property {
     kind: PropertyKind::General,
     id: "manufacturing_date",
     name: "Manufacturing Date",
+    unit: None,
+};
+const PROP_OPERATING_TIME: Property = Property {
+    kind: PropertyKind::General,
+    id: "operating_time",
+    name: "Operating Time",
     unit: None,
 };
 const PROP_PROGRAM_TYPE: Property = Property {
@@ -215,6 +221,20 @@ impl<P: Read + Write> WashingMachine<P> {
         ))
     }
 
+    /// Queries the total operating time of the machine.
+    ///
+    /// The operating time is only incremented if a washing program is running.
+    /// It is internally stored in minutes and hours but only the hours are displayed in the service mode.
+    pub async fn query_operating_time(&mut self) -> Result<Duration, P::Error> {
+        let time: [u8; 5] = self.intf.read_memory(0x1cd2).await?;
+        let mins = time[0];
+        let hours = u32::from_le_bytes([time[1], time[2], time[3], time[4]]);
+
+        Ok(Duration::from_secs(
+            (u64::from(hours) * 60 + u64::from(mins)) * 60,
+        ))
+    }
+
     /// Queries the program type.
     pub async fn query_program_type(&mut self) -> Result<ProgramType, P::Error> {
         ProgramType::from_repr(self.intf.read_memory(0x25ef).await?)
@@ -280,6 +300,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_MODEL_NUMBER,
             PROP_MATERIAL_NUMBER,
             PROP_MANUFACTURING_DATE,
+            PROP_OPERATING_TIME,
             PROP_PROGRAM_TYPE,
             PROP_PROGRAM_TEMPERATURE,
             PROP_PROGRAM_OPTIONS,
@@ -299,6 +320,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_MODEL_NUMBER => Ok(self.query_model_number().await?.into()),
             PROP_MATERIAL_NUMBER => Ok(self.query_material_number().await?.into()),
             PROP_MANUFACTURING_DATE => Ok(self.query_manufacturing_date().await?.into()),
+            PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
             // Failure
             // Operation
             PROP_PROGRAM_TYPE => Ok(self.query_program_type().await?.to_string().into()),
