@@ -498,8 +498,19 @@ mod utils {
         const RPM_CONVERSION: u32 = 442_500;
 
         match speed {
-            0x0000_0000 | 0x0000_ffff => Some(0x0000), // No speed set
+            0x0000_0000 | 0x0000_ffff => Some(0), // No speed set
             s => (RPM_CONVERSION / s).try_into().ok(),
+        }
+    }
+
+    /// Computes the motor speed in rpm from a raw variable-frequency drive (VFD) speed value.
+    pub(super) fn rpm_from_motor_speed_vfd(speed: u16) -> u16 {
+        // The VFD value and motor speed in rpm have a linear relationship.
+        const RPM_CONVERSION: u16 = 113;
+
+        match speed {
+            0x7fff => 0, // No speed set
+            s => (s * 10) / RPM_CONVERSION,
         }
     }
 }
