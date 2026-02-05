@@ -37,7 +37,11 @@ async fn find_full_access_key(
     intf: &mut Interface<Port>,
     read_key: u16,
 ) -> Result<u16, Box<dyn Error>> {
-    for i in FULL_ACCESS_KEYS.iter().copied().chain(0x0000u16..=0xffffu16) {
+    for i in FULL_ACCESS_KEYS
+        .iter()
+        .copied()
+        .chain(0x0000u16..=0xffffu16)
+    {
         println!("Trying read & full access keys: {read_key:04x}, {i:04x}");
 
         while let Err(err) = time::timeout(UNLOCK_TIMEOUT, async {
