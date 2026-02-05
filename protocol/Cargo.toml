@@ -26,6 +26,7 @@ strum = { version = "0.27.2", default-features = false, features = ["derive"] }
 [dev-dependencies]
 env_logger = "0.11.8"
 tokio = { version = "1.48.0", features = ["rt-multi-thread", "macros", "time"] }
+clap = { version = "4.5.57", features = ["derive"] }
 
 [features]
 native-serial = ["dep:serial2-tokio", "dep:embedded-io-adapters"]
