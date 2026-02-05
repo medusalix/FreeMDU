@@ -119,7 +119,7 @@ impl PropertyTable {
 impl Widget for &PropertyTable {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered()
-            .border_type(BorderType::Thick)
+            .border_type(BorderType::Rounded)
             .border_style(self.color)
             .padding(Padding::proportional(1))
             .title(Line::from(vec![" ".into(), self.title.bold(), " ".into()]).centered())

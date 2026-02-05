@@ -126,7 +126,7 @@ impl Popup {
         let height = (height as u16) + pad.top + pad.bottom + 2;
         let popup = area.centered(Constraint::Length(width), Constraint::Length(height));
         let block = Block::bordered()
-            .border_type(BorderType::Thick)
+            .border_type(BorderType::Rounded)
             .padding(pad)
             .title(Line::from(vec![" ".into(), title.bold(), " ".into()]).centered());
         let inner = block.inner(popup);
