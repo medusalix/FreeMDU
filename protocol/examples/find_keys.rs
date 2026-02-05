@@ -1,3 +1,4 @@
+use clap::Parser;
 use freemdu::{Interface, serial::Port};
 use std::{error::Error, thread, time::Duration};
 use tokio::time;
@@ -9,6 +10,14 @@ const CHECK_TIMEOUT: Duration = Duration::from_millis(100);
 // First try valid keys for existing models
 const READ_KEYS: [u16; 7] = [0x43ea, 0xb4ee, 0x1234, 0x2b67, 0x04d2, 0x2e69, 0x15a8];
 const FULL_ACCESS_KEYS: [u16; 7] = [0x1f02, 0x4e83, 0x5678, 0x8235, 0x162e, 0x3e3b, 0x703d];
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Serial port path
+    #[arg(short, long, default_value = "/dev/ttyACM0")]
+    port: String,
+}
 
 async fn find_read_access_key(intf: &mut Interface<Port>) -> Result<u16, Box<dyn Error>> {
     for i in READ_KEYS.iter().copied().chain(0x0000u16..=0xffffu16) {
@@ -68,7 +77,9 @@ async fn find_full_access_key(
 async fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
 
-    let port = freemdu::serial::open("/dev/ttyACM0")?;
+    let args = Args::parse();
+
+    let port = freemdu::serial::open(&args.port)?;
     let mut intf = Interface::new(port);
     let id = intf.query_software_id().await?;
 

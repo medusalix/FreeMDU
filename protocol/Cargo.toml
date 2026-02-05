@@ -17,6 +17,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 async-trait = { version = "0.1.89" }
 bitflags = { version = "2.10.0" }
 bitflags-derive = "0.0.4"
+clap = { version = "4.5.57", features = ["derive"] }
 embedded-io-adapters = { version = "0.7.0", features = ["tokio-1"], optional = true }
 embedded-io-async = "0.7.0"
 log = "0.4.28"

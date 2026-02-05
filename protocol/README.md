@@ -27,3 +27,18 @@ An example can be executed with the following command, replacing `<EXAMPLE>` wit
 ```shell
 cargo run --all-features --example <EXAMPLE>
 ```
+
+All examples accept the flag `-p` to define the serial port of your ESP32, the default is:
+
+```shell
+cargo run --all-features --example <EXAMPLE> -- -p /dev/ttyACM0
+```
+
+For `dump_eeprom`, you can also use these flags (they are the default values):
+- specify start and/or end addresses: `-s 0x0000 -e 0x07ff`
+- specify output filename: `-o eeprom_dump.bin`
+- use byte instead of word addressing for newer devices: `-b`
+
+For `dump_memory`:
+- start/end 32-bit addresses: `-s 0x0000_0000 -e 0x0000_ffff`
+- output file: `-o memory_dump.bin`
