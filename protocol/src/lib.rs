@@ -214,6 +214,7 @@ impl<E> From<ReadExactError<E>> for Error<E> {
 #[derive(Debug)]
 #[repr(u8)]
 enum Command {
+    /// Base command set.
     Lock = 0x10,
     QuerySoftwareId = 0x11,
     UnlockReadAccess = 0x20,
@@ -226,6 +227,8 @@ enum Command {
     Halt = 0x45,
     SetBaudRate2400 = 0x46,
     SetBaudRate9600 = 0x47,
+    /// Extended command set.
+    ExtendAddress = 0x37,
 }
 
 /// Request message sent to the diagnostic interface.
@@ -419,19 +422,40 @@ impl<P: Read + Write> Interface<P> {
 
     /// Reads data from the device's memory.
     ///
-    /// The requested payload length cannot exceed 255 bytes.
+    /// Newer devices support reading up to 65535 bytes from a 32-bit memory address,
+    /// while older devices are limited to 255 bytes and 16-bit addresses.
     ///
     /// # Errors
     ///
-    /// - [`Error::InvalidArgument`] if the payload length is greater than 255 bytes.
+    /// - [`Error::InvalidArgument`] if the payload length is greater than 65535 bytes.
     pub async fn read_memory<L: From<Payload<N>>, const N: usize>(
         &mut self,
-        addr: u16,
+        addr: u32,
     ) -> Result<L, P::Error> {
-        let len = N.try_into().map_err(|_| Error::InvalidArgument)?;
+        let len: u16 = N.try_into().map_err(|_| Error::InvalidArgument)?;
 
-        self.send(Request::new(Command::ReadMemory, addr, len).into())
+        // Send upper bytes of address or length
+        if addr > 0xffff || len > 0xff {
+            self.send(
+                Request::new(
+                    Command::ExtendAddress,
+                    (addr >> 16) as u16,
+                    (len >> 8) as u8,
+                )
+                .into(),
+            )
             .await?;
+        }
+
+        self.send(
+            Request::new(
+                Command::ReadMemory,
+                (addr & 0xffff) as u16,
+                (len & 0xff) as u8,
+            )
+            .into(),
+        )
+        .await?;
 
         Ok(self.receive().await?.into())
     }
@@ -479,20 +503,41 @@ impl<P: Read + Write> Interface<P> {
 
     /// Writes data to the device's memory.
     ///
-    /// The payload length cannot exceed 255 bytes.
+    /// Newer devices support writing up to 65535 bytes to a 32-bit memory address,
+    /// while older devices are limited to 255 bytes and 16-bit addresses.
     ///
     /// # Errors
     ///
-    /// - [`Error::InvalidArgument`] if the payload length is greater than 255 bytes.
+    /// - [`Error::InvalidArgument`] if the payload length is greater than 65535 bytes.
     pub async fn write_memory<L: Into<Payload<N>>, const N: usize>(
         &mut self,
-        addr: u16,
+        addr: u32,
         payload: L,
     ) -> Result<(), P::Error> {
-        let len = N.try_into().map_err(|_| Error::InvalidArgument)?;
+        let len: u16 = N.try_into().map_err(|_| Error::InvalidArgument)?;
 
-        self.send(Request::new(Command::WriteMemory, addr, len).into())
+        // Send upper bytes of address or length
+        if addr > 0xffff || len > 0xff {
+            self.send(
+                Request::new(
+                    Command::ExtendAddress,
+                    (addr >> 16) as u16,
+                    (len >> 8) as u8,
+                )
+                .into(),
+            )
             .await?;
+        }
+
+        self.send(
+            Request::new(
+                Command::WriteMemory,
+                (addr & 0xffff) as u16,
+                (len & 0xff) as u8,
+            )
+            .into(),
+        )
+        .await?;
         self.send(payload.into()).await
     }
 
@@ -520,12 +565,21 @@ impl<P: Read + Write> Interface<P> {
 
     /// Jumps to a specified subroutine and waits for it to return.
     ///
+    /// Newer devices support jumping to a 32-bit memory address,
+    /// while older devices are limited to 16-bit addresses.
+    ///
     /// This resets the device's diagnostic access level.
     /// The interface must be unlocked again after this operation
     /// to perform further diagnostic commands.
-    pub async fn jump_to_subroutine(&mut self, addr: u16) -> Result<(), P::Error> {
+    pub async fn jump_to_subroutine(&mut self, addr: u32) -> Result<(), P::Error> {
+        // Send upper bytes of address
+        if addr > 0xffff {
+            self.send(Request::new(Command::ExtendAddress, (addr >> 16) as u16, 0x00).into())
+                .await?;
+        }
+
         // Response is sent once subroutine returns
-        self.send(Request::new(Command::JumpToSubroutine, addr, 0x00).into())
+        self.send(Request::new(Command::JumpToSubroutine, (addr & 0xffff) as u16, 0x00).into())
             .await?;
         self.read(&mut [0x00]).await
     }
@@ -724,6 +778,34 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn read_memory_extended() -> Result<(), Infallible> {
+        init_logger();
+
+        let mut deque = VecDeque::from([
+            0x00, 0x00, 0x11, 0x22, 0x33, 0x44, 0xaa, 0xab, 0xcd, 0xef, 0x99, 0x00, 0xde, 0xad,
+            0x8b,
+        ]);
+        let mut intf = Interface::new(&mut deque);
+        let data: [u8; 10] = intf.read_memory(0x1234abcd).await?;
+
+        assert_eq!(
+            deque,
+            [
+                0x37, 0x34, 0x12, 0x00, 0x7d, 0x30, 0xcd, 0xab, 0x0a, 0xb2, 0x00, 0x00, 0x00
+            ],
+            "deque contents should be correct"
+        );
+
+        assert_eq!(
+            data,
+            [0x11, 0x22, 0x33, 0x44, 0xab, 0xcd, 0xef, 0x99, 0xde, 0xad],
+            "memory contents should be correct"
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn read_eeprom() -> Result<(), Infallible> {
         init_logger();
 
@@ -792,6 +874,31 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn write_memory_extended() -> Result<(), Infallible> {
+        init_logger();
+
+        let mut deque = VecDeque::from([0x00, 0x00, 0x00, 0x00, 0x00]);
+        let mut intf = Interface::new(&mut deque);
+
+        intf.write_memory(
+            0x1234abcd,
+            [0x11, 0x22, 0x33, 0x44, 0xab, 0xcd, 0xef, 0x99, 0xde, 0xad],
+        )
+        .await?;
+
+        assert_eq!(
+            deque,
+            [
+                0x37, 0x34, 0x12, 0x00, 0x7d, 0x40, 0xcd, 0xab, 0x0a, 0xc2, 0x11, 0x22, 0x33, 0x44,
+                0xaa, 0xab, 0xcd, 0xef, 0x99, 0x00, 0xde, 0xad, 0x8b
+            ],
+            "deque contents should be correct"
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn write_eeprom() -> Result<(), Infallible> {
         init_logger();
 
@@ -828,6 +935,24 @@ mod tests {
         assert_eq!(
             deque,
             [0x42, 0xcd, 0xab, 0x00, 0xba],
+            "deque contents should be correct"
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn jump_to_subroutine_extended() -> Result<(), Infallible> {
+        init_logger();
+
+        let mut deque = VecDeque::from([0x00, 0x00, 0x00]);
+        let mut intf = Interface::new(&mut deque);
+
+        intf.jump_to_subroutine(0x1234abcd).await?;
+
+        assert_eq!(
+            deque,
+            [0x37, 0x34, 0x12, 0x00, 0x7d, 0x42, 0xcd, 0xab, 0x00, 0xba],
             "deque contents should be correct"
         );
 
@@ -894,7 +1019,7 @@ mod tests {
 
         let mut deque = VecDeque::from([]);
         let mut intf = Interface::new(&mut deque);
-        let res: Result<[u8; 256], _> = intf.read_memory(0xabcd).await;
+        let res: Result<[u8; 65536], _> = intf.read_memory(0xabcd).await;
 
         assert_eq!(
             res.unwrap_err(),
@@ -902,7 +1027,7 @@ mod tests {
             "result should be invalid argument error"
         );
 
-        let res = intf.write_memory(0xabcd, [0x00; 256]).await;
+        let res = intf.write_memory(0xabcd, [0x00; 65536]).await;
 
         assert_eq!(
             res.unwrap_err(),
