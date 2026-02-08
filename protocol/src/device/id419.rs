@@ -127,6 +127,12 @@ const PROP_WATER_LEVEL: Property = Property {
     name: "Water Level",
     unit: Some("mmH₂O"),
 };
+const PROP_TACHOMETER_SPEED: Property = Property {
+    kind: PropertyKind::Io,
+    id: "tachometer_speed",
+    name: "Tachometer Speed",
+    unit: Some("rpm"),
+};
 
 const ACTION_SET_PROGRAM_OPTIONS: Action = Action {
     kind: ActionKind::Operation,
@@ -613,6 +619,24 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok((current, target))
     }
 
+    /// Queries the current speed sensed by the tachometer generator and the target speed.
+    ///
+    /// The speed is provided in `rpm` (revolutions per minute).
+    pub async fn query_tachometer_speed(&mut self) -> Result<(u16, u16), P::Error> {
+        // The target speed is selected from a lookup table at 0xe1ad,
+        // based on the value of the memory at 0x020b multiplied by 2.
+        // Motor control calculations are performed in a subroutine at 0xb9cb.
+        let speed: [u8; 5] = self.intf.read_memory(0x0091).await?;
+        let current_raw = u32::from_le_bytes([speed[0], speed[1], speed[2], 0x00]);
+        let target_raw = u16::from_le_bytes([speed[3], speed[4]]);
+        let current =
+            utils::rpm_from_motor_speed(current_raw).ok_or(Error::UnexpectedMemoryValue)?;
+        let target = utils::rpm_from_motor_speed(u32::from(target_raw))
+            .ok_or(Error::UnexpectedMemoryValue)?;
+
+        Ok((current, target))
+    }
+
     /// Starts the selected program.
     ///
     /// As the program cannot be set using the diagnostic interface,
@@ -679,6 +703,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_NTC_RESISTANCE,
             PROP_TEMPERATURE,
             PROP_WATER_LEVEL,
+            PROP_TACHOMETER_SPEED,
         ]
     }
 
@@ -715,6 +740,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_NTC_RESISTANCE => Ok(self.query_ntc_resistance().await?.into()),
             PROP_TEMPERATURE => Ok(self.query_temperature().await?.into()),
             PROP_WATER_LEVEL => Ok(self.query_water_level().await?.into()),
+            PROP_TACHOMETER_SPEED => Ok(self.query_tachometer_speed().await?.into()),
             _ => Err(Error::UnknownProperty),
         }
     }
