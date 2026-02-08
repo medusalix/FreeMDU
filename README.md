@@ -29,6 +29,7 @@ The following table lists the software IDs and device/board combinations that ha
 
 | Software ID | Device         | Board      | Microcontroller           | Optical interface location   | Status             |
 |-------------|----------------|------------|---------------------------|------------------------------|--------------------|
+| 324         | W 980          | EDPW 213   | Mitsubishi M37451MC       | *Check inlet (PC)* indicator | 🟢 Fully supported |
 | 360         | Bare board     | EDPW 223-A | Mitsubishi M38078MC-065FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
 | 419         | Bare board     | EDPW 206   | Mitsubishi M37451MC-804FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
 | 469         | W 487 S        | EDPW 228-A | Mitsubishi M38078MF       | *Check inlet (PC)* indicator | 🟢 Fully supported |
