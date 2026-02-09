@@ -22,26 +22,25 @@ embedded-io-async = "0.7.0"
 log = "0.4.28"
 serial2-tokio = { version = "0.1.19", optional = true }
 strum = { version = "0.27.2", default-features = false, features = ["derive"] }
-
-[dev-dependencies]
-env_logger = "0.11.8"
-tokio = { version = "1.48.0", features = ["rt-multi-thread", "macros", "time"] }
+env_logger = { version = "0.11.8", optional = true }
+tokio = { version = "1.48.0", features = ["rt-multi-thread", "macros", "time"], optional = true }
+clap = { version = "4.5.51", features = ["derive"], optional = true }
 
 [features]
-native-serial = ["dep:serial2-tokio", "dep:embedded-io-adapters"]
+native-serial = ["dep:serial2-tokio", "dep:embedded-io-adapters", "dep:clap", "dep:env_logger", "dep:tokio"]
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
 missing_errors_doc = "allow"
 
-[[example]]
+[[bin]]
 name = "find_keys"
 required-features = ["native-serial"]
 
-[[example]]
+[[bin]]
 name = "dump_memory"
 required-features = ["native-serial"]
 
-[[example]]
+[[bin]]
 name = "dump_eeprom"
 required-features = ["native-serial"]
