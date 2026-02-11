@@ -1,4 +1,4 @@
-use freemdu::device::{Date, Property, Value};
+use freemdu::device::{Date, Fault, FaultInfo, Property, Value};
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
@@ -121,6 +121,28 @@ impl PropertyTable {
             }
             Value::Date(Date { year, month, day }) => {
                 Some(Cell::Text(format!("{year}-{month:02}-{day:02}")))
+            }
+            Value::Fault(fault) => {
+                let (status, info) = match fault {
+                    Fault::Ok => return None, // Don't display unasserted faults
+                    Fault::Active(info) => ("Active", info),
+                    Fault::Stored(info) => ("Stored", info),
+                };
+
+                let txt = if let Some(FaultInfo {
+                    operating_hours,
+                    count,
+                }) = info
+                {
+                    format!(
+                        "{status} (occurred {count} {}, last at {operating_hours}h)",
+                        if *count == 1 { "time" } else { "times" }
+                    )
+                } else {
+                    status.to_string()
+                };
+
+                Some(Cell::Text(txt))
             }
         }
     }

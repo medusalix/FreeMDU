@@ -216,6 +216,7 @@ async fn publish_property_value(prop: &Property, val: &Value) -> Result<()> {
                 .publish()
                 .await
         }
+        Value::Fault(_) => Ok(()), // Faults should not be published
     }
     .map_err(|err| anyhow::anyhow!("Failed to publish property value: {err:?}"))
 }

@@ -118,7 +118,7 @@ pub enum DeviceKind {
 pub enum PropertyKind {
     /// General properties, e.g. model number.
     General,
-    /// Failure properties, e.g. stored faults.
+    /// Failure properties, e.g. faults.
     Failure,
     /// Operation properties, e.g. program phase.
     Operation,
@@ -199,6 +199,8 @@ pub enum Value {
     Duration(Duration),
     /// Date value.
     Date(Date),
+    /// Fault value.
+    Fault(Fault),
 }
 
 /// A simple date, consisting of year, month and day.
@@ -218,6 +220,32 @@ impl Date {
     pub fn new(year: u16, month: u8, day: u8) -> Self {
         Self { year, month, day }
     }
+}
+
+/// Additional information about a fault.
+#[derive(PartialEq, Eq, Debug)]
+pub struct FaultInfo {
+    /// Last time of occurrence.
+    pub operating_hours: u32,
+    /// Number of occurrences.
+    pub count: u32,
+}
+
+/// The status of a device fault.
+///
+/// Some devices provide additional metadata for active or stored faults using [`FaultInfo`].
+#[derive(PartialEq, Eq, Debug)]
+pub enum Fault {
+    /// Fault is not asserted.
+    Ok,
+    /// Fault is currently active.
+    ///
+    /// May include additional information if available.
+    Active(Option<FaultInfo>),
+    /// Fault is stored in non-volatile memory (EEPROM).
+    ///
+    /// May include additional information if available.
+    Stored(Option<FaultInfo>),
 }
 
 impl From<bool> for Value {
@@ -277,6 +305,12 @@ impl From<Duration> for Value {
 impl From<Date> for Value {
     fn from(date: Date) -> Self {
         Self::Date(date)
+    }
+}
+
+impl From<Fault> for Value {
+    fn from(fault: Fault) -> Self {
+        Self::Fault(fault)
     }
 }
 
