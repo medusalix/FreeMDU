@@ -9,6 +9,12 @@ use ratatui::{
 };
 
 #[derive(Debug)]
+enum Cell {
+    Text(String),
+    Gauge(String, f64),
+}
+
+#[derive(Debug)]
 pub struct PropertyTable {
     title: &'static str,
     color: Color,
@@ -29,37 +35,43 @@ impl PropertyTable {
     }
 
     fn render_rows(&self, area: Rect, buf: &mut Buffer) {
+        // Convert properties to cells before rendering to avoid empty rows
+        let cells = self
+            .data
+            .iter()
+            .filter_map(|(prop, val)| Self::prop_to_cell(prop, val).map(|cell| (prop, cell)));
+        let layout = Layout::horizontal([Constraint::Fill(1); 2]);
         let mut offset = 0;
 
-        for ((prop, val), row) in self.data.iter().zip(area.rows().take(self.data.len())) {
-            let [mut left, mut right] = Layout::horizontal([Constraint::Fill(1); 2]).areas(row);
+        for ((prop, cell), row) in cells.zip(area.rows()) {
+            let [mut left, mut right] = layout.areas(row);
 
             left.y += offset;
             right.y += offset;
 
             // Abort if row exceeds table bounds
-            if PropertyTable::row_height_out_of_bounds(right, area) {
+            if Self::row_height_out_of_bounds(right, area) {
                 break;
             }
 
-            match PropertyTable::format_prop(prop, val) {
-                (text, None) => {
-                    let par = Paragraph::new(text).wrap(Wrap { trim: false });
+            match cell {
+                Cell::Text(txt) => {
+                    let par = Paragraph::new(txt).wrap(Wrap { trim: false });
 
                     right.height = par.line_count(right.width) as u16;
 
                     // Abort if wrapped paragraph exceeds table bounds
-                    if PropertyTable::row_height_out_of_bounds(right, area) {
+                    if Self::row_height_out_of_bounds(right, area) {
                         break;
                     }
 
                     par.render(right, buf);
                 }
-                (text, Some(ratio)) => LineGauge::default()
+                Cell::Gauge(label, ratio) => LineGauge::default()
                     .filled_symbol(line::THICK_HORIZONTAL)
                     .filled_style(self.color)
                     .ratio(ratio)
-                    .label(text)
+                    .label(label)
                     .render(right, buf),
             }
 
@@ -68,23 +80,23 @@ impl PropertyTable {
         }
     }
 
-    fn format_prop(prop: &Property, val: &Value) -> (String, Option<f64>) {
-        match *val {
-            Value::Bool(val) => {
+    fn prop_to_cell(prop: &Property, val: &Value) -> Option<Cell> {
+        match val {
+            &Value::Bool(val) => {
                 if val {
-                    ("Yes".to_string(), None)
+                    Some(Cell::Text("Yes".to_string()))
                 } else {
-                    ("No".to_string(), None)
+                    Some(Cell::Text("No".to_string()))
                 }
             }
             Value::Number(num) => {
                 if let Some(unit) = prop.unit {
-                    (format!("{num} {unit}"), None)
+                    Some(Cell::Text(format!("{num} {unit}")))
                 } else {
-                    (num.to_string(), None)
+                    Some(Cell::Text(num.to_string()))
                 }
             }
-            Value::Sensor(current, target) => {
+            &Value::Sensor(current, target) => {
                 let txt = if let Some(unit) = prop.unit {
                     format!("{current} / {target} {unit}")
                 } else {
@@ -97,17 +109,19 @@ impl PropertyTable {
                     0.0
                 };
 
-                (txt, Some(ratio))
+                Some(Cell::Gauge(txt, ratio))
             }
-            Value::String(ref string) => (string.clone(), None),
+            Value::String(string) => Some(Cell::Text(string.clone())),
             Value::Duration(dur) => {
                 let total_mins = dur.as_secs() / 60;
                 let hours = total_mins / 60;
                 let mins = total_mins % 60;
 
-                (format!("{hours}h {mins}min"), None)
+                Some(Cell::Text(format!("{hours}h {mins}min")))
             }
-            Value::Date(Date { year, month, day }) => (format!("{year}-{month:02}-{day:02}"), None),
+            Value::Date(Date { year, month, day }) => {
+                Some(Cell::Text(format!("{year}-{month:02}-{day:02}")))
+            }
         }
     }
 
