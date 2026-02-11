@@ -40,12 +40,6 @@ const PROP_OPERATING_TIME: Property = Property {
     name: "Operating Time",
     unit: None,
 };
-const PROP_STORED_FAULTS: Property = Property {
-    kind: PropertyKind::Failure,
-    id: "stored_faults",
-    name: "Stored Faults",
-    unit: None,
-};
 const PROP_OPERATING_MODE: Property = Property {
     kind: PropertyKind::Operation,
     id: "operating_mode",
@@ -765,7 +759,6 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
         &[
             PROP_ROM_CODE,
             PROP_OPERATING_TIME,
-            PROP_STORED_FAULTS,
             PROP_OPERATING_MODE,
             PROP_PROGRAM_SELECTOR,
             PROP_PROGRAM_TYPE,
@@ -800,8 +793,6 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             // General
             PROP_ROM_CODE => Ok(self.query_rom_code().await?.into()),
             PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
-            // Failure
-            PROP_STORED_FAULTS => Ok(self.query_stored_faults().await?.to_string().into()),
             // Operation
             PROP_OPERATING_MODE => Ok(self.query_operating_mode().await?.to_string().into()),
             PROP_PROGRAM_SELECTOR => Ok(self.query_program_selector().await?.to_string().into()),

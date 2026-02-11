@@ -31,12 +31,6 @@ const PROP_MANUFACTURING_DATE: Property = Property {
     name: "Manufacturing Date",
     unit: None,
 };
-const PROP_STORED_FAULTS: Property = Property {
-    kind: PropertyKind::Failure,
-    id: "stored_faults",
-    name: "Stored Faults",
-    unit: None,
-};
 const PROP_PROGRAM_SELECTOR: Property = Property {
     kind: PropertyKind::Operation,
     id: "program_selector",
@@ -464,7 +458,6 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
     fn properties(&self) -> &'static [Property] {
         &[
             PROP_MANUFACTURING_DATE,
-            PROP_STORED_FAULTS,
             PROP_PROGRAM_SELECTOR,
             PROP_PROGRAM_TYPE,
             PROP_TOP_SOLO_ENABLED,
@@ -486,8 +479,6 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
         match *prop {
             // General
             PROP_MANUFACTURING_DATE => Ok(self.query_manufacturing_date().await?.into()),
-            // Failure
-            PROP_STORED_FAULTS => Ok(self.query_stored_faults().await?.to_string().into()),
             // Operation
             PROP_PROGRAM_SELECTOR => Ok(self.query_program_selector().await?.into()),
             PROP_PROGRAM_TYPE => Ok(self.query_program_type().await?.to_string().into()),
