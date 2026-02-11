@@ -118,8 +118,8 @@ pub enum DeviceKind {
 pub enum PropertyKind {
     /// General properties, e.g. model number.
     General,
-    /// Failure properties, e.g. faults.
-    Failure,
+    /// Fault properties, e.g. detergent overdose.
+    Fault,
     /// Operation properties, e.g. program phase.
     Operation,
     /// Input/output properties, e.g. water level.

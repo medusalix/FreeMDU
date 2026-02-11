@@ -31,7 +31,7 @@ After starting the application, connect the communication adapter to your device
 Each supported device defines a set of diagnostic properties, grouped into the following categories:
 
 - **General Information** (e.g. operating time)
-- **Failure Information** (e.g. detergent overdose)
+- **Fault Information** (e.g. detergent overdose)
 - **Operating State** (e.g. current program phase)
 - **Input/Output State** (e.g. current water level)
 
