@@ -4,8 +4,8 @@ use ratatui::{
     crossterm::event::{Event, KeyCode, KeyEvent},
     layout::{Constraint, Layout, Margin, Position, Rect},
     style::Stylize,
-    text::{Line, Text},
-    widgets::{Block, BorderType, Clear, Padding, StatefulWidget, Widget},
+    text::Line,
+    widgets::{Block, BorderType, Clear, Padding, Paragraph, StatefulWidget, Widget, Wrap},
 };
 use tui_input::{Input, backend::crossterm::EventHandler};
 
@@ -55,7 +55,7 @@ impl Popup {
             ActionParameters::Enumeration(vals) => vals.join(", "),
             ActionParameters::Flags(vals) => vals.join(" | "),
         };
-        let msg = Text::from(vec![
+        let par = Paragraph::new(vec![
             Line::from(vec![
                 "Please specify an argument for the ".into(),
                 action.bold(),
@@ -63,12 +63,18 @@ impl Popup {
             ]),
             Line::default(),
             Line::from(vec!["Possible values: ".into(), hint.bold(), ".".into()]),
-        ]);
-        let inner = Self::render_popup(area, buf, "Trigger action", msg.width(), 5);
+        ])
+        .wrap(Wrap { trim: false });
+
+        // Split message into multiple lines if too long
+        let width = par.line_width().min(area.width.saturating_sub(50) as usize);
+        let lines = par.line_count(width as u16);
+
+        let inner = Self::render_popup(area, buf, "Trigger action", width, lines + 2);
         let [top, bottom] =
             Layout::vertical([Constraint::Fill(1), Constraint::Length(1)]).areas(inner);
 
-        msg.render(top, buf);
+        par.render(top, buf);
         input.value().render(bottom, buf);
 
         (bottom.x + input.visual_cursor() as u16, bottom.y).into()
