@@ -209,14 +209,14 @@ async fn publish_property_value(prop: &Property, val: &Value) -> Result<()> {
                 .publish()
                 .await
         }
-        Value::Sensor(_, _) => Ok(()), // Sensor values should not be published
         Value::Date(Date { year, month, day }) => {
             topic
                 .with_display(format!("{year}-{month:02}-{day:02}"))
                 .publish()
                 .await
         }
-        Value::Fault(_) => Ok(()), // Faults should not be published
+        // Sensor values and faults should not be published
+        Value::Sensor(_, _) | Value::Fault(_) => Ok(()),
     }
     .map_err(|err| anyhow::anyhow!("Failed to publish property value: {err:?}"))
 }
