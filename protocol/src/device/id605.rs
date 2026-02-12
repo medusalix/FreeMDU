@@ -9,8 +9,8 @@
 //! the device's software ID and return an appropriate device instance.
 
 use crate::device::{
-    Action, ActionKind, Date, Device, DeviceKind, Error, Interface, Property, PropertyKind, Result,
-    Value, private, utils,
+    Action, ActionKind, Date, Device, DeviceKind, Error, Fault, Interface, Property, PropertyKind,
+    Result, Value, private, utils,
 };
 use alloc::{boxed::Box, string::ToString};
 use bitflags_derive::{FlagsDebug, FlagsDisplay};
@@ -29,6 +29,60 @@ const PROP_MANUFACTURING_DATE: Property = Property {
     kind: PropertyKind::General,
     id: "manufacturing_date",
     name: "Manufacturing Date",
+    unit: None,
+};
+const PROP_FAULT_F1: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f1",
+    name: "F1: NTC Thermistor Open",
+    unit: None,
+};
+const PROP_FAULT_F2: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f2",
+    name: "F2: NTC Thermistor Short",
+    unit: None,
+};
+const PROP_FAULT_F3: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f3",
+    name: "F3: Program Selector",
+    unit: None,
+};
+const PROP_FAULT_F4: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f4",
+    name: "F4: Heater",
+    unit: None,
+};
+const PROP_FAULT_F5: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f5",
+    name: "F5: Drainage",
+    unit: None,
+};
+const PROP_FAULT_F6: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f6",
+    name: "F6: Water Inlet Start",
+    unit: None,
+};
+const PROP_FAULT_F7: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f7",
+    name: "F7: Water Inlet End",
+    unit: None,
+};
+const PROP_FAULT_F8: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f8",
+    name: "F8: Pressure Switch Inlet",
+    unit: None,
+};
+const PROP_FAULT_F9: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f9",
+    name: "F9: Pressure Switch Heating",
     unit: None,
 };
 const PROP_PROGRAM_SELECTOR: Property = Property {
@@ -99,31 +153,29 @@ const ACTION_START_PROGRAM: Action = Action {
     params: None,
 };
 
-bitflags::bitflags! {
-    /// Dishwasher fault.
-    ///
-    /// Each flag represents a specific fault condition that can occur in the machine.
-    #[derive(FlagsDisplay, FlagsDebug, PartialEq, Eq, Copy, Clone)]
-    pub struct Fault: u16 {
-        /// NTC thermistor (temperature sensor) open circuit detected.
-        const NtcThermistorOpen = 0x0001;
-        /// NTC thermistor (temperature sensor) short circuit detected.
-        const NtcThermistorShort = 0x0002;
-        /// Program selection knob fault detected.
-        const ProgramSelector = 0x0004;
-        /// Heater fault detected.
-        const Heater = 0x0008;
-        /// Drainage fault detected.
-        const Drainage = 0x0010;
-        /// Inlet fault detected at the start of the inlet phase.
-        const InletStart = 0x0020;
-        /// Inlet fault detected at the end of the inlet phase.
-        const InletEnd = 0x0040;
-        /// Heater pressure switch fault detected during inlet phase.
-        const PressureSwitchInlet = 0x0080;
-        /// Heater pressure switch fault detected during heating phase.
-        const PressureSwitchHeating = 0x0100;
-    }
+/// Dishwasher fault code.
+///
+/// Each code represents a specific fault condition that can occur in the machine.
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+pub enum FaultCode {
+    /// NTC thermistor (temperature sensor) open circuit fault.
+    NtcThermistorOpen,
+    /// NTC thermistor (temperature sensor) short circuit fault.
+    NtcThermistorShort,
+    /// Program selection knob fault.
+    ProgramSelector,
+    /// Heater fault.
+    Heater,
+    /// Drainage fault.
+    Drainage,
+    /// Water inlet fault at the start of the inlet phase.
+    WaterInletStart,
+    /// Water inlet fault at the end of the inlet phase.
+    WaterInletEnd,
+    /// Heater pressure switch fault during inlet phase.
+    PressureSwitchInlet,
+    /// Heater pressure switch fault during heating phase.
+    PressureSwitchHeating,
 }
 
 /// Dishwashing program type.
@@ -289,11 +341,45 @@ impl<P: Read + Write> Dishwasher<P> {
         ))
     }
 
-    /// Queries the stored faults.
+    /// Queries the status of a fault identified by its fault code.
     ///
-    /// The faults are persisted in the EEPROM when turning off the machine.
-    pub async fn query_stored_faults(&mut self) -> Result<Fault, P::Error> {
-        Fault::from_bits(self.intf.read_memory(0x0082).await?).ok_or(Error::UnexpectedMemoryValue)
+    /// Faults may be either currently active or stored persistently in EEPROM
+    /// from a previous occurrence when the machine was powered off.
+    /// Returned faults do not include operating hours or occurrence count information.
+    pub async fn query_fault(&mut self, code: FaultCode) -> Result<Fault, P::Error> {
+        let mut query =
+            async |active: (u16, u8), stored: Option<(u16, u8)>| -> Result<Fault, P::Error> {
+                let val: u8 = self.intf.read_memory(active.0.into()).await?;
+
+                if (val & active.1) != 0x00 {
+                    Ok(Fault::Active(None))
+                } else if let Some(stored) = stored {
+                    let val: u8 = self.intf.read_memory(stored.0.into()).await?;
+
+                    if (val & stored.1) != 0x00 {
+                        Ok(Fault::Stored(None))
+                    } else {
+                        Ok(Fault::Ok)
+                    }
+                } else {
+                    Ok(Fault::Ok)
+                }
+            };
+
+        match code {
+            // NTC open/short and pressure switch heating only have two states (ok/active)
+            // They are stored but don't have a dedicated bit for the active state
+            FaultCode::NtcThermistorOpen => query((0x0082, 0x01), None),
+            FaultCode::NtcThermistorShort => query((0x0082, 0x02), None),
+            FaultCode::ProgramSelector => query((0x0052, 0x40), Some((0x0082, 0x04))),
+            FaultCode::Heater => query((0x0053, 0x02), Some((0x0082, 0x08))),
+            FaultCode::Drainage => query((0x0052, 0x02), Some((0x0082, 0x10))),
+            FaultCode::WaterInletStart => query((0x0052, 0x04), Some((0x0082, 0x20))),
+            FaultCode::WaterInletEnd => query((0x0052, 0x08), Some((0x0082, 0x40))),
+            FaultCode::PressureSwitchInlet => query((0x0052, 0x10), Some((0x0082, 0x80))),
+            FaultCode::PressureSwitchHeating => query((0x0083, 0x01), None),
+        }
+        .await
     }
 
     /// Queries the program selection knob position.
@@ -458,6 +544,15 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
     fn properties(&self) -> &'static [Property] {
         &[
             PROP_MANUFACTURING_DATE,
+            PROP_FAULT_F1,
+            PROP_FAULT_F2,
+            PROP_FAULT_F3,
+            PROP_FAULT_F4,
+            PROP_FAULT_F5,
+            PROP_FAULT_F6,
+            PROP_FAULT_F7,
+            PROP_FAULT_F8,
+            PROP_FAULT_F9,
             PROP_PROGRAM_SELECTOR,
             PROP_PROGRAM_TYPE,
             PROP_TOP_SOLO_ENABLED,
@@ -479,6 +574,25 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
         match *prop {
             // General
             PROP_MANUFACTURING_DATE => Ok(self.query_manufacturing_date().await?.into()),
+            // Fault
+            PROP_FAULT_F1 => Ok(self.query_fault(FaultCode::NtcThermistorOpen).await?.into()),
+            PROP_FAULT_F2 => Ok(self
+                .query_fault(FaultCode::NtcThermistorShort)
+                .await?
+                .into()),
+            PROP_FAULT_F3 => Ok(self.query_fault(FaultCode::ProgramSelector).await?.into()),
+            PROP_FAULT_F4 => Ok(self.query_fault(FaultCode::Heater).await?.into()),
+            PROP_FAULT_F5 => Ok(self.query_fault(FaultCode::Drainage).await?.into()),
+            PROP_FAULT_F6 => Ok(self.query_fault(FaultCode::WaterInletStart).await?.into()),
+            PROP_FAULT_F7 => Ok(self.query_fault(FaultCode::WaterInletEnd).await?.into()),
+            PROP_FAULT_F8 => Ok(self
+                .query_fault(FaultCode::PressureSwitchInlet)
+                .await?
+                .into()),
+            PROP_FAULT_F9 => Ok(self
+                .query_fault(FaultCode::PressureSwitchHeating)
+                .await?
+                .into()),
             // Operation
             PROP_PROGRAM_SELECTOR => Ok(self.query_program_selector().await?.into()),
             PROP_PROGRAM_TYPE => Ok(self.query_program_type().await?.to_string().into()),
