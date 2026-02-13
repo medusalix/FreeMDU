@@ -85,10 +85,10 @@ const PROP_FAULT_F9: Property = Property {
     name: "F9: Pressure Switch Heating",
     unit: None,
 };
-const PROP_PROGRAM_SELECTOR: Property = Property {
+const PROP_SELECTED_PROGRAM: Property = Property {
     kind: PropertyKind::Operation,
-    id: "program_selector",
-    name: "Program Selector",
+    id: "selected_program",
+    name: "Selected Program",
     unit: None,
 };
 const PROP_PROGRAM_TYPE: Property = Property {
@@ -162,7 +162,7 @@ pub enum FaultCode {
     NtcThermistorOpen,
     /// NTC thermistor (temperature sensor) short circuit fault.
     NtcThermistorShort,
-    /// Program selection knob fault.
+    /// Program selector knob fault.
     ProgramSelector,
     /// Heater fault.
     Heater,
@@ -176,6 +176,38 @@ pub enum FaultCode {
     PressureSwitchInlet,
     /// Heater pressure switch fault during heating phase.
     PressureSwitchHeating,
+}
+
+/// Dishwashing program.
+///
+/// Each variant represents a position of the machine's program selector knob.
+#[derive(FromRepr, Display, PartialEq, Eq, Copy, Clone, Debug)]
+#[repr(u8)]
+pub enum Program {
+    /// Stop position (no program selected).
+    Stop,
+    /// Universal program, 55 °C.
+    Universal55,
+    /// Universal plus program, 55 °C.
+    UniversalPlus55,
+    /// Intensive program, 75 °C.
+    Intensive75,
+    /// Energy save program.
+    EnergySave,
+    /// No program (5 o'clock).
+    None1,
+    /// No program (6 o'clock).
+    None2,
+    /// No program (7 o'clock).
+    None3,
+    /// Pre-wash program.
+    PreWash,
+    /// Economy program.
+    Economy,
+    /// Gentle program, 45 °C.
+    Gentle45,
+    /// Normal program, 50 °C.
+    Normal50,
 }
 
 /// Dishwashing program type.
@@ -382,12 +414,9 @@ impl<P: Read + Write> Dishwasher<P> {
         .await
     }
 
-    /// Queries the program selection knob position.
-    ///
-    /// Returns the position as a numeric clock position value
-    /// (e.g., `2` represents the 2 o'clock position).
-    pub async fn query_program_selector(&mut self) -> Result<u8, P::Error> {
-        Ok(self.intf.read_memory(0x00af).await?)
+    /// Queries the selected program.
+    pub async fn query_selected_program(&mut self) -> Result<Program, P::Error> {
+        Program::from_repr(self.intf.read_memory(0x00af).await?).ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// Queries the program type.
@@ -496,7 +525,7 @@ impl<P: Read + Write> Dishwasher<P> {
     /// Starts the selected program.
     ///
     /// As the program cannot be set using the diagnostic interface,
-    /// the desired program has to be selected manually using the program selection knob.
+    /// the desired program has to be selected manually using the program selector knob.
     /// This function returns an error if no program has been chosen
     /// or if a program is already running.
     pub async fn start_program(&mut self) -> Result<(), P::Error> {
@@ -553,7 +582,7 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
             PROP_FAULT_F7,
             PROP_FAULT_F8,
             PROP_FAULT_F9,
-            PROP_PROGRAM_SELECTOR,
+            PROP_SELECTED_PROGRAM,
             PROP_PROGRAM_TYPE,
             PROP_TOP_SOLO_ENABLED,
             PROP_PROGRAM_PHASE,
@@ -594,7 +623,7 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
                 .await?
                 .into()),
             // Operation
-            PROP_PROGRAM_SELECTOR => Ok(self.query_program_selector().await?.into()),
+            PROP_SELECTED_PROGRAM => Ok(self.query_selected_program().await?.to_string().into()),
             PROP_PROGRAM_TYPE => Ok(self.query_program_type().await?.to_string().into()),
             PROP_TOP_SOLO_ENABLED => Ok(self.query_top_solo_enabled().await?.into()),
             PROP_PROGRAM_PHASE => Ok(self.query_program_phase().await?.to_string().into()),
