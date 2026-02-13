@@ -12,7 +12,7 @@ The firmware currently supports only the Espressif **ESP32-C3** and **ESP32-C6**
 
 Because $R_P$ determines the phototransistor's sensitivity, an appropriate resistance must be selected. In most cases, a value of approximately $`47\,\text{k}\Omega`$ works well.
 
-By default, the firmware uses the `UART1` peripheral for infrared communication, with pin `0` as RX and `1` as TX. Pin `10` can be connected to an active-low status LED. All pin assignments can be modified in the [`.cargo/config.toml`](.cargo/config.toml) file.
+By default, the firmware uses the `UART1` peripheral for infrared communication, with pin `0` as RX and `1` as TX. Pin `10` can be connected to an active-low status LED or a WS2812 RGB LED (with `--features ws2812led` enabled). All pin assignments can be modified in the [`.cargo/config.toml`](.cargo/config.toml) file.
 
 ### Firmware modes
 
@@ -35,6 +35,8 @@ cargo run --features esp32c6 --target riscv32imac-unknown-none-elf --release --b
 ```
 
 Replace `<MODE>` with the desired firmware mode (`bridge` or `standalone`). For the ESP32-C3, substitute `esp32c3` and `riscv32imc-unknown-none-elf`.
+
+To enable support for WS2812 RGB LED, add a `--features ws2812led` argument. With this feature enabled, the LED will blink in red color in bridge mode during communication while in standalone mode it will turn green when connected. 
 
 ## Usage
 
