@@ -46,10 +46,10 @@ const PROP_OPERATING_MODE: Property = Property {
     name: "Operating Mode",
     unit: None,
 };
-const PROP_PROGRAM_SELECTOR: Property = Property {
+const PROP_SELECTED_PROGRAM: Property = Property {
     kind: PropertyKind::Operation,
-    id: "program_selector",
-    name: "Program Selector",
+    id: "selected_program",
+    name: "Selected Program",
     unit: None,
 };
 const PROP_PROGRAM_TYPE: Property = Property {
@@ -230,13 +230,13 @@ pub enum OperatingMode {
     CustomerProgramming = 0x06,
 }
 
-/// Washing program selection knob position.
+/// Washing machine program.
 ///
-/// Each variant represents a position of the machine's program selection knob.
+/// Each variant represents a position of the machine's program selector knob.
 #[derive(FromRepr, Display, PartialEq, Eq, Copy, Clone, Debug)]
 #[repr(u8)]
-pub enum SelectorPosition {
-    /// Finish position.
+pub enum Program {
+    /// Finish position (no program selected).
     Finish,
     /// Cottons program, 95 °C.
     Cottons95,
@@ -500,12 +500,11 @@ impl<P: Read + Write> WashingMachine<P> {
             .ok_or(Error::UnexpectedMemoryValue)
     }
 
-    /// Queries the program selection knob position.
-    pub async fn query_program_selector(&mut self) -> Result<SelectorPosition, P::Error> {
-        // The selector position is set from the value at 0x012f after a short delay.
-        // This value is also used to set the persistent program selection at 0x0001.
-        SelectorPosition::from_repr(self.intf.read_memory(0x0071).await?)
-            .ok_or(Error::UnexpectedMemoryValue)
+    /// Queries the selected program.
+    pub async fn query_selected_program(&mut self) -> Result<Program, P::Error> {
+        // The selected program is set from the value at 0x012f after a short delay.
+        // This value is also used to set the persistent program value at 0x0001.
+        Program::from_repr(self.intf.read_memory(0x0071).await?).ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// Queries the program type.
@@ -760,7 +759,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_ROM_CODE,
             PROP_OPERATING_TIME,
             PROP_OPERATING_MODE,
-            PROP_PROGRAM_SELECTOR,
+            PROP_SELECTED_PROGRAM,
             PROP_PROGRAM_TYPE,
             PROP_PROGRAM_TEMPERATURE,
             PROP_PROGRAM_OPTIONS,
@@ -795,7 +794,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
             // Operation
             PROP_OPERATING_MODE => Ok(self.query_operating_mode().await?.to_string().into()),
-            PROP_PROGRAM_SELECTOR => Ok(self.query_program_selector().await?.to_string().into()),
+            PROP_SELECTED_PROGRAM => Ok(self.query_selected_program().await?.to_string().into()),
             PROP_PROGRAM_TYPE => Ok(self.query_program_type().await?.to_string().into()),
             PROP_PROGRAM_TEMPERATURE => Ok(self.query_program_temperature().await?.into()),
             PROP_PROGRAM_OPTIONS => Ok(self.query_program_options().await?.to_string().into()),
