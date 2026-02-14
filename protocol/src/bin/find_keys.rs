@@ -87,7 +87,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut intf = Interface::new(port);
     let id = intf.query_software_id().await?;
 
-    println!("Connected to device with Software ID: {id:04x}");
+    println!("Connected to device with Software ID: {id:04}");
 
     let read_key = find_read_access_key(&mut intf).await?;
     let full_key = find_full_access_key(&mut intf, read_key).await?;
