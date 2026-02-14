@@ -3,9 +3,10 @@ use freemdu::{
     device::{self, Action, DeviceKind, Error, Property, PropertyKind, Value},
     serial::Port,
 };
+use log::debug;
 use tokio::{
     sync::mpsc::{self, UnboundedReceiver, UnboundedSender},
-    task::{self, JoinHandle},
+    task,
     time::{self, Duration},
 };
 
@@ -31,6 +32,7 @@ pub enum Response {
         actions: &'static [Action],
         tx: UnboundedSender<Request>,
     },
+    DeviceDisconnected,
     PropertiesQueried(PropertyKind, Vec<(&'static Property, Value)>),
     InvalidActionArgument(&'static Action),
     InvalidActionState(&'static Action),
@@ -38,46 +40,62 @@ pub enum Response {
 
 pub struct Worker<'a> {
     dev: Device<'a>,
-    tx: UnboundedSender<Response>,
+    tx: &'a UnboundedSender<Response>,
 }
 
 impl Worker<'_> {
-    pub fn start(mut port: Port) -> (UnboundedReceiver<Response>, JoinHandle<Result<()>>) {
+    pub fn start(mut port: Port) -> UnboundedReceiver<Response> {
         let (tx, rx) = mpsc::unbounded_channel();
-        let handle = task::spawn_local(async move {
+
+        task::spawn_local(async move {
             loop {
                 // Connect to device (retry on timeout)
                 match time::timeout(DEVICE_TIMEOUT, device::connect(&mut port)).await {
-                    Ok(dev) => return Worker { dev: dev?, tx }.run().await,
-                    Err(_) => time::sleep(DEVICE_CONNECT_INTERVAL).await,
+                    Ok(Ok(dev)) => {
+                        let mut worker = Worker { dev, tx: &tx };
+
+                        if let Err(err) = worker.run().await {
+                            debug!("Error running device worker: {err:#}");
+                        }
+                    }
+                    Ok(Err(err)) => debug!("Error connecting to device: {err:#}"),
+                    Err(_) => debug!("Device connection timed out"),
                 }
+
+                time::sleep(DEVICE_CONNECT_INTERVAL).await;
             }
         });
 
-        (rx, handle)
+        rx
     }
 
     async fn run(&mut self) -> Result<()> {
-        let (tx, mut rx) = mpsc::unbounded_channel();
+        let (dev_tx, mut dev_rx) = mpsc::unbounded_channel();
 
         self.tx.send(Response::DeviceConnected {
             software_id: self.dev.software_id(),
             kind: self.dev.kind(),
             actions: self.dev.actions(),
-            tx,
+            tx: dev_tx,
         })?;
 
-        // Handle incoming commands from session channel
-        while let Some(cmd) = rx.recv().await {
-            match cmd {
+        // Handle incoming commands from device channel
+        while let Some(cmd) = dev_rx.recv().await {
+            let res = match cmd {
                 Request::QueryProperties(kind) => self
                     .query_properties(kind)
                     .await
-                    .context("Failed to query properties")?,
+                    .context("Failed to query properties"),
                 Request::TriggerAction(action, param) => self
                     .trigger_action(action, param)
                     .await
-                    .context("Failed to trigger action")?,
+                    .context("Failed to trigger action"),
+            };
+
+            if res.is_err() {
+                self.tx.send(Response::DeviceDisconnected)?;
+
+                return res;
             }
         }
 

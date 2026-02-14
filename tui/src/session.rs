@@ -104,7 +104,6 @@ impl Session {
 
     pub fn handle_worker_response(&mut self, resp: Response) -> Result<()> {
         match resp {
-            Response::DeviceConnected { .. } => {}
             Response::PropertiesQueried(kind, data) => {
                 if let Some((_, table)) = self.tables.iter_mut().find(|(k, _)| k == &kind) {
                     table.update(data);
@@ -118,6 +117,7 @@ impl Session {
             Response::InvalidActionState(action) => {
                 self.popup = Some(Popup::InvalidActionState(action));
             }
+            _ => {}
         }
 
         Ok(())
