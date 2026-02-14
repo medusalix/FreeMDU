@@ -172,8 +172,8 @@ pub enum Error<E> {
     IncorrectChecksum,
     /// The device received an invalid command.
     InvalidCommand,
-    /// The device responded with an unknown response code.
-    UnknownResponseCode,
+    /// The device returned an invalid response.
+    InvalidResponse,
     /// The port encountered an unexpected end-of-file.
     UnexpectedEof,
     /// A port-specific input/output error.
@@ -186,7 +186,7 @@ impl<E: core::error::Error> Display for Error<E> {
             Self::InvalidArgument => write!(f, "invalid argument"),
             Self::IncorrectChecksum => write!(f, "incorrect checksum"),
             Self::InvalidCommand => write!(f, "invalid command"),
-            Self::UnknownResponseCode => write!(f, "unknown response code"),
+            Self::InvalidResponse => write!(f, "invalid response"),
             Self::UnexpectedEof => write!(f, "unexpected end-of-file"),
             Self::Io(err) => write!(f, "input/output error: {err}"),
         }
@@ -635,7 +635,7 @@ impl<P: Read + Write> Interface<P> {
                 Some(ResponseCode::Success) => Ok(()),
                 Some(ResponseCode::IncorrectChecksum) => Err(Error::IncorrectChecksum),
                 Some(ResponseCode::InvalidCommand) => Err(Error::InvalidCommand),
-                None => Err(Error::UnknownResponseCode),
+                None => Err(Error::InvalidResponse),
             }?;
         }
 
@@ -1090,8 +1090,8 @@ mod tests {
 
         assert_eq!(
             res.unwrap_err(),
-            Error::UnknownResponseCode,
-            "result should be unknown response code error"
+            Error::InvalidResponse,
+            "result should be invalid response error"
         );
 
         Ok(())
