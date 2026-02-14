@@ -210,25 +210,61 @@ impl<E> From<ReadExactError<E>> for Error<E> {
     }
 }
 
+/// Baud rate used by the diagnostic interface.
+#[derive(FromRepr, PartialEq, Eq, Copy, Clone, Debug)]
+#[repr(u8)]
+pub enum BaudRate {
+    /// 2400 baud.
+    Baud2400,
+    /// 9600 baud.
+    Baud9600,
+    /// 19200 baud.
+    Baud19200,
+    /// 38400 baud.
+    Baud38400,
+    /// 57600 baud.
+    Baud57600,
+    /// 76800 baud.
+    Baud76800,
+    /// 115200 baud.
+    Baud115200,
+}
+
+impl BaudRate {
+    /// Returns the numeric baud rate value.
+    #[must_use]
+    pub const fn as_baud(self) -> u32 {
+        match self {
+            Self::Baud2400 => 2400,
+            Self::Baud9600 => 9600,
+            Self::Baud19200 => 19200,
+            Self::Baud38400 => 38400,
+            Self::Baud57600 => 57600,
+            Self::Baud76800 => 76800,
+            Self::Baud115200 => 115_200,
+        }
+    }
+}
+
 /// Command code used by the diagnostic interface.
 #[derive(Debug)]
 #[repr(u8)]
 enum Command {
-    /// Base command set.
     Lock = 0x10,
     QuerySoftwareId = 0x11,
     UnlockReadAccess = 0x20,
     ReadMemory = 0x30,
     ReadEeprom = 0x31,
     UnlockFullAccess = 0x32,
+    ExtendAddress = 0x37,    // Available on newer devices
+    QueryMaxBaudRate = 0x38, // Available on newer devices
     WriteMemory = 0x40,
     WriteEeprom = 0x41,
     JumpToSubroutine = 0x42,
     Halt = 0x45,
     SetBaudRate2400 = 0x46,
     SetBaudRate9600 = 0x47,
-    /// Extended command set.
-    ExtendAddress = 0x37,
+    SetBaudRate = 0x4b, // Available on newer devices
 }
 
 /// Request message sent to the diagnostic interface.
@@ -415,6 +451,7 @@ impl<P: Read + Write> Interface<P> {
     ///
     /// - [`Interface::read_memory`]
     /// - [`Interface::read_eeprom`]
+    /// - [`Interface::query_max_baud_rate`]
     pub async fn unlock_read_access(&mut self, key: u16) -> Result<(), P::Error> {
         self.send(Request::new(Command::UnlockReadAccess, key, 0x00).into())
             .await
@@ -482,6 +519,22 @@ impl<P: Read + Write> Interface<P> {
         Ok(self.receive().await?.into())
     }
 
+    /// Queries the device's maximum supported baud rate.
+    ///
+    /// The maximum baud rate can only be queried on newer devices.
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::InvalidResponse`] if the device responds with an invalid baud rate
+    pub async fn query_max_baud_rate(&mut self) -> Result<BaudRate, P::Error> {
+        self.send(Request::new(Command::QueryMaxBaudRate, 0x0000, 0x02).into())
+            .await?;
+
+        let resp: [u8; 2] = self.receive().await?.into();
+
+        BaudRate::from_repr(resp[1]).ok_or(Error::InvalidResponse)
+    }
+
     /// Unlocks full diagnostic access.
     ///
     /// Before calling this function, read-only access has to be
@@ -494,8 +547,7 @@ impl<P: Read + Write> Interface<P> {
     /// - [`Interface::write_eeprom`]
     /// - [`Interface::jump_to_subroutine`]
     /// - [`Interface::halt`]
-    /// - [`Interface::set_baud_rate_2400`]
-    /// - [`Interface::set_baud_rate_9600`]
+    /// - [`Interface::set_baud_rate`]
     pub async fn unlock_full_access(&mut self, key: u16) -> Result<(), P::Error> {
         self.send(Request::new(Command::UnlockFullAccess, key, 0x00).into())
             .await
@@ -592,30 +644,40 @@ impl<P: Read + Write> Interface<P> {
             .await
     }
 
-    /// Sets the device's baud rate to 2400.
+    /// Sets the device's baud rate.
+    ///
+    /// Baud rates above 9600 baud are only supported on newer devices.
+    /// On these devices, the maximum supported baud rate
+    /// can be queried via [`Interface::query_max_baud_rate`].
+    /// If a higher-than-supported baud rate is requested on a newer device,
+    /// it will automatically fall back to the highest supported baud rate.
     ///
     /// This resets the device's diagnostic access level.
     /// The interface must be unlocked again after this operation
     /// to perform further diagnostic commands.
     ///
     /// Note that this does not change the baud rate of the current port instance.
-    /// A new [`Interface`] must be created with a port configured for 2400 baud.
-    pub async fn set_baud_rate_2400(&mut self) -> Result<(), P::Error> {
-        self.send(Request::new(Command::SetBaudRate2400, 0x0000, 0x00).into())
-            .await
-    }
+    /// A new [`Interface`] must be created with a port configured for the selected baud rate.
+    pub async fn set_baud_rate(&mut self, rate: BaudRate) -> Result<(), P::Error> {
+        match rate {
+            BaudRate::Baud2400 => {
+                self.send(Request::new(Command::SetBaudRate2400, 0x0000, 0x00).into())
+                    .await
+            }
+            BaudRate::Baud9600 => {
+                self.send(Request::new(Command::SetBaudRate9600, 0x0000, 0x00).into())
+                    .await
+            }
+            _ => {
+                self.send(Request::new(Command::SetBaudRate, rate as u16, 0x01).into())
+                    .await?;
 
-    /// Sets the device's baud rate to 9600.
-    ///
-    /// This resets the device's diagnostic access level.
-    /// The interface must be unlocked again after this operation
-    /// to perform further diagnostic commands.
-    ///
-    /// Note that this does not change the baud rate of the current port instance.
-    /// A new [`Interface`] must be created with a port configured for 9600 baud.
-    pub async fn set_baud_rate_9600(&mut self) -> Result<(), P::Error> {
-        self.send(Request::new(Command::SetBaudRate9600, 0x0000, 0x00).into())
-            .await
+                // Device responds with actual baud rate
+                let _: u8 = self.receive().await?.into();
+
+                Ok(())
+            }
+        }
     }
 
     /// Sends a payload to the port.
@@ -831,6 +893,25 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn query_max_baud_rate() -> Result<(), Infallible> {
+        init_logger();
+
+        let mut deque = VecDeque::from([0x00, 0x80, 0x03, 0x83]);
+        let mut intf = Interface::new(&mut deque);
+        let rate = intf.query_max_baud_rate().await?;
+
+        assert_eq!(
+            deque,
+            [0x38, 0x00, 0x00, 0x02, 0x3a, 0x00],
+            "deque contents should be correct"
+        );
+
+        assert_eq!(rate, BaudRate::Baud38400, "baud rate should be correct");
+
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn unlock_full_access() -> Result<(), Infallible> {
         init_logger();
 
@@ -984,7 +1065,7 @@ mod tests {
         let mut deque = VecDeque::from([0x00]);
         let mut intf = Interface::new(&mut deque);
 
-        intf.set_baud_rate_2400().await?;
+        intf.set_baud_rate(BaudRate::Baud2400).await?;
 
         assert_eq!(
             deque,
@@ -1002,11 +1083,29 @@ mod tests {
         let mut deque = VecDeque::from([0x00]);
         let mut intf = Interface::new(&mut deque);
 
-        intf.set_baud_rate_9600().await?;
+        intf.set_baud_rate(BaudRate::Baud9600).await?;
 
         assert_eq!(
             deque,
             [0x47, 0x00, 0x00, 0x00, 0x47],
+            "deque contents should be correct"
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn set_baud_rate() -> Result<(), Infallible> {
+        init_logger();
+
+        let mut deque = VecDeque::from([0x00, 0x02, 0x02]);
+        let mut intf = Interface::new(&mut deque);
+
+        intf.set_baud_rate(BaudRate::Baud19200).await?;
+
+        assert_eq!(
+            deque,
+            [0x4b, 0x02, 0x00, 0x01, 0x4e, 0x00],
             "deque contents should be correct"
         );
 
