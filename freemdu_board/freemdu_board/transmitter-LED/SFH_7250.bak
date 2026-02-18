@@ -1,0 +1,246 @@
+
+(kicad_symbol_lib (version 20211014) (generator kicad_symbol_editor)
+  (symbol "SFH_7250" (pin_names (offset 1.016)) (in_bom yes) (on_board yes)
+    (property "Reference" "U" (id 0) (at -5.08 10.922 0)
+      (effects (font (size 1.27 1.27)) (justify bottom left))
+    )
+    (property "Value" "SFH_7250" (id 1) (at -5.08 -12.7 0)
+      (effects (font (size 1.27 1.27)) (justify bottom left))
+    )
+    (property "Footprint" "SFH_7250:OSRAM_SFH_7250" (id 2) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "MF" "OSRAM Opto" (id 4) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "Description" "\n                        \n                            Infrared (IR) Emitter 850nm 1.6V 70mA 10mW/sr @ 70mA 120° 4-PLCC\n                        \n" (id 5) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "Package" "PLCC-4 Osram Opto" (id 6) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "Price" "None" (id 7) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "Check_prices" "https://www.snapeda.com/parts/SFH%207250/Osram/view-part/?ref=eda" (id 8) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "STANDARD" "Manufacturer Recommendations" (id 9) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "PARTREV" "1.3" (id 10) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "SnapEDA_Link" "https://www.snapeda.com/parts/SFH%207250/Osram/view-part/?ref=snap" (id 11) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "MP" "SFH 7250" (id 12) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "Purchase-URL" "https://www.snapeda.com/api/url_track_click_mouser/?unipart_id=2742600&manufacturer=OSRAM Opto&part_name=SFH 7250&search_term=sfh7250" (id 13) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "Availability" "In Stock" (id 14) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "MANUFACTURER" "OSRAM" (id 15) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (symbol "SFH_7250_0_0"
+      (polyline
+        (pts (xy -2.54 6.604) (xy -2.54 5.08)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -2.54 5.08) (xy -2.54 3.556)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -2.54 3.556) (xy 0.0 5.08)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 0.0 5.08) (xy -2.54 6.604)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 0.0 6.604) (xy 0.0 5.08)) (stroke (width 0.254))
+      )
+      (text "IR" (at 1.016 7.112 0)
+        (effects (font (size 1.016 1.016)) (justify bottom left))
+      )
+      (polyline
+        (pts (xy 0.0 5.08) (xy 0.0 3.556)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 1.016 9.144) (xy -0.762 7.112)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 0.6858 8.1788) (xy 0.127 8.6614)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 0.127 8.6614) (xy 1.016 9.144)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 1.016 9.144) (xy 0.6858 8.1788)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 0.6858 8.1788) (xy 0.7112 8.9154)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 0.7112 8.9154) (xy 0.5842 8.9154)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 0.3048 8.5852) (xy 0.5334 8.7376)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -0.2286 9.2456) (xy -2.0066 7.2136)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -0.5588 8.2804) (xy -1.1176 8.763)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -1.1176 8.763) (xy -0.2286 9.2456)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -0.2286 9.2456) (xy -0.5588 8.2804)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -0.5588 8.2804) (xy -0.5334 9.017)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -0.5334 9.017) (xy -0.6604 9.017)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -0.9398 8.6868) (xy -0.7112 8.8392)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 5.08 -10.16) (xy -5.08 -10.16)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -2.54 5.08) (xy -5.08 5.08)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts (xy 0.0 5.08) (xy 5.08 5.08)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts (xy 5.08 -10.16) (xy 5.08 -2.54)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 5.08 -2.54) (xy 5.08 10.16)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -5.08 -10.16) (xy -5.08 -2.54)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -5.08 -2.54) (xy -5.08 10.16)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -5.08 10.16) (xy 5.08 10.16)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -2.54 -8.255) (xy -0.762 -6.477)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts (xy -0.762 -6.477) (xy -1.143 -7.62)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts (xy -1.143 -7.62) (xy -1.905 -6.858)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts (xy -1.905 -6.858) (xy -0.762 -6.477)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts (xy 2.286 -2.794) (xy 2.54 -2.54)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts
+          (xy -1.143 -7.62)
+          (xy -0.762 -6.477)
+          (xy -1.905 -6.858)
+          (xy -1.143 -7.62)
+        )
+        (stroke (width 0.1524)) (fill (type outline))
+      )
+      (polyline
+        (pts (xy -1.905 -5.08) (xy -0.635 -5.08)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -0.635 -5.08) (xy 0.635 -5.08)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 0.635 -5.08) (xy 1.905 -5.08)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy 0.635 -5.08) (xy 2.54 -2.54)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts (xy -0.635 -5.08) (xy -2.54 -2.54)) (stroke (width 0.254))
+      )
+      (polyline
+        (pts
+          (xy 2.54 -2.54)
+          (xy 1.524 -2.794)
+          (xy 2.54 -3.556)
+          (xy 2.54 -2.54)
+        )
+        (stroke (width 0.254)) (fill (type outline))
+      )
+      (polyline
+        (pts (xy -0.635 -8.255) (xy 1.143 -6.477)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts (xy 1.143 -6.477) (xy 0.762 -7.62)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts (xy 0.762 -7.62) (xy 0.0 -6.858)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts (xy 0.0 -6.858) (xy 1.143 -6.477)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts
+          (xy 0.762 -7.62)
+          (xy 1.143 -6.477)
+          (xy 0.0 -6.858)
+          (xy 0.762 -7.62)
+        )
+        (stroke (width 0.1524)) (fill (type outline))
+      )
+      (polyline
+        (pts (xy -2.54 -2.54) (xy -5.08 -2.54)) (stroke (width 0.1524))
+      )
+      (polyline
+        (pts (xy 5.08 -2.54) (xy 2.54 -2.54)) (stroke (width 0.1524))
+      )
+      (pin passive line (at -7.62 5.08 0) (length 2.54)
+        (name "~"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "1"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin passive line (at 7.62 5.08 180.0) (length 2.54)
+        (name "~"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "2"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin passive line (at -7.62 -2.54 0) (length 2.54)
+        (name "~"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "3"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin passive line (at 7.62 -2.54 180.0) (length 2.54)
+        (name "~"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "4"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+    )
+  )
+)
