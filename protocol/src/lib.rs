@@ -554,6 +554,8 @@ impl<P: Read + Write> Interface<P> {
     /// - [`Interface::jump_to_subroutine`]
     /// - [`Interface::halt`]
     /// - [`Interface::set_baud_rate`]
+    /// - [`Interface::set_chunk_size`]
+    /// - [`Interface::reset`]
     pub async fn unlock_full_access(&mut self, key: u16) -> Result<(), P::Error> {
         self.send(Request::new(Command::UnlockFullAccess, key, 0x00).into())
             .await
