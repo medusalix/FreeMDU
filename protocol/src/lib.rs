@@ -264,7 +264,8 @@ enum Command {
     Halt = 0x45,
     SetBaudRate2400 = 0x46,
     SetBaudRate9600 = 0x47,
-    SetBaudRate = 0x4b, // Available on newer devices
+    SetChunkSize = 0x4a, // Available on newer devices
+    SetBaudRate = 0x4b,  // Available on newer devices
 }
 
 /// Request message sent to the diagnostic interface.
@@ -409,12 +410,16 @@ fn compute_checksum(data: &[u8]) -> u8 {
 #[derive(Debug)]
 pub struct Interface<P> {
     port: P,
+    chunk_size: u8,
 }
 
 impl<P: Read + Write> Interface<P> {
     /// Constructs a new diagnostic interface.
     pub fn new(port: P) -> Self {
-        Self { port }
+        Self {
+            port,
+            chunk_size: 4, // Default size, adjustable on newer devices
+        }
     }
 
     /// Locks the diagnostic interface.
@@ -680,12 +685,30 @@ impl<P: Read + Write> Interface<P> {
         }
     }
 
+    /// Configures the diagnostic frame chunk size.
+    ///
+    /// The chunk size can only be adjusted on newer devices.
+    ///
+    /// If the requested size is outside the supported range,
+    /// it is clamped by the device to the nearest supported boundary.
+    /// The supported range is device-specific,
+    /// but is typically between 4 and 128 bytes.
+    pub async fn set_chunk_size(&mut self, size: u8) -> Result<(), P::Error> {
+        self.send(Request::new(Command::SetChunkSize, u16::from(size), 0x01).into())
+            .await?;
+
+        // Device responds with actual chunk size
+        self.chunk_size = self.receive().await?.into();
+
+        Ok(())
+    }
+
     /// Sends a payload to the port.
     ///
     /// The payload is split into chunks with an appended checksum.
     /// Chunks are sent sequentially, verifying the response code for every transmission.
     async fn send<const N: usize>(&mut self, payload: Payload<N>) -> Result<(), P::Error> {
-        for chunk in payload.0.chunks(4) {
+        for chunk in payload.0.chunks(self.chunk_size as usize) {
             let checksum = compute_checksum(chunk);
             let mut resp = [0xff];
 
@@ -711,7 +734,7 @@ impl<P: Read + Write> Interface<P> {
     async fn receive<const N: usize>(&mut self) -> Result<Payload<N>, P::Error> {
         let mut payload = Payload([0x00; N]);
 
-        for chunk in payload.0.chunks_mut(4) {
+        for chunk in payload.0.chunks_mut(self.chunk_size as usize) {
             let mut checksum = [0x00];
 
             self.read(chunk).await?;
@@ -1089,6 +1112,37 @@ mod tests {
             deque,
             [0x47, 0x00, 0x00, 0x00, 0x47],
             "deque contents should be correct"
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn set_chunk_size() -> Result<(), Infallible> {
+        init_logger();
+
+        let mut deque = VecDeque::from([
+            0x00, 0x80, 0x80, 0x00, 0x11, 0x22, 0x33, 0x44, 0xab, 0xcd, 0xef, 0x99, 0xde, 0xad,
+            0x35,
+        ]);
+        let mut intf = Interface::new(&mut deque);
+
+        intf.set_chunk_size(128).await?;
+
+        let data: [u8; 10] = intf.read_memory(0xabcd).await?;
+
+        assert_eq!(
+            deque,
+            [
+                0x4a, 0x80, 0x0, 0x1, 0xcb, 0x00, 0x30, 0xcd, 0xab, 0x0a, 0xb2, 0x00
+            ],
+            "deque contents should be correct"
+        );
+
+        assert_eq!(
+            data,
+            [0x11, 0x22, 0x33, 0x44, 0xab, 0xcd, 0xef, 0x99, 0xde, 0xad],
+            "memory contents should be correct"
         );
 
         Ok(())
