@@ -470,7 +470,7 @@ impl<P: Read + Write> Interface<P> {
     ///
     /// # Errors
     ///
-    /// - [`Error::InvalidArgument`] if the payload length is greater than 65535 bytes.
+    /// - [`Error::InvalidArgument`] if the payload length exceeds 65535 bytes.
     pub async fn read_memory<L: From<Payload<N>>, const N: usize>(
         &mut self,
         addr: u32,
@@ -508,11 +508,9 @@ impl<P: Read + Write> Interface<P> {
     /// For older devices, the address must be specified in words, not bytes.
     /// As an example, to read a byte at address `0x64`, provide the word address `0x32`.
     ///
-    /// The payload length cannot exceed 255 bytes.
-    ///
     /// # Errors
     ///
-    /// - [`Error::InvalidArgument`] if the payload length is not a multiple of two or exceeds 255 bytes.
+    /// - [`Error::InvalidArgument`] if the payload length exceeds 255 bytes.
     pub async fn read_eeprom<L: From<Payload<N>>, const N: usize>(
         &mut self,
         addr: u16,
@@ -568,7 +566,7 @@ impl<P: Read + Write> Interface<P> {
     ///
     /// # Errors
     ///
-    /// - [`Error::InvalidArgument`] if the payload length is greater than 65535 bytes.
+    /// - [`Error::InvalidArgument`] if the payload length exceeds 65535 bytes.
     pub async fn write_memory<L: Into<Payload<N>>, const N: usize>(
         &mut self,
         addr: u32,
@@ -606,11 +604,9 @@ impl<P: Read + Write> Interface<P> {
     /// For older devices, the address must be specified in words, not bytes.
     /// As an example, to write a byte at address `0x64`, provide the word address `0x32`.
     ///
-    /// The payload length cannot exceed 255 bytes.
-    ///
     /// # Errors
     ///
-    /// - [`Error::InvalidArgument`] if the payload length is not a multiple of two or exceeds 255 bytes.
+    /// - [`Error::InvalidArgument`] if the payload length exceeds 255 bytes.
     pub async fn write_eeprom<L: Into<Payload<N>>, const N: usize>(
         &mut self,
         addr: u16,
