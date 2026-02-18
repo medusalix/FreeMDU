@@ -253,6 +253,7 @@ enum Command {
     Lock = 0x10,
     QuerySoftwareId = 0x11,
     UnlockReadAccess = 0x20,
+    UnlockSmartHomeAccess = 0x21, // Available on newer devices
     ReadMemory = 0x30,
     ReadEeprom = 0x31,
     UnlockFullAccess = 0x32,
@@ -264,9 +265,10 @@ enum Command {
     Halt = 0x45,
     SetBaudRate2400 = 0x46,
     SetBaudRate9600 = 0x47,
-    SetChunkSize = 0x4a, // Available on newer devices
-    SetBaudRate = 0x4b,  // Available on newer devices
-    Reset = 0x4e,        // Available on newer devices
+    SetChunkSize = 0x4a,     // Available on newer devices
+    SetBaudRate = 0x4b,      // Available on newer devices
+    Reset = 0x4e,            // Available on newer devices
+    RequestSmartHome = 0x85, // Available on newer devices
 }
 
 /// Request message sent to the diagnostic interface.
@@ -458,8 +460,29 @@ impl<P: Read + Write> Interface<P> {
     /// - [`Interface::read_memory`]
     /// - [`Interface::read_eeprom`]
     /// - [`Interface::query_max_baud_rate`]
+    /// - [`Interface::send_smart_home_request`]
     pub async fn unlock_read_access(&mut self, key: u16) -> Result<(), P::Error> {
         self.send(Request::new(Command::UnlockReadAccess, key, 0x00).into())
+            .await
+    }
+
+    /// Unlocks access to the smart home functionality.
+    ///
+    /// Smart home functionality is only supported on newer devices.
+    ///
+    /// Before calling this function, the software ID must be
+    /// queried using [`Interface::query_software_id`].
+    /// Unlike diagnostic access, unlocking smart home features does not
+    /// require a device-specific key.
+    ///
+    /// Successfully unlocking smart home access enables the following functions:
+    ///
+    /// - [`Interface::query_max_baud_rate`]
+    /// - [`Interface::set_baud_rate`]
+    /// - [`Interface::set_chunk_size`]
+    /// - [`Interface::send_smart_home_request`]
+    pub async fn unlock_smart_home_access(&mut self) -> Result<(), P::Error> {
+        self.send(Request::new(Command::UnlockSmartHomeAccess, 0x0000, 0x00).into())
             .await
     }
 
@@ -710,6 +733,26 @@ impl<P: Read + Write> Interface<P> {
             .await
     }
 
+    /// Sends a smart home request to the device and returns the response.
+    ///
+    /// Smart home functionality is only supported on newer devices.
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::InvalidArgument`] if the payload length exceeds 255 bytes.
+    pub async fn send_smart_home_request<const M: usize, const N: usize>(
+        &mut self,
+        cmd: u16,
+        payload: Payload<N>,
+    ) -> Result<Payload<M>, P::Error> {
+        let len = N.try_into().map_err(|_| Error::InvalidArgument)?;
+
+        self.send(Request::new(Command::RequestSmartHome, cmd, len).into())
+            .await?;
+        self.send(payload).await?;
+        self.receive().await
+    }
+
     /// Sends a payload to the port.
     ///
     /// The payload is split into chunks with an appended checksum.
@@ -838,6 +881,24 @@ mod tests {
         assert_eq!(
             deque,
             [0x20, 0xcd, 0xab, 0x00, 0x98],
+            "deque contents should be correct"
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn unlock_smart_home_access() -> Result<(), Infallible> {
+        init_logger();
+
+        let mut deque = VecDeque::from([0x00]);
+        let mut intf = Interface::new(&mut deque);
+
+        intf.unlock_smart_home_access().await?;
+
+        assert_eq!(
+            deque,
+            [0x21, 0x00, 0x00, 0x00, 0x21],
             "deque contents should be correct"
         );
 
@@ -1187,6 +1248,27 @@ mod tests {
             [0x4e, 0x00, 0x00, 0x00, 0x4e],
             "deque contents should be correct"
         );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn send_smart_home_request() -> Result<(), Infallible> {
+        init_logger();
+
+        let mut deque = VecDeque::from([0x00, 0x00, 0x00, 0x00, 0x00]);
+        let mut intf = Interface::new(&mut deque);
+        let payload: Payload<2> = intf
+            .send_smart_home_request(0x0001, [0x00, 0x03].into())
+            .await?;
+
+        assert_eq!(
+            deque,
+            [0x85, 0x01, 0x00, 0x02, 0x88, 0x00, 0x03, 0x03, 0x00],
+            "deque contents should be correct"
+        );
+
+        assert_eq!(payload.0, [0x00, 0x00], "response should be correct");
 
         Ok(())
     }
