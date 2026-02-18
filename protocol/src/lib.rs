@@ -266,6 +266,7 @@ enum Command {
     SetBaudRate9600 = 0x47,
     SetChunkSize = 0x4a, // Available on newer devices
     SetBaudRate = 0x4b,  // Available on newer devices
+    Reset = 0x4e,        // Available on newer devices
 }
 
 /// Request message sent to the diagnostic interface.
@@ -701,6 +702,14 @@ impl<P: Read + Write> Interface<P> {
         self.chunk_size = self.receive().await?.into();
 
         Ok(())
+    }
+
+    /// Resets the device's microcontroller.
+    ///
+    /// A reset can only be performed on newer devices.
+    pub async fn reset(&mut self) -> Result<(), P::Error> {
+        self.send(Request::new(Command::Reset, 0x0000, 0x00).into())
+            .await
     }
 
     /// Sends a payload to the port.
@@ -1160,6 +1169,24 @@ mod tests {
         assert_eq!(
             deque,
             [0x4b, 0x02, 0x00, 0x01, 0x4e, 0x00],
+            "deque contents should be correct"
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn reset() -> Result<(), Infallible> {
+        init_logger();
+
+        let mut deque = VecDeque::from([0x00]);
+        let mut intf = Interface::new(&mut deque);
+
+        intf.reset().await?;
+
+        assert_eq!(
+            deque,
+            [0x4e, 0x00, 0x00, 0x00, 0x4e],
             "deque contents should be correct"
         );
 
