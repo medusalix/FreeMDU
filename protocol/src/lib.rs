@@ -781,7 +781,7 @@ impl<P: Read + Write> Interface<P> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloc::collections::vec_deque::VecDeque;
+    use alloc::{boxed::Box, collections::vec_deque::VecDeque};
     use core::convert::Infallible;
     use log::LevelFilter;
 
@@ -880,7 +880,7 @@ mod tests {
             0x8b,
         ]);
         let mut intf = Interface::new(&mut deque);
-        let data: [u8; 10] = intf.read_memory(0x1234abcd).await?;
+        let data: [u8; 10] = intf.read_memory(0x1234_abcd).await?;
 
         assert_eq!(
             deque,
@@ -994,7 +994,7 @@ mod tests {
         let mut intf = Interface::new(&mut deque);
 
         intf.write_memory(
-            0x1234abcd,
+            0x1234_abcd,
             [0x11, 0x22, 0x33, 0x44, 0xab, 0xcd, 0xef, 0x99, 0xde, 0xad],
         )
         .await?;
@@ -1061,7 +1061,7 @@ mod tests {
         let mut deque = VecDeque::from([0x00, 0x00, 0x00]);
         let mut intf = Interface::new(&mut deque);
 
-        intf.jump_to_subroutine(0x1234abcd).await?;
+        intf.jump_to_subroutine(0x1234_abcd).await?;
 
         assert_eq!(
             deque,
@@ -1195,11 +1195,13 @@ mod tests {
 
     #[tokio::test]
     async fn error_invalid_argument() -> Result<(), Infallible> {
+        static DATA: [u8; 65536] = [0x00; _];
+
         init_logger();
 
         let mut deque = VecDeque::from([]);
         let mut intf = Interface::new(&mut deque);
-        let res: Result<[u8; 65536], _> = intf.read_memory(0xabcd).await;
+        let res: Result<[u8; 65536], _> = Box::pin(intf.read_memory(0xabcd)).await;
 
         assert_eq!(
             res.unwrap_err(),
@@ -1207,7 +1209,7 @@ mod tests {
             "result should be invalid argument error"
         );
 
-        let res = intf.write_memory(0xabcd, [0x00; 65536]).await;
+        let res = Box::pin(intf.write_memory(0xabcd, DATA)).await;
 
         assert_eq!(
             res.unwrap_err(),
