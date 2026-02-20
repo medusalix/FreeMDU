@@ -88,6 +88,54 @@ const PROP_PROGRAM_SPIN_SPEED: Property = Property {
     name: "Program Spin Speed",
     unit: Some("rpm"),
 };
+const PROP_LOAD_LEVEL: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "load_level",
+    name: "Load Level",
+    unit: None,
+};
+const PROP_DELAY_START_TIME: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "delay_start_time",
+    name: "Delay Start Time",
+    unit: None,
+};
+const PROP_REMAINING_TIME: Property = Property {
+    kind: PropertyKind::Operation,
+    id: "remaining_time",
+    name: "Remaining Time",
+    unit: None,
+};
+const PROP_TEMPERATURE: Property = Property {
+    kind: PropertyKind::Io,
+    id: "temperature",
+    name: "Temperature",
+    unit: Some("°C"),
+};
+const PROP_MOTOR_SPEED: Property = Property {
+    kind: PropertyKind::Io,
+    id: "motor_speed",
+    name: "Motor Speed",
+    unit: Some("rpm"),
+};
+const PROP_ACTIVE_ACTUATORS: Property = Property {
+    kind: PropertyKind::Io,
+    id: "active_actuators",
+    name: "Active Actuators",
+    unit: None,
+};
+const PROP_ACTIVE_MOTOR_RELAYS: Property = Property {
+    kind: PropertyKind::Io,
+    id: "active_motor_relays",
+    name: "Active Motor Relays",
+    unit: None,
+};
+const PROP_HEATER_RELAY_ACTIVE: Property = Property {
+    kind: PropertyKind::Io,
+    id: "heater_relay_active",
+    name: "Heater Relay Active",
+    unit: None,
+};
 
 /// Washing program type.
 ///
@@ -146,6 +194,39 @@ bitflags::bitflags! {
         /// Extra quiet option enabled.
         const ExtraQuiet = 0x4000;
     }
+
+    #[derive(FlagsDisplay, FlagsDebug, PartialEq, Eq, Copy, Clone)]
+    pub struct MotorRelay: u8 {
+        const FieldSwitch = 0x10;
+        const Reverse = 0x20;
+    }
+
+    #[derive(FlagsDisplay, FlagsDebug, PartialEq, Eq, Copy, Clone)]
+    pub struct Actuator: u8 {
+        const PreWash = 0x01;
+        const MainWash = 0x02;
+        const Softener = 0x04;
+        const DrainPump = 0x08;
+        const DoorRelay = 0x10;
+    }
+}
+
+#[derive(FromRepr, Display, PartialEq, Eq, Copy, Clone, Debug)]
+#[repr(u8)]
+pub enum ProgramPhase {
+    Idle,
+    PreWash,
+    Soak,
+    PreRinse,
+    MainWash,
+    Rinse,
+    RinseHold,
+    Clean,
+    Cool,
+    Pump,
+    Spin,
+    AntiCreaseFinish,
+    Finish,
 }
 
 /// Washing machine device implementation.
@@ -237,7 +318,7 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// Queries the program type.
     pub async fn query_program_type(&mut self) -> Result<ProgramType, P::Error> {
-        ProgramType::from_repr(self.intf.read_memory(0x25ef).await?)
+        ProgramType::from_repr(self.intf.read_memory(0x1d6c).await?)
             .ok_or(Error::UnexpectedMemoryValue)
     }
 
@@ -245,7 +326,7 @@ impl<P: Read + Write> WashingMachine<P> {
     ///
     /// The program temperature is provided in `°C` (degrees Celsius).
     pub async fn query_program_temperature(&mut self) -> Result<u8, P::Error> {
-        Ok(self.intf.read_memory(0x25f0).await?)
+        Ok(self.intf.read_memory(0x1d6d).await?)
     }
 
     /// Queries the program options.
@@ -253,7 +334,7 @@ impl<P: Read + Write> WashingMachine<P> {
     /// The program options are typically set using the buttons on the front panel of the machine,
     /// although not all combinations can be selected.
     pub async fn query_program_options(&mut self) -> Result<ProgramOption, P::Error> {
-        let opts: u16 = self.intf.read_memory(0x25f2).await?;
+        let opts: u16 = self.intf.read_memory(0x1d6f).await?;
 
         // The intensive/short option is inverted.
         ProgramOption::from_bits(opts ^ 0x0040).ok_or(Error::UnexpectedMemoryValue)
@@ -263,9 +344,63 @@ impl<P: Read + Write> WashingMachine<P> {
     ///
     /// The spin speed is provided in `rpm` (revolutions per minute).
     pub async fn query_program_spin_speed(&mut self) -> Result<u16, P::Error> {
-        let speed: u8 = self.intf.read_memory(0x25f1).await?;
+        let speed: u8 = self.intf.read_memory(0x1d6e).await?;
 
         Ok(u16::from(speed) * 10)
+    }
+
+    pub async fn query_load_level(&mut self) -> Result<u8, P::Error> {
+        Ok(self.intf.read_memory(0x1cf0).await?)
+    }
+
+    pub async fn query_delay_start_time(&mut self) -> Result<Duration, P::Error> {
+        let hours: u8 = self.intf.read_memory(0x1d78).await?;
+        let mins: u8 = self.intf.read_memory(0x1d79).await?;
+
+        Ok(Duration::from_secs(
+            (u64::from(hours) * 60 + u64::from(mins)) * 60,
+        ))
+    }
+
+    pub async fn query_remaining_time(&mut self) -> Result<Duration, P::Error> {
+        let hours: u8 = self.intf.read_memory(0x1d7a).await?;
+        let mins: u8 = self.intf.read_memory(0x1d7b).await?;
+
+        Ok(Duration::from_secs(
+            (u64::from(hours) * 60 + u64::from(mins)) * 60,
+        ))
+    }
+
+    pub async fn query_temperature(&mut self) -> Result<(u8, u8), P::Error> {
+        let current = self.intf.read_memory(0x0ec1).await?;
+        let target = self.intf.read_memory(0x0ecf).await?;
+
+        Ok((current, target))
+    }
+
+    pub async fn query_motor_speed(&mut self) -> Result<(u16, u16), P::Error> {
+        let current: i16 = self.intf.read_memory(0x0dfd).await?;
+        let target: i16 = self.intf.read_memory(0x0dff).await?;
+
+        Ok((current.unsigned_abs() / 10, target.unsigned_abs() / 10))
+    }
+
+    pub async fn query_active_actuators(&mut self) -> Result<Actuator, P::Error> {
+        let actuators: u8 = self.intf.read_memory(0x0f3a).await?;
+
+        Actuator::from_bits(actuators & 0x1f).ok_or(Error::UnexpectedMemoryValue)
+    }
+
+    pub async fn query_active_motor_relays(&mut self) -> Result<MotorRelay, P::Error> {
+        let relays: u8 = self.intf.read_memory(0x03e0).await?;
+
+        MotorRelay::from_bits(relays & 0x30).ok_or(Error::UnexpectedMemoryValue)
+    }
+
+    pub async fn query_heater_relay_active(&mut self) -> Result<bool, P::Error> {
+        let state: u8 = self.intf.read_memory(0x0b5d).await?;
+
+        Ok(state != 0x00)
     }
 }
 
@@ -305,6 +440,14 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_PROGRAM_TEMPERATURE,
             PROP_PROGRAM_OPTIONS,
             PROP_PROGRAM_SPIN_SPEED,
+            PROP_LOAD_LEVEL,
+            PROP_DELAY_START_TIME,
+            PROP_REMAINING_TIME,
+            PROP_TEMPERATURE,
+            PROP_MOTOR_SPEED,
+            PROP_ACTIVE_ACTUATORS,
+            PROP_ACTIVE_MOTOR_RELAYS,
+            PROP_HEATER_RELAY_ACTIVE,
         ]
     }
 
@@ -327,7 +470,17 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_PROGRAM_TEMPERATURE => Ok(self.query_program_temperature().await?.into()),
             PROP_PROGRAM_OPTIONS => Ok(self.query_program_options().await?.to_string().into()),
             PROP_PROGRAM_SPIN_SPEED => Ok(self.query_program_spin_speed().await?.into()),
+            PROP_LOAD_LEVEL => Ok(self.query_load_level().await?.into()),
+            PROP_DELAY_START_TIME => Ok(self.query_delay_start_time().await?.into()),
+            PROP_REMAINING_TIME => Ok(self.query_remaining_time().await?.into()),
             // Input/output
+            PROP_TEMPERATURE => Ok(self.query_temperature().await?.into()),
+            PROP_MOTOR_SPEED => Ok(self.query_motor_speed().await?.into()),
+            PROP_ACTIVE_ACTUATORS => Ok(self.query_active_actuators().await?.to_string().into()),
+            PROP_ACTIVE_MOTOR_RELAYS => {
+                Ok(self.query_active_motor_relays().await?.to_string().into())
+            }
+            PROP_HEATER_RELAY_ACTIVE => Ok(self.query_heater_relay_active().await?.into()),
             _ => Err(Error::UnknownProperty),
         }
     }
