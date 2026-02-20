@@ -8,6 +8,7 @@
 //! Alternatively, use [`device::connect`](crate::device::connect) to automatically detect
 //! the device's software ID and return an appropriate device instance.
 
+#![allow(missing_docs)]
 use crate::device::{
     Action, Date, Device, DeviceKind, Error, Interface, Property, PropertyKind, Result, Value,
     private,
