@@ -1136,8 +1136,9 @@ impl<P: Read + Write> WashingMachine<P> {
     }
 
     /// Queries the operating state.
-    pub async fn query_operating_state(&mut self) -> Result<u8, P::Error> {
-        Ok(self.intf.read_memory(0x1d66).await?)
+    pub async fn query_operating_state(&mut self) -> Result<OperatingState, P::Error> {
+        OperatingState::from_repr(self.intf.read_memory(0x1d66).await?)
+            .ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// Queries the selected program.
