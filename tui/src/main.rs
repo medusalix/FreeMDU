@@ -39,7 +39,7 @@ struct App {
 impl App {
     async fn run(&mut self, port: Port, term: &mut DefaultTerminal) -> Result<()> {
         let mut events = EventStream::new();
-        let (mut rx, mut worker) = Worker::start(port);
+        let mut rx = Worker::start(port);
 
         while !self.should_exit {
             // Draw terminal widgets
@@ -60,7 +60,6 @@ impl App {
                 Some(resp) = rx.recv() => self
                     .handle_worker_response(resp)
                     .context("Failed to handle worker response")?,
-                res = &mut worker => res?.context("Failed to run worker")?,
             }
         }
 
@@ -101,6 +100,7 @@ impl App {
             } => {
                 self.session = Some(Session::create(software_id, kind, actions, tx)?);
             }
+            Response::DeviceDisconnected => self.session = None,
             _ => {
                 if let Some(sess) = &mut self.session {
                     sess.handle_worker_response(resp)?;
