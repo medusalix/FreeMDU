@@ -1407,7 +1407,11 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
     }
 
     fn actions(&self) -> &'static [Action] {
-        &[ACTION_SET_PROGRAM_OPTIONS, ACTION_SET_PROGRAM_SPIN_SPEED]
+        &[
+            ACTION_SELECT_PROGRAM,
+            ACTION_SET_PROGRAM_OPTIONS,
+            ACTION_SET_PROGRAM_SPIN_SPEED,
+        ]
     }
 
     async fn query_property(&mut self, prop: &Property) -> Result<Value, P::Error> {
