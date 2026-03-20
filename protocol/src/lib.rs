@@ -350,6 +350,24 @@ impl From<u32> for Payload<4> {
     }
 }
 
+impl From<i8> for Payload<1> {
+    fn from(val: i8) -> Self {
+        Self(val.to_le_bytes())
+    }
+}
+
+impl From<i16> for Payload<2> {
+    fn from(val: i16) -> Self {
+        Self(val.to_le_bytes())
+    }
+}
+
+impl From<i32> for Payload<4> {
+    fn from(val: i32) -> Self {
+        Self(val.to_le_bytes())
+    }
+}
+
 impl<const N: usize> From<Payload<N>> for [u8; N] {
     fn from(payload: Payload<N>) -> Self {
         payload.0
@@ -369,6 +387,24 @@ impl From<Payload<2>> for u16 {
 }
 
 impl From<Payload<4>> for u32 {
+    fn from(payload: Payload<4>) -> Self {
+        Self::from_le_bytes(payload.0)
+    }
+}
+
+impl From<Payload<1>> for i8 {
+    fn from(payload: Payload<1>) -> Self {
+        Self::from_le_bytes(payload.0)
+    }
+}
+
+impl From<Payload<2>> for i16 {
+    fn from(payload: Payload<2>) -> Self {
+        Self::from_le_bytes(payload.0)
+    }
+}
+
+impl From<Payload<4>> for i32 {
     fn from(payload: Payload<4>) -> Self {
         Self::from_le_bytes(payload.0)
     }
