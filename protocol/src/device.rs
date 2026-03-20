@@ -8,6 +8,7 @@
 //! Use the [`connect`] function to automatically select the correct device
 //! implementation based on the devices's software ID.
 
+pub mod id132;
 pub mod id324;
 pub mod id360;
 pub mod id419;
@@ -435,6 +436,9 @@ pub async fn connect<'a, P: 'a + Read + Write>(
     let id = intf.query_software_id().await?;
 
     match id {
+        id132::compatible_software_ids!() => {
+            Ok(Box::new(id132::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
+        }
         id324::compatible_software_ids!() => {
             Ok(Box::new(id324::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
         }
