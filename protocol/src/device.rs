@@ -15,6 +15,7 @@ pub mod id324;
 pub mod id360;
 pub mod id419;
 pub mod id469;
+pub mod id517;
 pub mod id605;
 pub mod id629;
 pub(super) mod utils;
@@ -113,6 +114,8 @@ pub enum DeviceKind {
     WasherDryer,
     /// Dishwasher.
     Dishwasher,
+    /// Glasswasher.
+    Glasswasher,
     /// Coffee machine.
     CoffeeMachine,
 }
@@ -453,6 +456,9 @@ pub async fn connect<'a, P: 'a + Read + Write>(
         }
         id469::compatible_software_ids!() => {
             Ok(Box::new(id469::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
+        }
+        id517::compatible_software_ids!() => {
+            Ok(Box::new(id517::Glasswasher::initialize(intf, id).await?) as Box<dyn Device<P>>)
         }
         id605::compatible_software_ids!() => {
             Ok(Box::new(id605::Dishwasher::initialize(intf, id).await?) as Box<dyn Device<P>>)
