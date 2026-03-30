@@ -8,6 +8,7 @@
 //! Use the [`connect`] function to automatically select the correct device
 //! implementation based on the devices's software ID.
 
+pub mod id2088;
 pub mod id324;
 pub mod id360;
 pub mod id419;
@@ -118,8 +119,8 @@ pub enum DeviceKind {
 pub enum PropertyKind {
     /// General properties, e.g. model number.
     General,
-    /// Failure properties, e.g. stored faults.
-    Failure,
+    /// Fault properties, e.g. detergent overdose.
+    Fault,
     /// Operation properties, e.g. program phase.
     Operation,
     /// Input/output properties, e.g. water level.
@@ -199,6 +200,8 @@ pub enum Value {
     Duration(Duration),
     /// Date value.
     Date(Date),
+    /// Fault value.
+    Fault(Fault),
 }
 
 /// A simple date, consisting of year, month and day.
@@ -218,6 +221,32 @@ impl Date {
     pub fn new(year: u16, month: u8, day: u8) -> Self {
         Self { year, month, day }
     }
+}
+
+/// Additional information about a fault.
+#[derive(PartialEq, Eq, Debug)]
+pub struct FaultInfo {
+    /// Last time of occurrence.
+    pub operating_hours: u32,
+    /// Number of occurrences.
+    pub count: u32,
+}
+
+/// The status of a device fault.
+///
+/// Some devices provide additional metadata for active or stored faults using [`FaultInfo`].
+#[derive(PartialEq, Eq, Debug)]
+pub enum Fault {
+    /// Fault is not asserted.
+    Ok,
+    /// Fault is currently active.
+    ///
+    /// May include additional information if available.
+    Active(Option<FaultInfo>),
+    /// Fault is stored in non-volatile memory (EEPROM).
+    ///
+    /// May include additional information if available.
+    Stored(Option<FaultInfo>),
 }
 
 impl From<bool> for Value {
@@ -277,6 +306,12 @@ impl From<Duration> for Value {
 impl From<Date> for Value {
     fn from(date: Date) -> Self {
         Self::Date(date)
+    }
+}
+
+impl From<Fault> for Value {
+    fn from(fault: Fault) -> Self {
+        Self::Fault(fault)
     }
 }
 
@@ -418,6 +453,9 @@ pub async fn connect<'a, P: 'a + Read + Write>(
         }
         id629::compatible_software_ids!() => {
             Ok(Box::new(id629::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
+        }
+        id2088::compatible_software_ids!() => {
+            Ok(Box::new(id2088::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
         }
         _ => Err(Error::UnknownSoftwareId(id)),
     }

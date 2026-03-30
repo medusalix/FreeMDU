@@ -44,8 +44,8 @@ impl Session {
                     PropertyTable::new("General Information", Color::Green),
                 ),
                 (
-                    PropertyKind::Failure,
-                    PropertyTable::new("Failure Information", Color::Red),
+                    PropertyKind::Fault,
+                    PropertyTable::new("Fault Information", Color::Red),
                 ),
                 (
                     PropertyKind::Operation,
@@ -104,7 +104,6 @@ impl Session {
 
     pub fn handle_worker_response(&mut self, resp: Response) -> Result<()> {
         match resp {
-            Response::DeviceConnected { .. } => {}
             Response::PropertiesQueried(kind, data) => {
                 if let Some((_, table)) = self.tables.iter_mut().find(|(k, _)| k == &kind) {
                     table.update(data);
@@ -118,6 +117,7 @@ impl Session {
             Response::InvalidActionState(action) => {
                 self.popup = Some(Popup::InvalidActionState(action));
             }
+            _ => {}
         }
 
         Ok(())
@@ -127,11 +127,11 @@ impl Session {
         // Select next property kind to update
         let kind = match self.update_counter {
             0 => PropertyKind::General,
-            1 => PropertyKind::Failure,
+            1 => PropertyKind::Fault,
             2 => PropertyKind::Operation,
             3 => PropertyKind::Io,
             cnt if cnt % 90 == 0 => PropertyKind::General,
-            cnt if cnt % 30 == 0 => PropertyKind::Failure,
+            cnt if cnt % 30 == 0 => PropertyKind::Fault,
             cnt if cnt % 3 == 0 => PropertyKind::Operation,
             _ => PropertyKind::Io,
         };

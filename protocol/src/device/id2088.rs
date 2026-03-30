@@ -1,6 +1,6 @@
-//! Device support for W 4xx series washing machines.
+//! Device support for W 3xxx series washing machines.
 //!
-//! Supports appliances with software ID 469, which typically use an EDPW 228-A board or similar.
+//! Supports appliances with software ID 2088, which typically use an EDPL 162-B board or similar.
 //!
 //! A washing machine instance can be obtained using [`WashingMachine::connect`],
 //! giving access to all device-specific methods the appliance offers.
@@ -23,11 +23,29 @@ use strum::{Display, EnumString, FromRepr, VariantNames};
 
 macro_rules! compatible_software_ids {
     () => {
-        469
+        2088
     };
 }
 pub(super) use compatible_software_ids;
 
+const PROP_SERIAL_NUMBER: Property = Property {
+    kind: PropertyKind::General,
+    id: "serial_number",
+    name: "Serial Number",
+    unit: None,
+};
+const PROP_SERIAL_NUMBER_INDEX: Property = Property {
+    kind: PropertyKind::General,
+    id: "serial_number_index",
+    name: "Serial Number Index",
+    unit: None,
+};
+const PROP_MODEL_NUMBER: Property = Property {
+    kind: PropertyKind::General,
+    id: "model_number",
+    name: "Model Number",
+    unit: None,
+};
 const PROP_MANUFACTURING_DATE: Property = Property {
     kind: PropertyKind::General,
     id: "manufacturing_date",
@@ -46,58 +64,58 @@ const PROP_OPERATING_TIME: Property = Property {
     name: "Operating Time",
     unit: None,
 };
-const PROP_FAULT_F1: Property = Property {
-    kind: PropertyKind::Fault,
-    id: "fault_f1",
-    name: "F1: Pressure Sensor",
-    unit: None,
-};
-const PROP_FAULT_F2: Property = Property {
-    kind: PropertyKind::Fault,
-    id: "fault_f2",
-    name: "F2: NTC Thermistor",
-    unit: None,
-};
-const PROP_FAULT_F3: Property = Property {
-    kind: PropertyKind::Fault,
-    id: "fault_f3",
-    name: "F3: Heater",
-    unit: None,
-};
-const PROP_FAULT_F4: Property = Property {
-    kind: PropertyKind::Fault,
-    id: "fault_f4",
-    name: "F4: Tachometer",
-    unit: None,
-};
-const PROP_FAULT_F5: Property = Property {
-    kind: PropertyKind::Fault,
-    id: "fault_f5",
-    name: "F5: Detergent Overdose",
-    unit: None,
-};
-const PROP_FAULT_F6: Property = Property {
-    kind: PropertyKind::Fault,
-    id: "fault_f6",
-    name: "F6: Water Inlet",
-    unit: None,
-};
-const PROP_FAULT_F7: Property = Property {
-    kind: PropertyKind::Fault,
-    id: "fault_f7",
-    name: "F7: Drainage",
-    unit: None,
-};
 const PROP_FAULT_F8: Property = Property {
     kind: PropertyKind::Fault,
     id: "fault_f8",
-    name: "F8: Final Spin Speed",
+    name: "F8: NTC Thermistor",
     unit: None,
 };
-const PROP_FAULT_F9: Property = Property {
+const PROP_FAULT_F10: Property = Property {
     kind: PropertyKind::Fault,
-    id: "fault_f9",
-    name: "F9: EEPROM",
+    id: "fault_f10",
+    name: "F10: Water Inlet",
+    unit: None,
+};
+const PROP_FAULT_F11: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f11",
+    name: "F11: Drainage",
+    unit: None,
+};
+const PROP_FAULT_F20: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f20",
+    name: "F20: Heater",
+    unit: None,
+};
+const PROP_FAULT_F41: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f41",
+    name: "F41: EEPROM",
+    unit: None,
+};
+const PROP_FAULT_F50: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f50",
+    name: "F50: Tachometer",
+    unit: None,
+};
+const PROP_FAULT_F51: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f51",
+    name: "F51: Pressure Sensor",
+    unit: None,
+};
+const PROP_FAULT_F56: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f56",
+    name: "F56: Final Spin Speed",
+    unit: None,
+};
+const PROP_FAULT_F63: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f63",
+    name: "F63: Detergent Overdose",
     unit: None,
 };
 const PROP_OPERATING_MODE: Property = Property {
@@ -128,12 +146,6 @@ const PROP_PROGRAM_OPTIONS: Property = Property {
     kind: PropertyKind::Operation,
     id: "program_options",
     name: "Program Options",
-    unit: None,
-};
-const PROP_BUZZER_ENABLED: Property = Property {
-    kind: PropertyKind::Operation,
-    id: "buzzer_enabled",
-    name: "Buzzer Enabled",
     unit: None,
 };
 const PROP_PROGRAM_SPIN_SETTING: Property = Property {
@@ -184,6 +196,12 @@ const PROP_ACTIVE_ACTUATORS: Property = Property {
     name: "Active Actuators",
     unit: None,
 };
+const PROP_WATER_DIVERTER_POSITION: Property = Property {
+    kind: PropertyKind::Io,
+    id: "water_diverter_position",
+    name: "Water Diverter Position",
+    unit: None,
+};
 const PROP_NTC_RESISTANCE: Property = Property {
     kind: PropertyKind::Io,
     id: "ntc_resistance",
@@ -208,11 +226,17 @@ const PROP_WATER_LEVEL: Property = Property {
     name: "Water Level",
     unit: Some("mmH₂O"),
 };
-const PROP_MOTOR_REVERSED: Property = Property {
+const PROP_MOTOR_PWM_DUTY_CYCLE: Property = Property {
     kind: PropertyKind::Io,
-    id: "motor_reversed",
-    name: "Motor Reversed",
-    unit: None,
+    id: "motor_pwm_duty_cycle",
+    name: "Motor PWM Duty Cycle",
+    unit: Some("%"),
+};
+const PROP_MOTOR_TARGET_SPEED: Property = Property {
+    kind: PropertyKind::Io,
+    id: "motor_target_speed",
+    name: "Motor Target Speed",
+    unit: Some("rpm"),
 };
 const PROP_TACHOMETER_SPEED: Property = Property {
     kind: PropertyKind::Io,
@@ -229,7 +253,7 @@ const ACTION_SET_PROGRAM_OPTIONS: Action = Action {
         "Soak",
         "PreWash",
         "WaterPlus",
-        "IntensiveShort",
+        "Short",
     ])),
 };
 const ACTION_SET_PROGRAM_SPIN_SETTING: Action = Action {
@@ -250,24 +274,24 @@ const ACTION_START_PROGRAM: Action = Action {
 /// Each code represents a specific fault condition that can occur in the machine.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum FaultCode {
-    /// Analog pressure sensor fault.
-    PressureSensor,
     /// NTC thermistor (temperature sensor) fault.
-    NtcThermistor,
-    /// Heater fault.
-    Heater,
-    /// Tachometer generator fault.
-    Tachometer,
-    /// Detergent overdose fault.
-    DetergentOverdose,
+    NtcThermistor = 8,
     /// Water inlet fault.
-    WaterInlet,
+    WaterInlet = 10,
     /// Drainage fault.
-    Drainage,
-    /// Final spin cycle speed too low (< 400 rpm) fault.
-    FinalSpinSpeed,
+    Drainage = 11,
+    /// Heater fault.
+    Heater = 20,
     /// EEPROM fault.
-    Eeprom,
+    Eeprom = 41,
+    /// Tachometer generator fault.
+    Tachometer = 50,
+    /// Analog pressure sensor fault.
+    PressureSensor = 51,
+    /// Final spin cycle speed too low (< 400 rpm) fault.
+    FinalSpinSpeed = 56,
+    /// Detergent overdose fault.
+    DetergentOverdose = 63,
 }
 
 /// Washing machine operating mode.
@@ -277,8 +301,6 @@ pub enum FaultCode {
 #[derive(FromRepr, Display, PartialEq, Eq, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum OperatingMode {
-    /// The door is open. Washing programs cannot be started.
-    DoorOpen = 0x00,
     /// Default mode when the machine is turned on.
     ProgramIdle = 0x01,
     /// A washing program is currently running.
@@ -287,18 +309,24 @@ pub enum OperatingMode {
     ProgramFinished = 0x03,
     /// Service programming mode, providing access to all machine and program options.
     ///
-    /// Entered by holding the _Delay start h/min_ and _Water plus_ buttons
-    /// when turning on the machine.
+    /// Entered by holding the _Start_ button when turning on the machine,
+    /// pressing it 5 times and holding it again after the last press.
     ServiceProgramming = 0x04,
     /// Customer programming mode, with a limited subset of the service programming options.
     ///
-    /// Entered by holding the _Intensive_/_Short_ and _Water plus_ buttons when turning on the machine.
+    /// Entered by holding the _Start_ button when turning on the machine.
     CustomerProgramming = 0x05,
     /// Service mode. Allows viewing stored faults and testing actuators.
     ///
-    /// Entered by holding the _Delay start h/min_ and _Intensive_/_Short_ buttons
-    /// when turning on the machine.
+    /// Entered by holding the _Start_ button when turning on the machine,
+    /// pressing it 3 times and holding it again after the last press.
     Service = 0x06,
+    /// Demonstration mode for trade fairs or events. Cycles through LEDs and
+    /// displays timing for washing program phases.
+    ///
+    /// Entered by holding the _Start_ button when turning on the machine,
+    /// pressing it once and holding it again after the last press.
+    Demo = 0x08,
 }
 
 /// Washing machine program.
@@ -311,8 +339,6 @@ pub enum Program {
     Finish,
     /// Cottons program, 95 °C.
     Cottons95,
-    /// Cottons program, 75 °C.
-    Cottons75,
     /// Cottons program, 60 °C.
     Cottons60,
     /// Cottons program, 40 °C.
@@ -321,22 +347,20 @@ pub enum Program {
     Cottons30,
     /// Minimum iron program, 60 °C.
     MinimumIron60,
-    /// Minimum iron program, 50 °C.
-    MinimumIron50,
     /// Minimum iron program, 40 °C.
     MinimumIron40,
     /// Minimum iron program, 30 °C.
     MinimumIron30,
+    /// Delicates program, 40 °C.
+    Delicates40,
+    /// Delicates program, 30 °C.
+    Delicates30,
+    /// Delicates program, cold.
+    DelicatesCold,
+    /// Separate rinse/starch program.
+    SeparateRinseStarch,
     /// Drain/spin program.
     DrainSpin,
-    /// Separate rinse program.
-    SeparateRinse,
-    /// Starch program.
-    Starch,
-    /// Mixed wash program, 40 °C.
-    MixedWash40,
-    /// Quick wash program, 40 °C.
-    QuickWash40,
     /// Woolens program, cold.
     WoolensCold,
     /// Woolens program, 30 °C.
@@ -345,12 +369,16 @@ pub enum Program {
     Woolens40,
     /// Silks program, 30 °C.
     Silks30,
-    /// Delicates program, cold.
-    DelicatesCold,
-    /// Delicates program, 30 °C.
-    Delicates30,
-    /// Delicates program, 40 °C.
-    Delicates40,
+    /// Express program, 40 °C.
+    Express40,
+    /// Denim program, 40 °C.
+    Denim40,
+    /// Shirts program, 40 °C.
+    Shirts40,
+    /// Dark garments program, 40 °C.
+    DarkGarments40,
+    /// Automatic program, 40 °C.
+    Automatic40,
 }
 
 /// Washing program type.
@@ -367,20 +395,24 @@ pub enum ProgramType {
     MinimumIron = 0x02,
     /// Delicates program.
     Delicates = 0x03,
-    /// Woolens program.
-    Woolens = 0x04,
-    /// Quick wash program.
-    QuickWash = 0x05,
-    /// Starch program.
-    Starch = 0x06,
+    /// Separate rinse/starch program.
+    SeparateRinseStarch = 0x04,
     /// Drain/spin program.
-    DrainSpin = 0x07,
-    /// Separate rinse program.
-    SeparateRinse = 0x09,
-    /// Mixed wash program.
-    MixedWash = 0x0a,
+    DrainSpin = 0x05,
+    /// Woolens program.
+    Woolens = 0x07,
     /// Silks program.
-    Silks = 0x0b,
+    Silks = 0x08,
+    /// Express program.
+    Express = 0x09,
+    /// Denim program.
+    Denim = 0x0a,
+    /// Shirts program.
+    Shirts = 0x0b,
+    /// Dark garments program.
+    DarkGarments = 0x0c,
+    /// Automatic program.
+    Automatic = 0x0d,
 }
 
 bitflags::bitflags! {
@@ -395,10 +427,8 @@ bitflags::bitflags! {
         const PreWash = 0x20;
         /// Water plus option enabled.
         const WaterPlus = 0x40;
-        /// Intensive or short option enabled.
-        ///
-        /// The actual effect depends on the machine's programming configuration.
-        const IntensiveShort = 0x80;
+        /// Short option enabled.
+        const Short = 0x80;
     }
 }
 
@@ -420,8 +450,6 @@ pub enum SpinSetting {
     SpinMed,
     /// High spin speed.
     SpinHigh,
-    /// Very high spin speed.
-    SpinVeryHigh,
     /// Maximum spin speed.
     SpinMax,
 }
@@ -472,17 +500,40 @@ bitflags::bitflags! {
     pub struct Actuator: u16 {
         /// Drain pump actuator.
         const DrainPump = 0x0004;
+        /// PWM short circuit relay actuator.
+        const PwmShortCircuit = 0x0008;
+        /// Reverse relay actuator.
+        const Reverse = 0x0010;
         /// Heater actuator.
         const Heater = 0x0020;
-        /// Softener compartment actuator.
-        const Softener = 0x0040;
-        /// Pre-wash compartment actuator.
-        const PreWash = 0x0080;
-        /// Warm water actuator.
+        /// Water diverter motor actuator.
+        const WaterDiverter = 0x0080;
+        /// Motor field switch relay actuator.
+        const FieldSwitch = 0x0100;
+        /// Warm water valve actuator.
         const WarmWater = 0x0200;
-        /// Main wash compartment actuator.
-        const MainWash = 0x0400;
+        /// Cold water valve actuator.
+        const ColdWater = 0x0400;
     }
+}
+
+/// Water diverter position.
+///
+/// The water diverter changes its position when the
+/// [`Actuator::WaterDiverter`] is activated.
+#[derive(FromRepr, Display, PartialEq, Eq, Copy, Clone, Debug)]
+#[repr(u8)]
+pub enum WaterDiverterPosition {
+    /// Unknown position (diverter is moving).
+    Unknown,
+    /// Door glass position.
+    DoorGlass,
+    /// Pre-wash compartment position.
+    PreWash,
+    /// Main wash compartment position.
+    MainWash,
+    /// Softener compartment position.
+    Softener,
 }
 
 /// Washing machine device implementation.
@@ -493,14 +544,14 @@ bitflags::bitflags! {
 ///
 /// ```no_run
 /// # async fn example() -> freemdu::device::Result<(), freemdu::serial::PortError> {
-/// use freemdu::device::{Device, id469::WashingMachine};
+/// use freemdu::device::{Device, id2088::WashingMachine};
 ///
 /// let mut port = freemdu::serial::open("/dev/ttyACM0")?;
 /// let mut machine = WashingMachine::connect(&mut port).await?;
 ///
+/// println!("Model number: {}", machine.query_model_number().await?);
 /// println!("Program type: {}", machine.query_program_type().await?);
 /// println!("Program options: {}", machine.query_program_options().await?);
-/// println!("Buzzer enabled: {}", machine.query_buzzer_enabled().await?);
 ///
 /// machine.start_program().await?;
 /// # Ok(())
@@ -520,10 +571,43 @@ impl<P: Read + Write> WashingMachine<P> {
         intf.unlock_read_access(0x43ea).await?;
         intf.unlock_full_access(0x1f02).await?;
 
-        // Disable ROM readout protection to access memory above 0x3000
-        intf.write_memory(0x02e9, 0x01u8).await?;
+        // Disable ROM readout protection to access memory above 0x5000
+        intf.write_memory(0x02b6, 0x01u8).await?;
 
         Ok(Self { intf, software_id })
+    }
+
+    /// Queries the serial number of the machine.
+    ///
+    /// The serial number consists of 8 digits, e.g. `93140239`.
+    /// It can also be found on the sticker on the back side of the machine's door.
+    pub async fn query_serial_number(&mut self) -> Result<String, P::Error> {
+        let data: [u8; 10] = self.intf.read_eeprom(0x01ba).await?;
+        let serial = str::from_utf8(&data[1..9]).map_err(|_| Error::UnexpectedMemoryValue)?;
+
+        Ok(serial.to_string())
+    }
+
+    /// Queries the serial number index of the machine.
+    ///
+    /// The serial number index consists of 2 digits, e.g. `03`.
+    /// It can also be found on the sticker on the back side of the machine's door.
+    pub async fn query_serial_number_index(&mut self) -> Result<String, P::Error> {
+        let data: [u8; 4] = self.intf.read_eeprom(0x01be).await?;
+        let idx = str::from_utf8(&data[1..3]).map_err(|_| Error::UnexpectedMemoryValue)?;
+
+        Ok(idx.to_string())
+    }
+
+    /// Queries the model number of the machine.
+    ///
+    /// The model number has a maximum length of 15 characters, e.g. `W3241`.
+    /// It can also be found on the sticker on the back side of the machine's door.
+    pub async fn query_model_number(&mut self) -> Result<String, P::Error> {
+        let data: [u8; 16] = self.intf.read_eeprom(0x01bf).await?;
+        let model = str::from_utf8(&data[1..]).map_err(|_| Error::UnexpectedMemoryValue)?;
+
+        Ok(model.trim_end().to_string())
     }
 
     /// Queries the manufacturing/inspection date of the machine.
@@ -585,14 +669,14 @@ impl<P: Read + Write> WashingMachine<P> {
         };
 
         match code {
-            FaultCode::PressureSensor => query((0x0070, 0x01), (0x004e, 0x01)),
-            FaultCode::NtcThermistor => query((0x00c9, 0x20), (0x004e, 0x02)),
+            FaultCode::PressureSensor => query((0x0072, 0x01), (0x004e, 0x01)),
+            FaultCode::NtcThermistor => query((0x00cb, 0x20), (0x004e, 0x02)),
             FaultCode::Heater => query((0x007c, 0x40), (0x004e, 0x04)),
-            FaultCode::Tachometer => query((0x0071, 0x20), (0x004e, 0x08)),
+            FaultCode::Tachometer => query((0x0073, 0x20), (0x004e, 0x08)),
             FaultCode::DetergentOverdose => query((0x0044, 0x08), (0x004e, 0x10)),
             FaultCode::WaterInlet => query((0x0044, 0x20), (0x004e, 0x20)),
             FaultCode::Drainage => query((0x0044, 0x40), (0x004e, 0x40)),
-            FaultCode::FinalSpinSpeed => query((0x0076, 0x01), (0x004e, 0x80)),
+            FaultCode::FinalSpinSpeed => query((0x0078, 0x01), (0x004e, 0x80)),
             FaultCode::Eeprom => query((0x004f, 0xd0), (0x004f, 0x01)),
         }
         .await
@@ -600,7 +684,7 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// Queries the operating mode.
     pub async fn query_operating_mode(&mut self) -> Result<OperatingMode, P::Error> {
-        OperatingMode::from_repr(self.intf.read_memory(0x00ce).await?)
+        OperatingMode::from_repr(self.intf.read_memory(0x00d0).await?)
             .ok_or(Error::UnexpectedMemoryValue)
     }
 
@@ -608,17 +692,17 @@ impl<P: Read + Write> WashingMachine<P> {
     pub async fn query_selected_program(&mut self) -> Result<Program, P::Error> {
         // The selected program is set from the value at 0x0130 after a short delay.
         // This value is also used to set the persistent program value at 0x0041.
-        Program::from_repr(self.intf.read_memory(0x00b6).await?).ok_or(Error::UnexpectedMemoryValue)
+        Program::from_repr(self.intf.read_memory(0x00b8).await?).ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// Queries the program type.
     ///
     /// The program type is set according to the program selector position.
     pub async fn query_program_type(&mut self) -> Result<ProgramType, P::Error> {
-        // Program types are defined in a lookup table at address 0x2a0d.
+        // Program types are defined in a lookup table at address 0x2f81.
         // The current type is determined by reading the value at 0x0041
-        // and adding an offset of 0x16 to index into this table.
-        ProgramType::from_repr(self.intf.read_memory(0x00dd).await?)
+        // to index into this table.
+        ProgramType::from_repr(self.intf.read_memory(0x00de).await?)
             .ok_or(Error::UnexpectedMemoryValue)
     }
 
@@ -628,10 +712,10 @@ impl<P: Read + Write> WashingMachine<P> {
     /// selector position and provided in `°C` (degrees Celsius).
     /// Some programs use a slightly lower temperature than selected.
     pub async fn query_program_temperature(&mut self) -> Result<u8, P::Error> {
-        // Program temperatures are defined in a lookup table at address 0x2a39.
+        // Program temperatures are defined in a lookup table at address 0x2fad.
         // The current temperature is determined by reading the value at 0x0041
-        // and adding an offset of 0x16 to index into this table.
-        Ok(self.intf.read_memory(0x00de).await?)
+        // to index into this table.
+        Ok(self.intf.read_memory(0x00df).await?)
     }
 
     /// Queries the program options.
@@ -639,7 +723,7 @@ impl<P: Read + Write> WashingMachine<P> {
     /// The program options are typically set using the buttons on the front panel of the machine,
     /// although not all combinations can be selected.
     pub async fn query_program_options(&mut self) -> Result<ProgramOption, P::Error> {
-        // The options are used to set the front panel indicator lights at 0x00b0.
+        // The options are used to set the front panel indicator lights at 0x00b2.
         ProgramOption::from_bits(self.intf.read_memory(0x0058).await?)
             .ok_or(Error::UnexpectedMemoryValue)
     }
@@ -653,16 +737,9 @@ impl<P: Read + Write> WashingMachine<P> {
         Ok(self.intf.write_memory(0x0058, opts.bits()).await?)
     }
 
-    /// Queries whether the buzzer is enabled in the program options.
-    pub async fn query_buzzer_enabled(&mut self) -> Result<bool, P::Error> {
-        let enabled: u8 = self.intf.read_memory(0x0045).await?;
-
-        Ok((enabled & 0x01) != 0x00)
-    }
-
     /// Queries the program spin setting.
     pub async fn query_program_spin_setting(&mut self) -> Result<SpinSetting, P::Error> {
-        // The spin setting is used to set the front panel indicator lights at 0x00aa.
+        // The spin setting is used to set the front panel indicator lights at 0x00ac.
         SpinSetting::from_repr(self.intf.read_memory(0x0057).await?)
             .ok_or(Error::UnexpectedMemoryValue)
     }
@@ -680,7 +757,7 @@ impl<P: Read + Write> WashingMachine<P> {
     /// and may not correspond exactly to the labels on the front panel.
     pub async fn query_program_spin_speed(&mut self) -> Result<u16, P::Error> {
         // The spin speed is calculated from the spin setting at 0x0057
-        // and the machine's programming configuration at 0x026d in the subroutine at 0x4001.
+        // and the machine's programming configuration at 0x021b in the subroutine at 0x387b.
         let speed: u8 = self.intf.read_memory(0x00e9).await?;
 
         Ok(u16::from(speed) * 50)
@@ -688,11 +765,11 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// Queries the program phase.
     pub async fn query_program_phase(&mut self) -> Result<ProgramPhase, P::Error> {
-        // Program phases are defined in a lookup table at address 0x8726.
+        // Program phases are defined in a lookup table at address 0x9feb.
         // The phase is determined by reading the value at 0x0040 to index into this table,
         // keeping only the lower nibble of the resulting value.
-        // This value is used to set the front panel indicator lights at 0x00ad.
-        ProgramPhase::from_repr(self.intf.read_memory(0x00a4).await?)
+        // This value is used to set the front panel indicator lights at 0x00af.
+        ProgramPhase::from_repr(self.intf.read_memory(0x00a5).await?)
             .ok_or(Error::UnexpectedMemoryValue)
     }
 
@@ -707,7 +784,7 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// Queries the laundry load level.
     ///
-    /// The load level ranges from 1 to 5 and is calculated by the machine during operation.
+    /// The load level ranges from 1 to 4 and is calculated by the machine during operation.
     /// For some program types, the maximum load level is limited to a lower value.
     pub async fn query_load_level(&mut self) -> Result<u8, P::Error> {
         Ok(self.intf.read_memory(0x004a).await?)
@@ -718,7 +795,7 @@ impl<P: Read + Write> WashingMachine<P> {
     /// The speed limit is provided in `rpm` (revolutions per minute)
     /// and is calculated by the machine based on the determined imbalance.
     pub async fn query_imbalance_spin_speed_limit(&mut self) -> Result<u16, P::Error> {
-        let limit: u8 = self.intf.read_memory(0x0260).await?;
+        let limit: u8 = self.intf.read_memory(0x0200).await?;
 
         Ok(u16::from(limit) * 50)
     }
@@ -728,7 +805,7 @@ impl<P: Read + Write> WashingMachine<P> {
     /// The machine typically displays the time of the selected program in hours and minutes.
     /// In other operating modes, the display can also show special characters, e.g. `P`.
     pub async fn query_display_contents(&mut self) -> Result<String, P::Error> {
-        let display: [u8; 4] = self.intf.read_memory(0x00a0).await?;
+        let display: [u8; 4] = self.intf.read_memory(0x00a1).await?;
         let points = (display[2] & 0x70) >> 4;
         let d1_code = display[0] & 0x0f;
         let d2_code = (display[0] & 0xf0) >> 4;
@@ -755,14 +832,22 @@ impl<P: Read + Write> WashingMachine<P> {
 
     /// Queries the currently active actuators.
     pub async fn query_active_actuators(&mut self) -> Result<Actuator, P::Error> {
-        // The active actuators at 0x007f and 0x0080 are
-        // directly written to ports 8 and 3, respectively.
-        let actuators: u16 = self.intf.read_memory(0x007f).await?;
+        // The actuators are controlled by a Thesys TH 2030 ASIC, which
+        // is connected to the main microcontroller via a serial interface.
+        // The active actuator bits are converted into a value
+        // for the ASIC by a subroutine at 0x21d1.
+        // After this conversion, the data from 0x02ba to 0x02c1
+        // is sent to the ASIC by a subroutine at 0x24f7.
+        Actuator::from_bits(self.intf.read_memory(0x0080).await?)
+            .ok_or(Error::UnexpectedMemoryValue)
+    }
 
-        // The machine uses a frequency converter for motor control
-        // and the reverse and field switch actuator bits are always set.
-        // Additionally, bits 0 and 1 are used for the load sensor.
-        Actuator::from_bits(actuators & !0x0113u16).ok_or(Error::UnexpectedMemoryValue)
+    /// Queries the current water diverter position.
+    pub async fn query_water_diverter_position(
+        &mut self,
+    ) -> Result<WaterDiverterPosition, P::Error> {
+        WaterDiverterPosition::from_repr(self.intf.read_memory(0x024b).await?)
+            .ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// Queries the NTC thermistor resistance.
@@ -778,7 +863,7 @@ impl<P: Read + Write> WashingMachine<P> {
     ///
     /// The temperature is provided in `°C` (degrees Celsius).
     pub async fn query_temperature(&mut self) -> Result<(u8, u8), P::Error> {
-        // Temperatures are defined in a lookup table at address 0x78a1.
+        // Temperatures are defined in a lookup table at address 0x8e6c.
         let [target, current] = self.intf.read_memory(0x0136).await?;
 
         Ok((current, target))
@@ -788,46 +873,53 @@ impl<P: Read + Write> WashingMachine<P> {
     ///
     /// The value can be used to calibrate the pressure sensor when the drum is empty.
     pub async fn query_pressure_sensor_value(&mut self) -> Result<u8, P::Error> {
-        Ok(self.intf.read_memory(0x02e5).await?)
+        Ok(self.intf.read_memory(0x02b5).await?)
     }
 
     /// Queries the current water level sensed by the analog pressure sensor and the target level.
     ///
     /// The water level is provided in `mmH₂O` (millimeters of water).
     pub async fn query_water_level(&mut self) -> Result<(u8, u8), P::Error> {
-        // Target water levels are defined in a lookup table at address 0x8376.
+        // Target water levels are defined in a lookup table at address 0x9bf3.
         // The current target is determined by reading the value at 0x0040 to index into this table,
         // although it also seems to depend on the program temperature and load level.
-        // In that case, the target is set from the lookup table at address 0x8ea4.
-        let [current, target] = self.intf.read_memory(0x0081).await?;
+        // In that case, the target is set from the lookup table at address 0xa7db.
+        let [current, target] = self.intf.read_memory(0x0082).await?;
 
         Ok((current, target))
     }
 
-    /// Queries whether the motor is running in reverse.
-    pub async fn query_motor_reversed(&mut self) -> Result<bool, P::Error> {
-        let state: u8 = self.intf.read_memory(0x00dc).await?;
+    /// Queries the PWM duty cycle of the drum motor.
+    ///
+    /// The duty cycle ranges from `0 %` to `100 %`.
+    pub async fn query_motor_pwm_duty_cycle(&mut self) -> Result<u8, P::Error> {
+        // The duty cycle determines the value of the timer registers TXL and TXH.
+        // However, this timer is only active if bit 5 at address 0x007a is set.
+        let duty: u8 = self.intf.read_memory(0x02b1).await?;
 
-        Ok((state & 0x04) != 0x00)
+        Ok((u16::from(duty) * 100 / 0xff).try_into()?)
+    }
+
+    /// Queries the target speed of the drum motor.
+    ///
+    /// The speed is provided in `rpm` (revolutions per minute).
+    /// In contrast to the tachometer speed, this value is also
+    /// available when the motor is running at a very low speed.
+    pub async fn query_motor_target_speed(&mut self) -> Result<u16, P::Error> {
+        let target: u16 = self.intf.read_memory(0x00d8).await?;
+
+        utils::rpm_from_motor_speed(u32::from(target)).ok_or(Error::UnexpectedMemoryValue)
     }
 
     /// Queries the current speed sensed by the tachometer generator and the target speed.
     ///
-    /// The speed is provided in `rpm` (revolutions per minute).
+    /// The speed in `rpm` (revolutions per minute) is only provided
+    /// by the machine during the spin phase.
     pub async fn query_tachometer_speed(&mut self) -> Result<(u16, u16), P::Error> {
-        // The motor speed is controlled by a separate variable-frequency drive (VFD) module,
-        // which is connected to the main microcontroller via a serial interface.
-        // The speed values are sent to this module by a subroutine at 0xc25d.
-        // During the spin phase, the motor speed is determined by a closed-loop controller
-        // using tachometer readings, with the speed setpoint stored at 0x018b.
-        let speed: [u8; 5] = self.intf.read_memory(0x00d3).await?;
-        let current_raw = u16::from_le_bytes([speed[0], speed[1]]);
-        let target_raw = u16::from_le_bytes([speed[3], speed[4]]);
+        let current = self.intf.read_memory(0x01a5).await?;
+        let target = self.intf.read_memory(0x018c).await?;
 
-        Ok((
-            utils::rpm_from_motor_speed_vfd(current_raw),
-            utils::rpm_from_motor_speed_vfd(target_raw),
-        ))
+        Ok((current, target))
     }
 
     /// Starts the selected program.
@@ -837,16 +929,16 @@ impl<P: Read + Write> WashingMachine<P> {
     /// This function returns an error if no program has been chosen
     /// or a program is already running.
     pub async fn start_program(&mut self) -> Result<(), P::Error> {
-        // Programs are managed by a state machine subroutine at 0x3d7c.
-        // The current state is stored at 0x00e6. Known state values include:
+        // Programs are managed by a state machine subroutine at 0x36b8.
+        // The current state is stored at 0x00e7. Known state values include:
         //   0x00: no program selected or running
         //   0x01: program selected and ready to start
         //   0x05: program running
         // Additional state values are utilized internally by the state machine.
-        let state: u8 = self.intf.read_memory(0x00e6).await?;
+        let state: u8 = self.intf.read_memory(0x00e7).await?;
 
         if state == 0x01 {
-            Ok(self.intf.write_memory(0x00e6, 0x02u8).await?)
+            Ok(self.intf.write_memory(0x00e7, 0x02u8).await?)
         } else {
             Err(Error::InvalidState)
         }
@@ -879,24 +971,26 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
 
     fn properties(&self) -> &'static [Property] {
         &[
+            PROP_SERIAL_NUMBER,
+            PROP_SERIAL_NUMBER_INDEX,
+            PROP_MODEL_NUMBER,
             PROP_MANUFACTURING_DATE,
             PROP_ROM_CODE,
             PROP_OPERATING_TIME,
-            PROP_FAULT_F1,
-            PROP_FAULT_F2,
-            PROP_FAULT_F3,
-            PROP_FAULT_F4,
-            PROP_FAULT_F5,
-            PROP_FAULT_F6,
-            PROP_FAULT_F7,
             PROP_FAULT_F8,
-            PROP_FAULT_F9,
+            PROP_FAULT_F10,
+            PROP_FAULT_F11,
+            PROP_FAULT_F20,
+            PROP_FAULT_F41,
+            PROP_FAULT_F50,
+            PROP_FAULT_F51,
+            PROP_FAULT_F56,
+            PROP_FAULT_F63,
             PROP_OPERATING_MODE,
             PROP_SELECTED_PROGRAM,
             PROP_PROGRAM_TYPE,
             PROP_PROGRAM_TEMPERATURE,
             PROP_PROGRAM_OPTIONS,
-            PROP_BUZZER_ENABLED,
             PROP_PROGRAM_SPIN_SETTING,
             PROP_PROGRAM_SPIN_SPEED,
             PROP_PROGRAM_PHASE,
@@ -905,11 +999,13 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_IMBALANCE_SPIN_SPEED_LIMIT,
             PROP_DISPLAY_CONTENTS,
             PROP_ACTIVE_ACTUATORS,
+            PROP_WATER_DIVERTER_POSITION,
             PROP_NTC_RESISTANCE,
             PROP_TEMPERATURE,
             PROP_PRESSURE_SENSOR_VALUE,
             PROP_WATER_LEVEL,
-            PROP_MOTOR_REVERSED,
+            PROP_MOTOR_PWM_DUTY_CYCLE,
+            PROP_MOTOR_TARGET_SPEED,
             PROP_TACHOMETER_SPEED,
         ]
     }
@@ -925,26 +1021,28 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
     async fn query_property(&mut self, prop: &Property) -> Result<Value, P::Error> {
         match *prop {
             // General
+            PROP_SERIAL_NUMBER => Ok(self.query_serial_number().await?.into()),
+            PROP_SERIAL_NUMBER_INDEX => Ok(self.query_serial_number_index().await?.into()),
+            PROP_MODEL_NUMBER => Ok(self.query_model_number().await?.into()),
             PROP_MANUFACTURING_DATE => Ok(self.query_manufacturing_date().await?.into()),
             PROP_ROM_CODE => Ok(self.query_rom_code().await?.into()),
             PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
             // Fault
-            PROP_FAULT_F1 => Ok(self.query_fault(FaultCode::PressureSensor).await?.into()),
-            PROP_FAULT_F2 => Ok(self.query_fault(FaultCode::NtcThermistor).await?.into()),
-            PROP_FAULT_F3 => Ok(self.query_fault(FaultCode::Heater).await?.into()),
-            PROP_FAULT_F4 => Ok(self.query_fault(FaultCode::Tachometer).await?.into()),
-            PROP_FAULT_F5 => Ok(self.query_fault(FaultCode::DetergentOverdose).await?.into()),
-            PROP_FAULT_F6 => Ok(self.query_fault(FaultCode::WaterInlet).await?.into()),
-            PROP_FAULT_F7 => Ok(self.query_fault(FaultCode::Drainage).await?.into()),
-            PROP_FAULT_F8 => Ok(self.query_fault(FaultCode::FinalSpinSpeed).await?.into()),
-            PROP_FAULT_F9 => Ok(self.query_fault(FaultCode::Eeprom).await?.into()),
+            PROP_FAULT_F8 => Ok(self.query_fault(FaultCode::NtcThermistor).await?.into()),
+            PROP_FAULT_F10 => Ok(self.query_fault(FaultCode::WaterInlet).await?.into()),
+            PROP_FAULT_F11 => Ok(self.query_fault(FaultCode::Drainage).await?.into()),
+            PROP_FAULT_F20 => Ok(self.query_fault(FaultCode::Heater).await?.into()),
+            PROP_FAULT_F41 => Ok(self.query_fault(FaultCode::Eeprom).await?.into()),
+            PROP_FAULT_F50 => Ok(self.query_fault(FaultCode::Tachometer).await?.into()),
+            PROP_FAULT_F51 => Ok(self.query_fault(FaultCode::PressureSensor).await?.into()),
+            PROP_FAULT_F56 => Ok(self.query_fault(FaultCode::FinalSpinSpeed).await?.into()),
+            PROP_FAULT_F63 => Ok(self.query_fault(FaultCode::DetergentOverdose).await?.into()),
             // Operation
             PROP_OPERATING_MODE => Ok(self.query_operating_mode().await?.to_string().into()),
             PROP_SELECTED_PROGRAM => Ok(self.query_selected_program().await?.to_string().into()),
             PROP_PROGRAM_TYPE => Ok(self.query_program_type().await?.to_string().into()),
             PROP_PROGRAM_TEMPERATURE => Ok(self.query_program_temperature().await?.into()),
             PROP_PROGRAM_OPTIONS => Ok(self.query_program_options().await?.to_string().into()),
-            PROP_BUZZER_ENABLED => Ok(self.query_buzzer_enabled().await?.into()),
             PROP_PROGRAM_SPIN_SETTING => {
                 Ok(self.query_program_spin_setting().await?.to_string().into())
             }
@@ -958,11 +1056,17 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_DISPLAY_CONTENTS => Ok(self.query_display_contents().await?.into()),
             // Input/output
             PROP_ACTIVE_ACTUATORS => Ok(self.query_active_actuators().await?.to_string().into()),
+            PROP_WATER_DIVERTER_POSITION => Ok(self
+                .query_water_diverter_position()
+                .await?
+                .to_string()
+                .into()),
             PROP_NTC_RESISTANCE => Ok(self.query_ntc_resistance().await?.into()),
             PROP_TEMPERATURE => Ok(self.query_temperature().await?.into()),
             PROP_PRESSURE_SENSOR_VALUE => Ok(self.query_pressure_sensor_value().await?.into()),
             PROP_WATER_LEVEL => Ok(self.query_water_level().await?.into()),
-            PROP_MOTOR_REVERSED => Ok(self.query_motor_reversed().await?.into()),
+            PROP_MOTOR_PWM_DUTY_CYCLE => Ok(self.query_motor_pwm_duty_cycle().await?.into()),
+            PROP_MOTOR_TARGET_SPEED => Ok(self.query_motor_target_speed().await?.into()),
             PROP_TACHOMETER_SPEED => Ok(self.query_tachometer_speed().await?.into()),
             _ => Err(Error::UnknownProperty),
         }
