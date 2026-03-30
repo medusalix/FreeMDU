@@ -25,6 +25,12 @@ macro_rules! compatible_software_ids {
 }
 pub(super) use compatible_software_ids;
 
+const PROP_MACHINE_NUMBER: Property = Property {
+    kind: PropertyKind::General,
+    id: "machine_number",
+    name: "Machine Number",
+    unit: None,
+};
 const PROP_FAULT_F1: Property = Property {
     kind: PropertyKind::Fault,
     id: "fault_f1",
@@ -438,6 +444,19 @@ impl<P: Read + Write> Glasswasher<P> {
         Ok(Self { intf, software_id })
     }
 
+    /// Queries the numerical identifier of the machine.
+    ///
+    /// The identifier has a length of 8 digits, e.g. `49365232`.
+    /// It can be set in the service mode of the machine.
+    pub async fn query_machine_number(&mut self) -> Result<u32, P::Error> {
+        // The machine number is stored in reverse order, with swapped nibbles.
+        let num: u32 = self.intf.read_memory(0x0234).await?;
+        let num = num.swap_bytes();
+        let num = ((num & 0x0f0f_0f0f) << 4) | ((num & 0xf0f0_f0f0) >> 4);
+
+        Ok(utils::decode_bcd_value(num))
+    }
+
     /// Queries the total operating time of the machine.
     ///
     /// The operating time is only incremented if a washing program is running.
@@ -654,6 +673,7 @@ impl<P: Read + Write> Device<P> for Glasswasher<P> {
 
     fn properties(&self) -> &'static [Property] {
         &[
+            PROP_MACHINE_NUMBER,
             PROP_FAULT_F1,
             PROP_FAULT_F2,
             PROP_FAULT_F4,
@@ -692,6 +712,7 @@ impl<P: Read + Write> Device<P> for Glasswasher<P> {
     async fn query_property(&mut self, prop: &Property) -> Result<Value, P::Error> {
         match *prop {
             // General
+            PROP_MACHINE_NUMBER => Ok(self.query_machine_number().await?.into()),
             // Fault
             PROP_FAULT_F1 => Ok(self
                 .query_fault(FaultCode::TemperatureMainWash)
