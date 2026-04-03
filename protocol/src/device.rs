@@ -8,6 +8,7 @@
 //! Use the [`connect`] function to automatically select the correct device
 //! implementation based on the devices's software ID.
 
+pub mod common;
 pub mod id2088;
 pub mod id324;
 pub mod id360;
