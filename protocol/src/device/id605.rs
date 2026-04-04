@@ -159,23 +159,23 @@ const ACTION_START_PROGRAM: Action = Action {
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum FaultCode {
     /// NTC thermistor (temperature sensor) open circuit fault.
-    NtcThermistorOpen,
+    NtcThermistorOpen = 1,
     /// NTC thermistor (temperature sensor) short circuit fault.
-    NtcThermistorShort,
+    NtcThermistorShort = 2,
     /// Program selector knob fault.
-    ProgramSelector,
+    ProgramSelector = 3,
     /// Heater fault.
-    Heater,
+    Heater = 4,
     /// Drainage fault.
-    Drainage,
+    Drainage = 5,
     /// Water inlet fault at the start of the inlet phase.
-    WaterInletStart,
+    WaterInletStart = 6,
     /// Water inlet fault at the end of the inlet phase.
-    WaterInletEnd,
+    WaterInletEnd = 7,
     /// Heater pressure switch fault during inlet phase.
-    PressureSwitchInlet,
+    PressureSwitchInlet = 8,
     /// Heater pressure switch fault during heating phase.
-    PressureSwitchHeating,
+    PressureSwitchHeating = 9,
 }
 
 /// Dishwashing program.

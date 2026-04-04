@@ -212,23 +212,23 @@ const ACTION_START_PROGRAM: Action = Action {
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum FaultCode {
     /// Analog pressure sensor fault.
-    PressureSensor,
+    PressureSensor = 1,
     /// NTC thermistor (temperature sensor) fault.
-    NtcThermistor,
+    NtcThermistor = 2,
     /// Heater fault.
-    Heater,
+    Heater = 3,
     /// Tachometer generator fault.
-    Tachometer,
+    Tachometer = 4,
     /// Detergent overdose fault.
-    DetergentOverdose,
+    DetergentOverdose = 5,
     /// Water inlet fault.
-    WaterInlet,
+    WaterInlet = 6,
     /// Drainage fault.
-    Drainage,
+    Drainage = 7,
     /// Final spin cycle speed too low (< 400 rpm) fault.
-    FinalSpinSpeed,
+    FinalSpinSpeed = 8,
     /// EEPROM fault.
-    Eeprom,
+    Eeprom = 9,
 }
 
 /// Washing machine operating mode.
