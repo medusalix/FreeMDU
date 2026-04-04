@@ -379,39 +379,35 @@ impl<P: Read + Write> Dishwasher<P> {
     /// from a previous occurrence when the machine was powered off.
     /// Returned faults do not include operating hours or occurrence count information.
     pub async fn query_fault(&mut self, code: FaultCode) -> Result<Fault, P::Error> {
-        let mut query =
-            async |active: (u16, u8), stored: Option<(u16, u8)>| -> Result<Fault, P::Error> {
-                let val: u8 = self.intf.read_memory(active.0.into()).await?;
-
-                if (val & active.1) != 0x00 {
-                    Ok(Fault::Active(None))
-                } else if let Some(stored) = stored {
-                    let val: u8 = self.intf.read_memory(stored.0.into()).await?;
-
-                    if (val & stored.1) != 0x00 {
-                        Ok(Fault::Stored(None))
-                    } else {
-                        Ok(Fault::Ok)
-                    }
-                } else {
-                    Ok(Fault::Ok)
-                }
-            };
-
-        match code {
+        let (active, (stored_addr, stored_mask)) = match code {
             // NTC open/short and pressure switch heating only have two states (ok/active)
             // They are stored but don't have a dedicated bit for the active state
-            FaultCode::NtcThermistorOpen => query((0x0082, 0x01), None),
-            FaultCode::NtcThermistorShort => query((0x0082, 0x02), None),
-            FaultCode::ProgramSelector => query((0x0052, 0x40), Some((0x0082, 0x04))),
-            FaultCode::Heater => query((0x0053, 0x02), Some((0x0082, 0x08))),
-            FaultCode::Drainage => query((0x0052, 0x02), Some((0x0082, 0x10))),
-            FaultCode::WaterInletStart => query((0x0052, 0x04), Some((0x0082, 0x20))),
-            FaultCode::WaterInletEnd => query((0x0052, 0x08), Some((0x0082, 0x40))),
-            FaultCode::PressureSwitchInlet => query((0x0052, 0x10), Some((0x0082, 0x80))),
-            FaultCode::PressureSwitchHeating => query((0x0083, 0x01), None),
+            FaultCode::NtcThermistorOpen => (None, (0x0082, 0x01)),
+            FaultCode::NtcThermistorShort => (None, (0x0082, 0x02)),
+            FaultCode::ProgramSelector => (Some((0x0052, 0x40)), (0x0082, 0x04)),
+            FaultCode::Heater => (Some((0x0053, 0x02)), (0x0082, 0x08)),
+            FaultCode::Drainage => (Some((0x0052, 0x02)), (0x0082, 0x10)),
+            FaultCode::WaterInletStart => (Some((0x0052, 0x04)), (0x0082, 0x20)),
+            FaultCode::WaterInletEnd => (Some((0x0052, 0x08)), (0x0082, 0x40)),
+            FaultCode::PressureSwitchInlet => (Some((0x0052, 0x10)), (0x0082, 0x80)),
+            FaultCode::PressureSwitchHeating => (None, (0x0083, 0x01)),
+        };
+
+        if let Some((active_addr, active_mask)) = active {
+            let active: u8 = self.intf.read_memory(active_addr).await?;
+
+            if (active & active_mask) != 0x00 {
+                return Ok(Fault::Active(None));
+            }
         }
-        .await
+
+        let stored: u8 = self.intf.read_memory(stored_addr).await?;
+
+        if (stored & stored_mask) != 0x00 {
+            Ok(Fault::Stored(None))
+        } else {
+            Ok(Fault::Ok)
+        }
     }
 
     /// Queries the selected program.

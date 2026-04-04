@@ -578,34 +578,31 @@ impl<P: Read + Write> WashingMachine<P> {
     /// from a previous occurrence when the machine was powered off.
     /// Returned faults do not include operating hours or occurrence count information.
     pub async fn query_fault(&mut self, code: FaultCode) -> Result<Fault, P::Error> {
-        let mut query = async |active: (u16, u8), stored: (u16, u8)| -> Result<Fault, P::Error> {
-            let val: u8 = self.intf.read_memory(active.0.into()).await?;
-
-            if (val & active.1) != 0x00 {
-                Ok(Fault::Active(None))
-            } else {
-                let val: u8 = self.intf.read_memory(stored.0.into()).await?;
-
-                if (val & stored.1) != 0x00 {
-                    Ok(Fault::Stored(None))
-                } else {
-                    Ok(Fault::Ok)
-                }
-            }
+        let ((active_addr, active_mask), (stored_addr, stored_mask)) = match code {
+            FaultCode::PressureSensor => ((0x0070, 0x01), (0x004e, 0x01)),
+            FaultCode::NtcThermistor => ((0x00c8, 0x20), (0x004e, 0x02)),
+            FaultCode::Heater => ((0x007a, 0x40), (0x004e, 0x04)),
+            FaultCode::Tachometer => ((0x0071, 0x20), (0x004e, 0x08)),
+            FaultCode::DetergentOverdose => ((0x0044, 0x08), (0x004e, 0x10)),
+            FaultCode::WaterInlet => ((0x0044, 0x20), (0x004e, 0x20)),
+            FaultCode::Drainage => ((0x0044, 0x40), (0x004e, 0x40)),
+            FaultCode::FinalSpinSpeed => ((0x0076, 0x01), (0x004e, 0x80)),
+            FaultCode::Eeprom => ((0x004f, 0xd0), (0x004f, 0x01)),
         };
 
-        match code {
-            FaultCode::PressureSensor => query((0x0070, 0x01), (0x004e, 0x01)),
-            FaultCode::NtcThermistor => query((0x00c8, 0x20), (0x004e, 0x02)),
-            FaultCode::Heater => query((0x007a, 0x40), (0x004e, 0x04)),
-            FaultCode::Tachometer => query((0x0071, 0x20), (0x004e, 0x08)),
-            FaultCode::DetergentOverdose => query((0x0044, 0x08), (0x004e, 0x10)),
-            FaultCode::WaterInlet => query((0x0044, 0x20), (0x004e, 0x20)),
-            FaultCode::Drainage => query((0x0044, 0x40), (0x004e, 0x40)),
-            FaultCode::FinalSpinSpeed => query((0x0076, 0x01), (0x004e, 0x80)),
-            FaultCode::Eeprom => query((0x004f, 0xd0), (0x004f, 0x01)),
+        let active: u8 = self.intf.read_memory(active_addr).await?;
+
+        if (active & active_mask) != 0x00 {
+            return Ok(Fault::Active(None));
         }
-        .await
+
+        let stored: u8 = self.intf.read_memory(stored_addr).await?;
+
+        if (stored & stored_mask) != 0x00 {
+            Ok(Fault::Stored(None))
+        } else {
+            Ok(Fault::Ok)
+        }
     }
 
     /// Queries the operating mode.
