@@ -284,27 +284,27 @@ pub enum FaultCode {
 #[repr(u8)]
 pub enum OperatingMode {
     /// The door is open. Washing programs cannot be started.
-    DoorOpen = 0x00,
+    DoorOpen,
     /// Default mode when the machine is turned on.
-    ProgramIdle = 0x01,
+    ProgramIdle,
     /// A washing program is currently running.
-    ProgramRunning = 0x02,
+    ProgramRunning,
     /// The washing program has finished.
-    ProgramFinished = 0x03,
+    ProgramFinished,
     /// Service programming mode, providing access to all machine and program options.
     ///
     /// Entered by holding the _Buzzer_/_Delay start h/min_ and _Water plus_ buttons
     /// when turning on the machine.
-    ServiceProgramming = 0x04,
+    ServiceProgramming,
     /// Customer programming mode, with a limited subset of the service programming options.
     ///
     /// Entered by holding the _Short_ and _Water plus_ buttons when turning on the machine.
-    CustomerProgramming = 0x05,
+    CustomerProgramming,
     /// Service mode. Allows viewing stored faults and testing actuators.
     ///
     /// Entered by holding the _Buzzer_/_Delay start h/min_ and _Short_ buttons
     /// when turning on the machine.
-    Service = 0x06,
+    Service,
 }
 
 /// Washing machine program.

@@ -209,25 +209,25 @@ bitflags::bitflags! {
 #[repr(u8)]
 pub enum OperatingMode {
     /// The door is open. Washing programs cannot be started.
-    DoorOpen = 0x00,
+    DoorOpen,
     /// Default mode when the machine is turned on and the door is closed.
-    ProgramIdle = 0x01,
+    ProgramIdle,
     /// A washing program is currently running.
-    ProgramRunning = 0x02,
+    ProgramRunning,
     /// The washing program has finished.
-    ProgramFinished = 0x03,
+    ProgramFinished,
     /// Service programming mode, providing access to all machine and program options.
     ///
     /// Entered by holding the _Pre-wash_ and _Short_ buttons when turning on the machine.
-    ServiceProgramming = 0x04,
+    ServiceProgramming,
     /// Service mode. Allows viewing stored faults and testing actuators.
     ///
     /// Entered by holding the _Soak_ and _Short_ buttons when turning on the machine.
-    Service = 0x05,
+    Service,
     /// Customer programming mode, with a limited subset of the service programming options.
     ///
     /// Entered by holding the _Pre-wash_ and _Soak_ buttons when turning on the machine.
-    CustomerProgramming = 0x06,
+    CustomerProgramming,
 }
 
 /// Washing machine program.
@@ -289,27 +289,27 @@ pub enum Program {
 #[repr(u8)]
 pub enum ProgramType {
     /// No program.
-    None = 0x00,
+    None,
     /// Cottons program.
-    Cottons = 0x01,
+    Cottons,
     /// Minimum iron program.
-    MinimumIron = 0x02,
+    MinimumIron,
     /// Delicates program.
-    Delicates = 0x03,
+    Delicates,
     /// Woolens program.
-    Woolens = 0x04,
+    Woolens,
     /// Quick wash program.
-    QuickWash = 0x05,
+    QuickWash,
     /// Starch program.
-    Starch = 0x06,
+    Starch,
     /// Spin program.
-    Spin = 0x07,
+    Spin,
     /// Drain program.
-    Drain = 0x08,
+    Drain,
     /// Separate rinse program.
-    SeparateRinse = 0x09,
+    SeparateRinse,
     /// Mixed wash program.
-    MixedWash = 0x0a,
+    MixedWash,
 }
 
 bitflags::bitflags! {
