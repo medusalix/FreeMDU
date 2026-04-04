@@ -271,9 +271,7 @@ enum Command {
     RequestSmartHome = 0x85, // Available on newer devices
 }
 
-/// Request message sent to the diagnostic interface.
-///
-/// A checksum must be appended to the serialized message using [`compute_checksum`].
+/// Request frame sent to the diagnostic interface.
 #[derive(Debug)]
 struct Request {
     cmd: Command,
@@ -372,10 +370,6 @@ impl From<Payload<4>> for u32 {
     fn from(payload: Payload<4>) -> Self {
         Self::from_le_bytes(payload.0)
     }
-}
-
-fn compute_checksum(data: &[u8]) -> u8 {
-    data.iter().map(|&x| Wrapping(x)).sum::<Wrapping<_>>().0
 }
 
 /// Asynchronous diagnostic protocol interface.
@@ -759,7 +753,7 @@ impl<P: Read + Write> Interface<P> {
     /// Chunks are sent sequentially, verifying the response code for every transmission.
     async fn send<const N: usize>(&mut self, payload: Payload<N>) -> Result<(), P::Error> {
         for chunk in payload.0.chunks(self.chunk_size as usize) {
-            let checksum = compute_checksum(chunk);
+            let checksum = Self::compute_checksum(chunk);
             let mut resp = [0xff];
 
             self.write(chunk).await?;
@@ -790,7 +784,7 @@ impl<P: Read + Write> Interface<P> {
             self.read(chunk).await?;
             self.read(&mut checksum).await?;
 
-            if checksum[0] != compute_checksum(chunk) {
+            if checksum[0] != Self::compute_checksum(chunk) {
                 return Err(Error::IncorrectChecksum);
             }
 
@@ -800,6 +794,11 @@ impl<P: Read + Write> Interface<P> {
         }
 
         Ok(payload)
+    }
+
+    /// Computes an 8-bit wrapping sum (modulo 256) over the provided data.
+    fn compute_checksum(data: &[u8]) -> u8 {
+        data.iter().map(|&x| Wrapping(x)).sum::<Wrapping<_>>().0
     }
 
     /// Reads data from the port into the provided buffer.
