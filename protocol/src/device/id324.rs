@@ -9,7 +9,7 @@
 //! the device's software ID and return an appropriate device instance.
 
 use crate::device::{
-    Action, ActionKind, ActionParameters, Device, DeviceKind, Error, Interface, Property,
+    Action, ActionKind, ActionParameters, Device, DeviceKind, Error, Fault, Interface, Property,
     PropertyKind, Result, Value, private, utils,
 };
 use alloc::{
@@ -38,6 +38,60 @@ const PROP_OPERATING_TIME: Property = Property {
     kind: PropertyKind::General,
     id: "operating_time",
     name: "Operating Time",
+    unit: None,
+};
+const PROP_FAULT_F1: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f1",
+    name: "F1: Pressure Sensor",
+    unit: None,
+};
+const PROP_FAULT_F2: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f2",
+    name: "F2: NTC Thermistor",
+    unit: None,
+};
+const PROP_FAULT_F3: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f3",
+    name: "F3: Heater",
+    unit: None,
+};
+const PROP_FAULT_F4: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f4",
+    name: "F4: Tachometer",
+    unit: None,
+};
+const PROP_FAULT_F5: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f5",
+    name: "F5: Detergent Overdose",
+    unit: None,
+};
+const PROP_FAULT_F6: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f6",
+    name: "F6: Water Inlet",
+    unit: None,
+};
+const PROP_FAULT_F7: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f7",
+    name: "F7: Drainage",
+    unit: None,
+};
+const PROP_FAULT_F8: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f8",
+    name: "F8: Final Spin Speed",
+    unit: None,
+};
+const PROP_FAULT_F9: Property = Property {
+    kind: PropertyKind::Fault,
+    id: "fault_f9",
+    name: "F9: EEPROM",
     unit: None,
 };
 const PROP_OPERATING_MODE: Property = Property {
@@ -173,32 +227,29 @@ const ACTION_START_PROGRAM: Action = Action {
     params: None,
 };
 
-bitflags::bitflags! {
-    /// Washing machine fault.
-    ///
-    /// Each flag represents a specific fault condition that can occur in the machine.
-    /// Multiple faults may be active simultaneously.
-    #[derive(FlagsDisplay, FlagsDebug, PartialEq, Eq, Copy, Clone)]
-    pub struct Fault: u16 {
-        /// Analog pressure sensor fault detected.
-        const PressureSensor = 0x0001;
-        /// NTC thermistor (temperature sensor) fault detected.
-        const NtcThermistor = 0x0002;
-        /// Heater fault detected.
-        const Heater = 0x0004;
-        /// Tachometer generator fault detected.
-        const TachometerGenerator = 0x0008;
-        /// Detergent overdose fault detected.
-        const DetergentOverdose = 0x0010;
-        /// Inlet fault detected.
-        const Inlet = 0x0020;
-        /// Drainage fault detected.
-        const Drainage = 0x0040;
-        /// No spin-drying possible.
-        const SpinCycle = 0x0080;
-        /// EEPROM fault detected.
-        const Eeprom = 0x0100;
-    }
+/// Washing machine fault code.
+///
+/// Each code represents a specific fault condition that can occur in the machine.
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+pub enum FaultCode {
+    /// Analog pressure sensor fault.
+    PressureSensor = 1,
+    /// NTC thermistor (temperature sensor) fault.
+    NtcThermistor = 2,
+    /// Heater fault.
+    Heater = 3,
+    /// Tachometer generator fault.
+    Tachometer = 4,
+    /// Detergent overdose fault.
+    DetergentOverdose = 5,
+    /// Water inlet fault.
+    WaterInlet = 6,
+    /// Drainage fault.
+    Drainage = 7,
+    /// Final spin cycle speed too low (< 400 rpm) fault.
+    FinalSpinSpeed = 8,
+    /// EEPROM fault.
+    Eeprom = 9,
 }
 
 /// Washing machine operating mode.
@@ -485,13 +536,37 @@ impl<P: Read + Write> WashingMachine<P> {
         ))
     }
 
-    /// Queries the stored faults.
+    /// Queries the status of a fault identified by its fault code.
     ///
-    /// The faults are persisted in the EEPROM when turning off the machine.
-    pub async fn query_stored_faults(&mut self) -> Result<Fault, P::Error> {
-        let faults: u16 = self.intf.read_memory(0x000e).await?;
+    /// Faults may be either currently active or stored persistently in EEPROM
+    /// from a previous occurrence when the machine was powered off.
+    /// Returned faults do not include operating hours or occurrence count information.
+    pub async fn query_fault(&mut self, code: FaultCode) -> Result<Fault, P::Error> {
+        let ((active_addr, active_mask), (stored_addr, stored_mask)) = match code {
+            FaultCode::PressureSensor => ((0x002e, 0x01), (0x000e, 0x01)),
+            FaultCode::NtcThermistor => ((0x0084, 0x20), (0x000e, 0x02)),
+            FaultCode::Heater => ((0x0038, 0x40), (0x000e, 0x04)),
+            FaultCode::Tachometer => ((0x002f, 0x20), (0x000e, 0x08)),
+            FaultCode::DetergentOverdose => ((0x0004, 0x08), (0x000e, 0x10)),
+            FaultCode::WaterInlet => ((0x0004, 0x20), (0x000e, 0x20)),
+            FaultCode::Drainage => ((0x0004, 0x40), (0x000e, 0x40)),
+            FaultCode::FinalSpinSpeed => ((0x0034, 0x01), (0x000e, 0x80)),
+            FaultCode::Eeprom => ((0x000f, 0xc0), (0x000f, 0x01)),
+        };
 
-        Fault::from_bits(faults & 0x01ff).ok_or(Error::UnexpectedMemoryValue)
+        let active: u8 = self.intf.read_memory(active_addr).await?;
+
+        if (active & active_mask) != 0x00 {
+            return Ok(Fault::Active(None));
+        }
+
+        let stored: u8 = self.intf.read_memory(stored_addr).await?;
+
+        if (stored & stored_mask) != 0x00 {
+            Ok(Fault::Stored(None))
+        } else {
+            Ok(Fault::Ok)
+        }
     }
 
     /// Queries the operating mode.
@@ -758,6 +833,15 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
         &[
             PROP_ROM_CODE,
             PROP_OPERATING_TIME,
+            PROP_FAULT_F1,
+            PROP_FAULT_F2,
+            PROP_FAULT_F3,
+            PROP_FAULT_F4,
+            PROP_FAULT_F5,
+            PROP_FAULT_F6,
+            PROP_FAULT_F7,
+            PROP_FAULT_F8,
+            PROP_FAULT_F9,
             PROP_OPERATING_MODE,
             PROP_SELECTED_PROGRAM,
             PROP_PROGRAM_TYPE,
@@ -792,6 +876,16 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             // General
             PROP_ROM_CODE => Ok(self.query_rom_code().await?.into()),
             PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
+            // Fault
+            PROP_FAULT_F1 => Ok(self.query_fault(FaultCode::PressureSensor).await?.into()),
+            PROP_FAULT_F2 => Ok(self.query_fault(FaultCode::NtcThermistor).await?.into()),
+            PROP_FAULT_F3 => Ok(self.query_fault(FaultCode::Heater).await?.into()),
+            PROP_FAULT_F4 => Ok(self.query_fault(FaultCode::Tachometer).await?.into()),
+            PROP_FAULT_F5 => Ok(self.query_fault(FaultCode::DetergentOverdose).await?.into()),
+            PROP_FAULT_F6 => Ok(self.query_fault(FaultCode::WaterInlet).await?.into()),
+            PROP_FAULT_F7 => Ok(self.query_fault(FaultCode::Drainage).await?.into()),
+            PROP_FAULT_F8 => Ok(self.query_fault(FaultCode::FinalSpinSpeed).await?.into()),
+            PROP_FAULT_F9 => Ok(self.query_fault(FaultCode::Eeprom).await?.into()),
             // Operation
             PROP_OPERATING_MODE => Ok(self.query_operating_mode().await?.to_string().into()),
             PROP_SELECTED_PROGRAM => Ok(self.query_selected_program().await?.to_string().into()),
