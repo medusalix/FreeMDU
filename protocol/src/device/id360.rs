@@ -736,28 +736,11 @@ impl<P: Read + Write> WashingMachine<P> {
     /// In other operating states, the display can also show special characters, e.g. `P`.
     pub async fn query_display_contents(&mut self) -> Result<String, P::Error> {
         let display: [u8; 4] = self.intf.read_memory(0x009e).await?;
-        let points = (display[2] & 0x70) >> 4;
-        let d1_code = display[0] & 0x0f;
-        let d2_code = (display[0] & 0xf0) >> 4;
-        let d3_code = display[1] & 0x0f;
-        let d1_special = (display[3] & 0x02) != 0x00;
-        let d2_special = (display[3] & 0x04) != 0x00;
-        let d3_special = (display[3] & 0x08) != 0x00;
-        let d1_point = points == 0x01 || points == 0x07;
-        let d2_point = points == 0x02 || points == 0x07;
-        let d3_point = points == 0x03 || points == 0x07;
 
-        Ok([
-            utils::decode_mc14489_digit(d1_code, d1_special),
-            if d1_point { Some('.') } else { None },
-            utils::decode_mc14489_digit(d2_code, d2_special),
-            if d2_point { Some('.') } else { None },
-            utils::decode_mc14489_digit(d3_code, d3_special),
-            if d3_point { Some('.') } else { None },
-        ]
-        .iter()
-        .flatten()
-        .collect())
+        Ok(utils::decode_mc14489_display(display)
+            .iter()
+            .flatten()
+            .collect())
     }
 
     /// Queries the currently active actuators.

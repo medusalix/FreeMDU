@@ -36,8 +36,33 @@ pub fn ntc_resistance_from_adc(val: u8) -> u32 {
     (2150 * u32::from(val)) / (256 - u32::from(val))
 }
 
-/// Decodes a Motorola MC14489 seven-segment digit code into its char representation.
-pub fn decode_mc14489_digit(code: u8, special: bool) -> Option<char> {
+/// Decodes raw data for a three-digit Motorola MC14489 seven-segment display into characters.
+///
+/// Each digit (including decimal points) is decoded using [`decode_mc14489_digit`].
+pub fn decode_mc14489_display(data: [u8; 4]) -> [Option<char>; 6] {
+    let points = (data[2] & 0x70) >> 4;
+    let d1_code = data[0] & 0x0f;
+    let d2_code = (data[0] & 0xf0) >> 4;
+    let d3_code = data[1] & 0x0f;
+    let d1_special = (data[3] & 0x02) != 0x00;
+    let d2_special = (data[3] & 0x04) != 0x00;
+    let d3_special = (data[3] & 0x08) != 0x00;
+    let d1_point = points == 0x01 || points == 0x07;
+    let d2_point = points == 0x02 || points == 0x07;
+    let d3_point = points == 0x03 || points == 0x07;
+
+    [
+        decode_mc14489_digit(d1_code, d1_special),
+        if d1_point { Some('.') } else { None },
+        decode_mc14489_digit(d2_code, d2_special),
+        if d2_point { Some('.') } else { None },
+        decode_mc14489_digit(d3_code, d3_special),
+        if d3_point { Some('.') } else { None },
+    ]
+}
+
+/// Decodes a single MC14489 seven-segment digit into a character.
+fn decode_mc14489_digit(code: u8, special: bool) -> Option<char> {
     match (code, special) {
         (0x00, false) => Some('0'),
         (0x01, false) => Some('1'),
