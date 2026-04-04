@@ -118,10 +118,10 @@ const PROP_FAULT_F63: Property = Property {
     name: "F63: Detergent Overdose",
     unit: None,
 };
-const PROP_OPERATING_MODE: Property = Property {
+const PROP_OPERATING_STATE: Property = Property {
     kind: PropertyKind::Operation,
-    id: "operating_mode",
-    name: "Operating Mode",
+    id: "operating_state",
+    name: "Operating State",
     unit: None,
 };
 const PROP_SELECTED_PROGRAM: Property = Property {
@@ -294,13 +294,13 @@ pub enum FaultCode {
     DetergentOverdose = 63,
 }
 
-/// Washing machine operating mode.
+/// Washing machine operating state.
 ///
 /// Different modes can be entered by pressing specific button combinations
 /// when turning on the machine.
 #[derive(FromRepr, Display, PartialEq, Eq, Copy, Clone, Debug)]
 #[repr(u8)]
-pub enum OperatingMode {
+pub enum OperatingState {
     /// The door is open. Washing programs cannot be started.
     DoorOpen = 0x00,
     /// Default mode when the machine is turned on.
@@ -681,9 +681,9 @@ impl<P: Read + Write> WashingMachine<P> {
         }
     }
 
-    /// Queries the operating mode.
-    pub async fn query_operating_mode(&mut self) -> Result<OperatingMode, P::Error> {
-        OperatingMode::from_repr(self.intf.read_memory(0x00d0).await?)
+    /// Queries the operating state.
+    pub async fn query_operating_state(&mut self) -> Result<OperatingState, P::Error> {
+        OperatingState::from_repr(self.intf.read_memory(0x00d0).await?)
             .ok_or(Error::UnexpectedMemoryValue)
     }
 
@@ -802,7 +802,7 @@ impl<P: Read + Write> WashingMachine<P> {
     /// Queries the contents of the seven-segment display.
     ///
     /// The machine typically displays the time of the selected program in hours and minutes.
-    /// In other operating modes, the display can also show special characters, e.g. `P`.
+    /// In other operating states, the display can also show special characters, e.g. `P`.
     pub async fn query_display_contents(&mut self) -> Result<String, P::Error> {
         let display: [u8; 4] = self.intf.read_memory(0x00a1).await?;
         let points = (display[2] & 0x70) >> 4;
@@ -985,7 +985,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_FAULT_F51,
             PROP_FAULT_F56,
             PROP_FAULT_F63,
-            PROP_OPERATING_MODE,
+            PROP_OPERATING_STATE,
             PROP_SELECTED_PROGRAM,
             PROP_PROGRAM_TYPE,
             PROP_PROGRAM_TEMPERATURE,
@@ -1037,7 +1037,7 @@ impl<P: Read + Write> Device<P> for WashingMachine<P> {
             PROP_FAULT_F56 => Ok(self.query_fault(FaultCode::FinalSpinSpeed).await?.into()),
             PROP_FAULT_F63 => Ok(self.query_fault(FaultCode::DetergentOverdose).await?.into()),
             // Operation
-            PROP_OPERATING_MODE => Ok(self.query_operating_mode().await?.to_string().into()),
+            PROP_OPERATING_STATE => Ok(self.query_operating_state().await?.to_string().into()),
             PROP_SELECTED_PROGRAM => Ok(self.query_selected_program().await?.to_string().into()),
             PROP_PROGRAM_TYPE => Ok(self.query_program_type().await?.to_string().into()),
             PROP_PROGRAM_TEMPERATURE => Ok(self.query_program_temperature().await?.into()),
