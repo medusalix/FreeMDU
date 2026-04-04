@@ -9,6 +9,7 @@
 //! implementation based on the devices's software ID.
 
 pub mod id2088;
+pub mod id218;
 pub mod id2895;
 pub mod id324;
 pub mod id360;
@@ -438,6 +439,9 @@ pub async fn connect<'a, P: 'a + Read + Write>(
     let id = intf.query_software_id().await?;
 
     match id {
+        id218::compatible_software_ids!() => {
+            Ok(Box::new(id218::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
+        }
         id324::compatible_software_ids!() => {
             Ok(Box::new(id324::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
         }
