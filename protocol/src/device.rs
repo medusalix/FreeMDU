@@ -22,7 +22,7 @@ use crate::{Error as ProtocolError, Interface, Read, Write};
 use alloc::{boxed::Box, string::String};
 use core::{
     fmt::{Display, Formatter},
-    num::TryFromIntError,
+    num::{ParseIntError, TryFromIntError},
     time::Duration,
 };
 
@@ -80,6 +80,12 @@ impl<E> From<ProtocolError<E>> for Error<E> {
 impl<E> From<TryFromIntError> for Error<E> {
     fn from(_err: TryFromIntError) -> Self {
         Self::UnexpectedMemoryValue
+    }
+}
+
+impl<E> From<ParseIntError> for Error<E> {
+    fn from(_err: ParseIntError) -> Self {
+        Self::InvalidArgument
     }
 }
 
@@ -167,6 +173,10 @@ pub enum ActionParameters {
     ///
     /// The slice contains all possible flag names.
     Flags(&'static [&'static str]),
+    /// Action accepts a value within an integer range.
+    ///
+    /// The range is limited by a minium and maximum value (inclusive).
+    Range(u32, u32),
 }
 
 /// A device action, e.g. starting the current washing program.
