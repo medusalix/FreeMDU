@@ -400,7 +400,7 @@ impl From<Payload<4>> for u32 {
 ///
 /// let mem: [u8; 16] = intf.read_memory(0x0000).await?;
 ///
-/// println!("Memory: {:x?}", mem);
+/// println!("Memory: {mem:x?}");
 /// # Ok(())
 /// # }
 /// ```
@@ -858,12 +858,13 @@ mod tests {
         let mut intf = Interface::new(&mut deque);
         let id = intf.query_software_id().await?;
 
-        assert_eq!(id, 629, "software ID should be correct");
         assert_eq!(
             deque,
             [0x11, 0x00, 0x00, 0x02, 0x13, 0x00],
             "deque contents should be correct"
         );
+
+        assert_eq!(id, 629, "software ID should be correct");
 
         Ok(())
     }
@@ -1257,9 +1258,10 @@ mod tests {
 
         let mut deque = VecDeque::from([0x00, 0x00, 0x00, 0x00, 0x00]);
         let mut intf = Interface::new(&mut deque);
-        let payload: Payload<2> = intf
+        let resp: [u8; 2] = intf
             .send_smart_home_request(0x0001, [0x00, 0x03].into())
-            .await?;
+            .await?
+            .into();
 
         assert_eq!(
             deque,
@@ -1267,7 +1269,7 @@ mod tests {
             "deque contents should be correct"
         );
 
-        assert_eq!(payload.0, [0x00, 0x00], "response should be correct");
+        assert_eq!(resp, [0x00, 0x00], "response should be correct");
 
         Ok(())
     }
