@@ -21,7 +21,7 @@ type Device<'a> = Box<dyn device::Device<&'a mut Port> + 'a>;
 #[derive(Debug)]
 pub enum Request {
     QueryProperties(PropertyKind),
-    TriggerAction(&'static Action, Option<Value>),
+    TriggerAction(&'static Action, Option<String>),
 }
 
 #[derive(Debug)]
@@ -87,7 +87,7 @@ impl Worker<'_> {
                     .await
                     .context("Failed to query properties"),
                 Request::TriggerAction(action, param) => self
-                    .trigger_action(action, param)
+                    .trigger_action(action, param.as_deref())
                     .await
                     .context("Failed to trigger action"),
             };
@@ -121,11 +121,7 @@ impl Worker<'_> {
         Ok(())
     }
 
-    async fn trigger_action(
-        &mut self,
-        action: &'static Action,
-        param: Option<Value>,
-    ) -> Result<()> {
+    async fn trigger_action(&mut self, action: &'static Action, param: Option<&str>) -> Result<()> {
         match time::timeout(DEVICE_TIMEOUT, self.dev.trigger_action(action, param)).await? {
             Err(Error::InvalidArgument) => self.tx.send(Response::InvalidActionArgument(action))?,
             Err(Error::InvalidState) => self.tx.send(Response::InvalidActionState(action))?,

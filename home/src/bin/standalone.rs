@@ -253,7 +253,7 @@ async fn trigger_action(port: &mut OpticalPort<'_>, id: &str, param: &str) -> Re
     info!("Triggering action {action:?} with parameter {param}");
 
     let param = if action.params.is_some() {
-        Some(Value::String(param.to_string()))
+        Some(param)
     } else {
         None
     };

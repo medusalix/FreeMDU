@@ -5,7 +5,7 @@ use crate::{
     worker::{Request, Response},
 };
 use anyhow::Result;
-use freemdu::device::{Action, DeviceKind, PropertyKind, Value};
+use freemdu::device::{Action, DeviceKind, PropertyKind};
 use ratatui::{
     buffer::Buffer,
     crossterm::event::Event,
@@ -76,9 +76,8 @@ impl Session {
                 State::Confirmed => {
                     if let Popup::TriggerAction(action, input) = popup {
                         // Use input value if action has parameters
-                        // Only string parameters are currently supported
                         let param = if action.params.is_some() {
-                            Some(Value::String(input.value().trim().to_string()))
+                            Some(input.value().trim().to_string())
                         } else {
                             None
                         };

@@ -637,12 +637,12 @@ impl<P: Read + Write> Device<P> for Dishwasher<P> {
     async fn trigger_action(
         &mut self,
         action: &Action,
-        param: Option<Value>,
+        param: Option<&str>,
     ) -> Result<(), P::Error> {
         match *action {
             ACTION_START_PROGRAM => match param {
                 None => self.start_program().await,
-                _ => Err(Error::InvalidArgument),
+                Some(_) => Err(Error::InvalidArgument),
             },
             _ => Err(Error::UnknownAction),
         }

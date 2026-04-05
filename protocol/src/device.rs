@@ -158,11 +158,11 @@ pub enum ActionKind {
 /// when invoking [`Device::trigger_action`].
 #[derive(PartialEq, Eq, Debug)]
 pub enum ActionParameters {
-    /// Action accepts a single [`Value::String`] chosen from an enumeration.
+    /// Action accepts a single value chosen from an enumeration.
     ///
     /// The slice contains all possible options.
     Enumeration(&'static [&'static str]),
-    /// Action accepts a [`Value::String`] representing a combination of flags.
+    /// Action accepts a value representing a combination of flags.
     ///
     /// The slice contains all possible flag names.
     Flags(&'static [&'static str]),
@@ -391,7 +391,7 @@ pub trait Device<P: Read + Write>: private::Sealed {
     /// The action must be from the set returned by [`Device::actions`].
     ///
     /// Depending on the value of [`Action::params`], the `param` argument
-    /// must be supplied with a corresponding [`Value`] variant.
+    /// must conform to the specified parameter type.
     ///
     /// # Errors
     ///
@@ -402,7 +402,7 @@ pub trait Device<P: Read + Write>: private::Sealed {
     async fn trigger_action(
         &mut self,
         action: &Action,
-        param: Option<Value>,
+        param: Option<&str>,
     ) -> Result<(), P::Error>;
 
     /// Returns a mutable reference to the underlying diagnostic interface.
