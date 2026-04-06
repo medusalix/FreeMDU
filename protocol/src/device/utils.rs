@@ -123,3 +123,76 @@ pub fn rpm_from_motor_speed_vfd(speed: u16) -> u16 {
             .unwrap_or(u16::MAX),
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bcd() {
+        assert_eq!(decode_bcd_value(0x0000_0000), 0);
+        assert_eq!(decode_bcd_value(0x0000_7974), 7974);
+        assert_eq!(decode_bcd_value(0x1234_5678), 1234_5678);
+        assert_eq!(decode_bcd_value(0x9999_9999), 9999_9999);
+        assert_eq!(decode_bcd_value(0xabcd_1234), 1234);
+        assert_eq!(decode_bcd_value(0xabcd_ffff), 0);
+    }
+
+    #[test]
+    fn ntc_adc() {
+        assert_eq!(ntc_resistance_from_adc(0x00), 0);
+        assert_eq!(ntc_resistance_from_adc(0x50), 977); // 100 °C
+        assert_eq!(ntc_resistance_from_adc(0xae), 4562); // 50 °C
+        assert_eq!(ntc_resistance_from_adc(0xde), 14038); // 22 °C
+        assert_eq!(ntc_resistance_from_adc(0xf2), 37164); // 0 °C
+        assert_eq!(ntc_resistance_from_adc(0xff), 548_250);
+    }
+
+    #[test]
+    fn mc14489() {
+        assert_eq!(
+            decode_mc14489_display([0x00, 0x00, 0x80, 0x7f]),
+            [None, None, None, None, None, None],
+        );
+        assert_eq!(
+            decode_mc14489_display([0x02, 0x09, 0x90, 0x71]),
+            [Some('2'), Some('.'), Some('0'), None, Some('9'), None],
+        );
+        assert_eq!(
+            decode_mc14489_display([0x50, 0x03, 0x80, 0x73]),
+            [None, None, Some('5'), None, Some('3'), None],
+        );
+        assert_eq!(
+            decode_mc14489_display([0x18, 0x02, 0x80, 0x73]),
+            [Some('P'), None, Some('1'), None, Some('2'), None],
+        );
+        assert_eq!(
+            decode_mc14489_display([0xcc, 0x0c, 0x80, 0x71]),
+            [Some('C'), None, Some('C'), None, Some('C'), None],
+        );
+    }
+
+    #[test]
+    fn rpm_motor_speed() {
+        assert_eq!(rpm_from_motor_speed(0x0000_0000), 0);
+        assert_eq!(rpm_from_motor_speed(0x0000_0001), u16::MAX);
+        assert_eq!(rpm_from_motor_speed(0x0000_00dd), 2002);
+        assert_eq!(rpm_from_motor_speed(0x0000_013c), 1400);
+        assert_eq!(rpm_from_motor_speed(0x0000_01eb), 901);
+        assert_eq!(rpm_from_motor_speed(0x0000_2b2f), 40);
+        assert_eq!(rpm_from_motor_speed(0x0000_3995), 30);
+        assert_eq!(rpm_from_motor_speed(0x0000_ffff), 0);
+    }
+
+    #[test]
+    fn rpm_motor_speed_vfd() {
+        assert_eq!(rpm_from_motor_speed_vfd(0x0000), 0);
+        assert_eq!(rpm_from_motor_speed_vfd(0x007a), 10);
+        assert_eq!(rpm_from_motor_speed_vfd(0x0153), 30);
+        assert_eq!(rpm_from_motor_speed_vfd(0x01c4), 40);
+        assert_eq!(rpm_from_motor_speed_vfd(0x2c2a), 1000);
+        assert_eq!(rpm_from_motor_speed_vfd(0x3095), 1100);
+        assert_eq!(rpm_from_motor_speed_vfd(0x3500), 1200);
+        assert_eq!(rpm_from_motor_speed_vfd(0x7ffe), 2899);
+        assert_eq!(rpm_from_motor_speed_vfd(0x7fff), 0);
+    }
+}
