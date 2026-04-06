@@ -811,7 +811,7 @@ impl<P: Read + Write> WashingMachine<P> {
     pub async fn query_motor_target_speed(&mut self) -> Result<u16, P::Error> {
         let target: u16 = self.intf.read_memory(0x00d5).await?;
 
-        utils::rpm_from_motor_speed(u32::from(target)).ok_or(Error::UnexpectedMemoryValue)
+        Ok(utils::rpm_from_motor_speed(u32::from(target)))
     }
 
     /// Queries the current speed sensed by the tachometer generator and the target speed.

@@ -100,14 +100,14 @@ fn decode_mc14489_digit(code: u8, special: bool) -> Option<char> {
 }
 
 /// Computes the motor speed in rpm from a raw motor speed value.
-pub fn rpm_from_motor_speed(speed: u32) -> Option<u16> {
+pub fn rpm_from_motor_speed(speed: u32) -> u16 {
     // This constant can be found by minimizing the error between the values
     // in the device's motor speed lookup table and the actual speed in rpm.
     const RPM_CONVERSION: u32 = 442_500;
 
     match speed {
-        0x0000_0000 | 0x0000_ffff => Some(0), // No speed set
-        s => (RPM_CONVERSION / s).try_into().ok(),
+        0x0000_0000 | 0x0000_ffff => 0, // No speed set
+        s => (RPM_CONVERSION / s).try_into().unwrap_or(u16::MAX),
     }
 }
 

@@ -755,14 +755,13 @@ impl<P: Read + Write> WashingMachine<P> {
         // based on the value of the memory at 0x020b multiplied by 2.
         // PWM calculations for the motor are performed in a subroutine at 0xb937.
         let speed: [u8; 5] = self.intf.read_memory(0x0091).await?;
-        let current_raw = u32::from_le_bytes([speed[0], speed[1], speed[2], 0x00]);
-        let target_raw = u16::from_le_bytes([speed[3], speed[4]]);
-        let current =
-            utils::rpm_from_motor_speed(current_raw).ok_or(Error::UnexpectedMemoryValue)?;
-        let target = utils::rpm_from_motor_speed(u32::from(target_raw))
-            .ok_or(Error::UnexpectedMemoryValue)?;
+        let current = u32::from_le_bytes([speed[0], speed[1], speed[2], 0x00]);
+        let target = u32::from_le_bytes([speed[3], speed[4], 0x00, 0x00]);
 
-        Ok((current, target))
+        Ok((
+            utils::rpm_from_motor_speed(current),
+            utils::rpm_from_motor_speed(target),
+        ))
     }
 
     /// Starts the selected program.

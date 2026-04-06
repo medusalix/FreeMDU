@@ -801,12 +801,12 @@ impl<P: Read + Write> WashingMachine<P> {
         // During the spin phase, the motor speed is determined by a closed-loop controller
         // using tachometer readings, with the speed setpoint stored at 0x018b.
         let speed: [u8; 5] = self.intf.read_memory(0x00d3).await?;
-        let current_raw = u16::from_le_bytes([speed[0], speed[1]]);
-        let target_raw = u16::from_le_bytes([speed[3], speed[4]]);
+        let current = u16::from_le_bytes([speed[0], speed[1]]);
+        let target = u16::from_le_bytes([speed[3], speed[4]]);
 
         Ok((
-            utils::rpm_from_motor_speed_vfd(current_raw),
-            utils::rpm_from_motor_speed_vfd(target_raw),
+            utils::rpm_from_motor_speed_vfd(current),
+            utils::rpm_from_motor_speed_vfd(target),
         ))
     }
 
