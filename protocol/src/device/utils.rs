@@ -114,10 +114,12 @@ pub fn rpm_from_motor_speed(speed: u32) -> u16 {
 /// Computes the motor speed in rpm from a raw variable-frequency drive (VFD) speed value.
 pub fn rpm_from_motor_speed_vfd(speed: u16) -> u16 {
     // The VFD value and motor speed in rpm have a linear relationship.
-    const RPM_CONVERSION: u16 = 113;
+    const RPM_CONVERSION: u32 = 113;
 
     match speed {
         0x7fff => 0, // No speed set
-        s => (s * 10) / RPM_CONVERSION,
+        s => ((u32::from(s) * 10) / RPM_CONVERSION)
+            .try_into()
+            .unwrap_or(u16::MAX),
     }
 }
