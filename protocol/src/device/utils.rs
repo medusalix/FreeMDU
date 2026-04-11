@@ -123,6 +123,7 @@ pub fn rpm_from_motor_speed_vfd(speed: u16) -> u16 {
             .unwrap_or(u16::MAX),
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
