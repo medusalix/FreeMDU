@@ -6,7 +6,7 @@ repository = "https://github.com/medusalix/FreeMDU"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-anyhow = { version = "1.0.100", default-features = false }
+anyhow = { version = "1.0.102", default-features = false }
 embassy-executor = { version = "0.9.1", features = ["log"] }
 embassy-futures = { version = "0.1.2", features = ["log"] }
 embassy-net = { version = "0.7.1", features = [
@@ -14,7 +14,7 @@ embassy-net = { version = "0.7.1", features = [
   "log",
 ] }
 embassy-sync = { version = "0.7.2", features = ["log"] }
-embassy-time = { version = "0.5.0", features = ["log"] }
+embassy-time = { version = "0.5.1", features = ["log"] }
 embedded-io-async = "0.7.0"
 esp-alloc = "0.9.0"
 esp-backtrace = { version = "0.18.1", features = [
@@ -35,7 +35,7 @@ esp-radio = { version = "0.17.0", features = [
   "wifi",
 ] }
 freemdu = { path = "../protocol" }
-log = "0.4.28"
+log = "0.4.29"
 mcutie = { version = "0.3.0", features = ["log"] }
 static_cell = "2.1.1"
 

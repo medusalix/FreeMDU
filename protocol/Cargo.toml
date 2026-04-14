@@ -15,17 +15,17 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 async-trait = { version = "0.1.89" }
-bitflags = { version = "2.10.0" }
+bitflags = { version = "2.11.1" }
 bitflags-derive = "0.0.4"
 embedded-io-adapters = { version = "0.7.0", features = ["tokio-1"], optional = true }
 embedded-io-async = "0.7.0"
-log = "0.4.28"
-serial2-tokio = { version = "0.1.19", optional = true }
+log = "0.4.29"
+serial2-tokio = { version = "0.1.23", optional = true }
 strum = { version = "0.27.2", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
-env_logger = "0.11.8"
-tokio = { version = "1.48.0", features = ["rt-multi-thread", "macros", "time"] }
+env_logger = "0.11.10"
+tokio = { version = "1.52.0", features = ["rt-multi-thread", "macros", "time"] }
 
 [features]
 native-serial = ["dep:serial2-tokio", "dep:embedded-io-adapters"]
