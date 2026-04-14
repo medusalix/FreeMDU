@@ -21,7 +21,6 @@ use ratatui::{
     text::Line,
     widgets::{Block, BorderType, Borders, Padding, StatefulWidget, Widget},
 };
-use tokio::task::LocalSet;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -151,16 +150,14 @@ impl StatefulWidget for &App {
     }
 }
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main(flavor = "local")]
 async fn main() -> Result<()> {
     env_logger::init();
 
     let args = Args::parse();
     let port = serial::open(&args.serial_port).context("Failed to open serial port")?;
     let mut term = ratatui::init();
-    let res = LocalSet::new()
-        .run_until(async move { App::default().run(port, &mut term).await })
-        .await;
+    let res = App::default().run(port, &mut term).await;
 
     ratatui::restore();
 
