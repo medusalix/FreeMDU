@@ -34,6 +34,7 @@ The following table lists the software IDs and device/board combinations that ha
 | 360         | Bare board     | EDPW 223-A | Mitsubishi M38078MC-065FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
 | 419         | Bare board     | EDPW 206   | Mitsubishi M37451MC-804FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
 | 469         | W 487 S        | EDPW 228-A | Mitsubishi M38078MF       | *Check inlet (PC)* indicator | 🟢 Fully supported |
+| 517         | G 7804         | EGPL 061   | Mitsubishi M38079EFFP     | *(PC) DOS* indicator         | 🟢 Fully supported |
 | 605         | G 651 I PLUS-3 | EGPL 542-C | Mitsubishi M38027M8       | *Salt (PC)* indicator        | 🟢 Fully supported |
 | 629         | W 2446         | EDPL 126-B | Mitsubishi M38079MF-308FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
 | 2088        | W 3241         | EDPL 162-B | Mitsubishi M38079EFFP     | *Check inlet (PC)* indicator | 🟢 Fully supported |
