@@ -537,26 +537,6 @@ pub enum WaterDiverterPosition {
 }
 
 /// Washing machine device implementation.
-///
-/// Connect to a compatible washing machine using [`WashingMachine::connect`].
-///
-/// # Examples
-///
-/// ```no_run
-/// # async fn example() -> freemdu::device::Result<(), freemdu::serial::PortError> {
-/// use freemdu::device::{Device, id629::WashingMachine};
-///
-/// let mut port = freemdu::serial::open("/dev/ttyACM0")?;
-/// let mut machine = WashingMachine::connect(&mut port).await?;
-///
-/// println!("Model number: {}", machine.query_model_number().await?);
-/// println!("Program type: {}", machine.query_program_type().await?);
-/// println!("Program options: {}", machine.query_program_options().await?);
-///
-/// machine.start_program().await?;
-/// # Ok(())
-/// # }
-/// ```
 #[derive(Debug)]
 pub struct WashingMachine<P> {
     intf: Interface<P>,

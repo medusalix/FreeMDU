@@ -496,26 +496,6 @@ bitflags::bitflags! {
 }
 
 /// Washing machine device implementation.
-///
-/// Connect to a compatible washing machine using [`WashingMachine::connect`].
-///
-/// # Examples
-///
-/// ```no_run
-/// # async fn example() -> freemdu::device::Result<(), freemdu::serial::PortError> {
-/// use freemdu::device::{Device, id360::WashingMachine};
-///
-/// let mut port = freemdu::serial::open("/dev/ttyACM0")?;
-/// let mut machine = WashingMachine::connect(&mut port).await?;
-///
-/// println!("Program type: {}", machine.query_program_type().await?);
-/// println!("Program options: {}", machine.query_program_options().await?);
-/// println!("Buzzer enabled: {}", machine.query_buzzer_enabled().await?);
-///
-/// machine.start_program().await?;
-/// # Ok(())
-/// # }
-/// ```
 #[derive(Debug)]
 pub struct WashingMachine<P> {
     intf: Interface<P>,

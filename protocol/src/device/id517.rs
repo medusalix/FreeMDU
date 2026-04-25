@@ -409,25 +409,6 @@ bitflags::bitflags! {
 }
 
 /// Glasswasher device implementation.
-///
-/// Connect to a compatible glasswasher using [`Glasswasher::connect`].
-///
-/// # Examples
-///
-/// ```no_run
-/// # async fn example() -> freemdu::device::Result<(), freemdu::serial::PortError> {
-/// use freemdu::device::{Device, id517::Glasswasher};
-///
-/// let mut port = freemdu::serial::open("/dev/ttyACM0")?;
-/// let mut washer = Glasswasher::connect(&mut port).await?;
-///
-/// println!("Program type: {}", washer.query_program_type().await?);
-/// println!("Drying enabled: {}", washer.query_drying_enabled().await?);
-///
-/// washer.start_program().await?;
-/// # Ok(())
-/// # }
-/// ```
 #[derive(Debug)]
 pub struct Glasswasher<P> {
     intf: Interface<P>,

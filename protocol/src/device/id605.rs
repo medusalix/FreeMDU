@@ -323,25 +323,6 @@ bitflags::bitflags! {
 }
 
 /// Dishwasher device implementation.
-///
-/// Connect to a compatible dishwasher using [`Dishwasher::connect`].
-///
-/// # Examples
-///
-/// ```no_run
-/// # async fn example() -> freemdu::device::Result<(), freemdu::serial::PortError> {
-/// use freemdu::device::{Device, id605::Dishwasher};
-///
-/// let mut port = freemdu::serial::open("/dev/ttyACM0")?;
-/// let mut washer = Dishwasher::connect(&mut port).await?;
-///
-/// println!("Program type: {}", washer.query_program_type().await?);
-/// println!("Top solo enabled: {}", washer.query_top_solo_enabled().await?);
-///
-/// washer.start_program().await?;
-/// # Ok(())
-/// # }
-/// ```
 #[derive(Debug)]
 pub struct Dishwasher<P> {
     intf: Interface<P>,
