@@ -31,6 +31,12 @@ const PROP_MACHINE_NUMBER: Property = Property {
     name: "Machine Number",
     unit: None,
 };
+const PROP_OPERATING_TIME: Property = Property {
+    kind: PropertyKind::General,
+    id: "operating_time",
+    name: "Operating Time",
+    unit: None,
+};
 const PROP_FAULT_F1: Property = Property {
     kind: PropertyKind::Fault,
     id: "fault_f1",
@@ -674,6 +680,7 @@ impl<P: Read + Write> Device<P> for Glasswasher<P> {
     fn properties(&self) -> &'static [Property] {
         &[
             PROP_MACHINE_NUMBER,
+            PROP_OPERATING_TIME,
             PROP_FAULT_F1,
             PROP_FAULT_F2,
             PROP_FAULT_F4,
@@ -713,6 +720,7 @@ impl<P: Read + Write> Device<P> for Glasswasher<P> {
         match *prop {
             // General
             PROP_MACHINE_NUMBER => Ok(self.query_machine_number().await?.into()),
+            PROP_OPERATING_TIME => Ok(self.query_operating_time().await?.into()),
             // Fault
             PROP_FAULT_F1 => Ok(self
                 .query_fault(FaultCode::TemperatureMainWash)
