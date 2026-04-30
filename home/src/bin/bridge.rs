@@ -76,6 +76,6 @@ async fn main(spawner: Spawner) {
     let serial = UsbSerialJtag::new(peripherals.USB_DEVICE).into_async();
     let opt = freemdu_home::new_optical_port(peripherals.UART1).unwrap();
 
-    spawner.spawn(led_task(led)).unwrap();
-    spawner.spawn(bridge_task(serial, opt)).unwrap();
+    spawner.spawn(led_task(led).unwrap());
+    spawner.spawn(bridge_task(serial, opt).unwrap());
 }

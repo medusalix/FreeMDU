@@ -9,7 +9,7 @@ use alloc::{
     string::{String, ToString},
     vec::Vec,
 };
-use anyhow::Result;
+use anyhow::{Context, Result};
 use core::fmt::Write;
 use embassy_executor::Spawner;
 use embassy_futures::select::{self, Either};
@@ -18,16 +18,13 @@ use embassy_time::{Duration, Ticker, WithTimeout};
 use esp_alloc as _;
 use esp_backtrace as _;
 use esp_hal::{
-    gpio::Output, interrupt::software::SoftwareInterruptControl, peripherals::WIFI, rng::Rng,
-    timer::timg::TimerGroup,
+    efuse, gpio::Output, interrupt::software::SoftwareInterruptControl, peripherals::WIFI,
+    rng::Rng, timer::timg::TimerGroup,
 };
 use esp_println::logger;
-use esp_radio::{
-    Controller,
-    wifi::{
-        self, ClientConfig, CountryInfo, ModeConfig, OperatingClass, WifiController, WifiDevice,
-        WifiEvent,
-    },
+use esp_radio::wifi::{
+    self, ControllerConfig, CountryInfo, Interface, OperatingClass, WifiController,
+    sta::StationConfig,
 };
 use freemdu::device::{self, Action, ActionKind, Date, Property, PropertyKind, Value};
 use freemdu_home::OpticalPort;
@@ -64,7 +61,7 @@ async fn mqtt_stack_task(
         PublishBytes<'static, &'static str, AvailabilityState>,
         1,
     >,
-) {
+) -> ! {
     // Move large MQTT task to heap
     Box::pin(task.run()).await;
 }
@@ -283,7 +280,7 @@ async fn connect_to_device<'a, 'b>(
 }
 
 #[embassy_executor::task]
-async fn network_stack_task(mut runner: Runner<'static, WifiDevice<'static>>) -> ! {
+async fn network_stack_task(mut runner: Runner<'static, Interface<'static>>) -> ! {
     runner.run().await;
 }
 
@@ -291,10 +288,10 @@ async fn network_stack_task(mut runner: Runner<'static, WifiDevice<'static>>) ->
 async fn wifi_connect_task(mut controller: WifiController<'static>) -> ! {
     loop {
         match controller.connect_async().await {
-            Ok(()) => {
-                info!("Wi-Fi connected");
-                controller.wait_for_event(WifiEvent::StaDisconnected).await;
-                info!("Wi-Fi disconnected");
+            Ok(info) => {
+                info!("Wi-Fi connected: {info:?}");
+                let info = controller.wait_for_disconnect_async().await;
+                info!("Wi-Fi disconnected: {info:?}");
             }
             Err(err) => {
                 error!("Failed to connect to Wi-Fi: {err:?}");
@@ -304,70 +301,44 @@ async fn wifi_connect_task(mut controller: WifiController<'static>) -> ! {
     }
 }
 
-fn init_wifi(wifi: WIFI<'static>) -> Result<(WifiController<'static>, WifiDevice<'static>)> {
-    static CONTROLLER: StaticCell<Controller<'_>> = StaticCell::new();
-
-    let controller = CONTROLLER.init(
-        esp_radio::init().map_err(|err| anyhow::anyhow!("Failed to initialize radio: {err:?}"))?,
-    );
-    let (mut controller, intfs) = wifi::new(
-        controller,
-        wifi,
-        wifi::Config::default().with_country_code(
-            CountryInfo::from(*b"01").with_operating_class(OperatingClass::Indoors),
-        ),
-    )
-    .map_err(|err| anyhow::anyhow!("Failed to create Wi-Fi controller: {err:?}"))?;
-
-    controller
-        .set_config(&ModeConfig::Client(
-            ClientConfig::default()
-                .with_ssid(env!("WIFI_SSID").into())
-                .with_password(env!("WIFI_PASSWORD").into()),
-        ))
-        .map_err(|err| anyhow::anyhow!("Failed to set Wi-Fi configuration: {err:?}"))?;
-    controller
-        .start()
-        .map_err(|err| anyhow::anyhow!("Failed to start Wi-Fi controller: {err:?}"))?;
-
-    Ok((controller, intfs.sta))
-}
-
-fn hostname_from_wifi(dev: &WifiDevice<'_>) -> Result<String> {
-    let mut hostname = String::with_capacity(32);
-
-    write!(&mut hostname, "freemdu_home_")?;
-
-    for byte in dev.mac_address() {
-        write!(&mut hostname, "{byte:02x}")?;
-    }
-
-    Ok(hostname)
-}
-
 fn init_network(
-    dev: WifiDevice<'static>,
+    wifi: WIFI<'static>,
     hostname: &str,
-) -> Result<(Stack<'static>, Runner<'static, WifiDevice<'static>>)> {
+) -> Result<(
+    WifiController<'static>,
+    Stack<'static>,
+    Runner<'static, Interface<'static>>,
+)> {
     static RESOURCES: StaticCell<StackResources<3>> = StaticCell::new();
 
-    let resources = RESOURCES.init(StackResources::new());
+    let (controller, intfs) = wifi::new(
+        wifi,
+        ControllerConfig::default()
+            .with_initial_config(wifi::Config::Station(
+                StationConfig::default()
+                    .with_ssid(env!("WIFI_SSID"))
+                    .with_password(env!("WIFI_PASSWORD").into()),
+            ))
+            .with_country_info(
+                CountryInfo::from(*b"01").with_operating_class(OperatingClass::Indoors),
+            ),
+    )
+    .context("Failed to configure and start Wi-Fi controller")?;
+
     let rng = Rng::new();
     let seed = (u64::from(rng.random()) << 32) | u64::from(rng.random());
     let mut cfg = DhcpConfig::default();
 
-    cfg.hostname = Some(
-        hostname
-            .try_into()
-            .map_err(|err| anyhow::anyhow!("Failed to set DHCP hostname: {err:?}"))?,
+    cfg.hostname = Some(hostname.try_into().context("Failed to set DHCP hostname")?);
+
+    let (stack, runner) = embassy_net::new(
+        intfs.station,
+        embassy_net::Config::dhcpv4(cfg),
+        RESOURCES.init(StackResources::new()),
+        seed,
     );
 
-    Ok(embassy_net::new(
-        dev,
-        embassy_net::Config::dhcpv4(cfg),
-        resources,
-        seed,
-    ))
+    Ok((controller, stack, runner))
 }
 
 #[esp_rtos::main]
@@ -383,11 +354,18 @@ async fn main(spawner: Spawner) {
 
     esp_rtos::start(timg0.timer0, sw_int.software_interrupt0);
 
-    let port = freemdu_home::new_optical_port(peripherals.UART1).unwrap();
+    let mut hostname = String::with_capacity(32);
+
+    write!(&mut hostname, "freemdu_home_").unwrap();
+
+    for byte in efuse::base_mac_address().as_bytes() {
+        write!(&mut hostname, "{byte:02x}").unwrap();
+    }
+
     let led = freemdu_home::new_status_led();
-    let (wifi_controller, wifi_dev) = init_wifi(peripherals.WIFI).unwrap();
-    let hostname = hostname_from_wifi(&wifi_dev).unwrap();
-    let (net_stack, net_runner) = init_network(wifi_dev, &hostname).unwrap();
+    let port = freemdu_home::new_optical_port(peripherals.UART1).unwrap();
+    let (wifi_controller, net_stack, net_runner) =
+        init_network(peripherals.WIFI, &hostname).unwrap();
     let (mqtt_receiver, mqtt_task) =
         McutieBuilder::new(net_stack, "freemdu_home", env!("MQTT_HOSTNAME"))
             .with_authentication(env!("MQTT_USERNAME"), env!("MQTT_PASSWORD"))
@@ -395,10 +373,8 @@ async fn main(spawner: Spawner) {
             .with_last_will(STATUS_TOPIC.with_bytes(AvailabilityState::Offline))
             .build();
 
-    spawner.spawn(mqtt_stack_task(mqtt_task)).unwrap();
-    spawner
-        .spawn(mqtt_message_task(mqtt_receiver, hostname, port, led))
-        .unwrap();
-    spawner.spawn(network_stack_task(net_runner)).unwrap();
-    spawner.spawn(wifi_connect_task(wifi_controller)).unwrap();
+    spawner.spawn(mqtt_stack_task(mqtt_task).unwrap());
+    spawner.spawn(mqtt_message_task(mqtt_receiver, hostname, port, led).unwrap());
+    spawner.spawn(network_stack_task(net_runner).unwrap());
+    spawner.spawn(wifi_connect_task(wifi_controller).unwrap());
 }
