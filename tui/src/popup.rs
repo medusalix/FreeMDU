@@ -54,6 +54,7 @@ impl Popup {
         let hint = match params {
             ActionParameters::Enumeration(vals) => vals.join(", "),
             ActionParameters::Flags(vals) => vals.join(" | "),
+            ActionParameters::Range(min, max) => format!("range from {min} to {max}"),
         };
         let par = Paragraph::new(vec![
             Line::from(vec![
