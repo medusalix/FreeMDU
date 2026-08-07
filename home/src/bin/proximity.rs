@@ -21,7 +21,7 @@ const TESTED_TX_PIN: u8 = match core::primitive::u8::from_str_radix(env!("PIN_OP
 esp_bootloader_esp_idf::esp_app_desc!();
 
 #[esp_rtos::main]
-async fn main(_spawner: embassy_executor::Spawner) {
+async fn main(_: embassy_executor::Spawner) {
     esp_alloc::heap_allocator!(size: 32 * 1024);
 
     let peripherals = esp_hal::init(esp_hal::Config::default());
