@@ -361,43 +361,20 @@ async fn main(spawner: Spawner) {
     for byte in efuse::base_mac_address().as_bytes() {
         write!(&mut hostname, "{byte:02x}").unwrap();
     }
+
     let led = freemdu_home::new_status_led();
     let port = freemdu_home::new_optical_port(peripherals.UART1).unwrap();
     let (wifi_controller, net_stack, net_runner) =
         init_network(peripherals.WIFI, &hostname).unwrap();
-
-    // 1. Elindítjuk a hálózati feladatokat a háttérben (CSAK EGYSZER, ITT!)
-    spawner.spawn(network_stack_task(net_runner).unwrap());
-    spawner.spawn(wifi_connect_task(wifi_controller).unwrap());
-
-    // 2. Megvárjuk, amíg a DHCP kiosztja a hálózati konfigurációt
-    info!("Waiting for DHCP...");
-    net_stack.wait_config_up().await;
-
-    let config = net_stack.config_v4().unwrap();
-    let gateway_ip = config.gateway.expect("No gateway address received from DHCP");
-
-    info!("DHCP configuration active!");
-    info!("Local IP: {}", config.address.address());
-    info!("Gateway IP (MQTT Broker): {}", gateway_ip);
-
-    // 3. Statikus memóriahely biztosítása a dinamikus IP stringnek, hogy 'static élettartamú legyen
-    static MQTT_HOST_CELL: static_cell::StaticCell<String> = static_cell::StaticCell::new();
-    let mut mqtt_host_string = String::with_capacity(16);
-    write!(&mut mqtt_host_string, "{}", gateway_ip).unwrap();
-
-    // Inicializáljuk a statikus cellát, így egy &'static str hivatkozást kapunk belőle
-    let mqtt_host_static: &'static String = MQTT_HOST_CELL.init(mqtt_host_string);
-
-    // 4. Az MQTT kliens felépítése a statikus IP referenciával
     let (mqtt_receiver, mqtt_task) =
-        McutieBuilder::new(net_stack, "freemdu_home", mqtt_host_static.as_str())
+        McutieBuilder::new(net_stack, "freemdu_home", env!("MQTT_HOSTNAME"))
             .with_authentication(env!("MQTT_USERNAME"), env!("MQTT_PASSWORD"))
             .with_subscriptions([Topic::Device("+/trigger")])
             .with_last_will(STATUS_TOPIC.with_bytes(AvailabilityState::Offline))
             .build();
 
-    // 5. Elindítjuk az MQTT-ért felelős taszkokat is
     spawner.spawn(mqtt_stack_task(mqtt_task).unwrap());
     spawner.spawn(mqtt_message_task(mqtt_receiver, hostname, port, led).unwrap());
+    spawner.spawn(network_stack_task(net_runner).unwrap());
+    spawner.spawn(wifi_connect_task(wifi_controller).unwrap());
 }
