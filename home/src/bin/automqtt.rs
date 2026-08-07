@@ -18,8 +18,12 @@ use embassy_time::{Duration, Ticker, WithTimeout};
 use esp_alloc as _;
 use esp_backtrace as _;
 use esp_hal::{
-    efuse, gpio::{AnyPin, Level, Output, OutputConfig}, interrupt::software::SoftwareInterruptControl, peripherals::WIFI,
-    rng::Rng, timer::timg::TimerGroup,
+    efuse,
+    gpio::{AnyPin, Level, Output, OutputConfig},
+    interrupt::software::SoftwareInterruptControl,
+    peripherals::WIFI,
+    rng::Rng,
+    timer::timg::TimerGroup,
 };
 use esp_println::logger;
 use esp_radio::wifi::{
@@ -367,47 +371,45 @@ async fn main(spawner: Spawner) {
     unsafe { esp_hal::gpio::AnyPin::steal(2) },
     esp_hal::gpio::Level::Low,
     esp_hal::gpio::OutputConfig::default(),
-    );     
+    );
     let mut gpio3 = Output::new(
     unsafe { esp_hal::gpio::AnyPin::steal(3) },
     esp_hal::gpio::Level::Low,
     esp_hal::gpio::OutputConfig::default(),
-    );   
+    );
     let mut gpio4 = Output::new(
     unsafe { esp_hal::gpio::AnyPin::steal(4) },
     esp_hal::gpio::Level::Low,
     esp_hal::gpio::OutputConfig::default(),
-    );   
+    );
     let mut gpio5 = Output::new(
     unsafe { esp_hal::gpio::AnyPin::steal(5) },
     esp_hal::gpio::Level::Low,
     esp_hal::gpio::OutputConfig::default(),
-    );  
+    );
     let mut gpio6 = Output::new(
     unsafe { esp_hal::gpio::AnyPin::steal(6) },
     esp_hal::gpio::Level::Low,
     esp_hal::gpio::OutputConfig::default(),
-    );   
+    );
     let mut gpio7 = Output::new(
     unsafe { esp_hal::gpio::AnyPin::steal(7) },
     esp_hal::gpio::Level::Low,
     esp_hal::gpio::OutputConfig::default(),
-    );         
+    );
     let mut gpio8 = Output::new(
     unsafe { esp_hal::gpio::AnyPin::steal(8) },
     esp_hal::gpio::Level::Low,
     esp_hal::gpio::OutputConfig::default(),
-    );   
+    );
     let mut gpio9 = Output::new(
     unsafe { esp_hal::gpio::AnyPin::steal(9) },
     esp_hal::gpio::Level::Low,
     esp_hal::gpio::OutputConfig::default(),
-    );   
+    );
     */
     let port = freemdu_home::new_optical_port(peripherals.UART1).unwrap();
-    
-    
-    
+
     let (wifi_controller, net_stack, net_runner) =
         init_network(peripherals.WIFI, &hostname).unwrap();
 
@@ -420,7 +422,9 @@ async fn main(spawner: Spawner) {
     net_stack.wait_config_up().await;
 
     let config = net_stack.config_v4().unwrap();
-    let gateway_ip = config.gateway.expect("No gateway address received from DHCP");
+    let gateway_ip = config
+        .gateway
+        .expect("No gateway address received from DHCP");
 
     info!("DHCP configuration active!");
     info!("Local IP: {}", config.address.address());
