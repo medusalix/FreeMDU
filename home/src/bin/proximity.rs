@@ -5,7 +5,7 @@ extern crate alloc;
 
 use esp_backtrace as _;
 use esp_hal::{
-    gpio::{AnyPin,Level, Output, Input, InputConfig, OutputConfig},
+    gpio::{AnyPin, Input, InputConfig, Level, Output, OutputConfig},
     timer::timg::TimerGroup,
 };
 
@@ -41,19 +41,14 @@ async fn main(_spawner: embassy_executor::Spawner) {
 
     let _gpioforinput = Input::new(
         unsafe { AnyPin::steal(TESTED_RX_PIN) },
-        InputConfig::default()
+        InputConfig::default(),
     );
 
-    let mut gpio10 = Output::new(
-        peripherals.GPIO10,
-        Level::Low,
-        OutputConfig::default(),
-    );
+    let mut gpio10 = Output::new(peripherals.GPIO10, Level::Low, OutputConfig::default());
 
     let gpios = esp_hal::peripherals::GPIO::regs();
 
     loop {
-
         let level = (gpios.in_().read().bits() & (1 << TESTED_RX_PIN)) != 0;
 
         if level {
