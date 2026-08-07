@@ -19,7 +19,7 @@ use esp_alloc as _;
 use esp_backtrace as _;
 use esp_hal::{
     efuse,
-//    gpio::{AnyPin, Level, Output, OutputConfig},
+    //    gpio::{AnyPin, Level, Output, OutputConfig},
     gpio::Output,
     interrupt::software::SoftwareInterruptControl,
     peripherals::WIFI,
@@ -367,12 +367,12 @@ async fn main(spawner: Spawner) {
         write!(&mut hostname, "{byte:02x}").unwrap();
     }
     let led = freemdu_home::new_status_led();
-/*
+    /*
     let mut gpio2 = Output::new(
         unsafe { esp_hal::gpio::AnyPin::steal(2) },
         esp_hal::gpio::Level::Low,
         esp_hal::gpio::OutputConfig::default(),
-    );    
+    );
     let mut gpio3 = Output::new(
     unsafe { esp_hal::gpio::AnyPin::steal(3) },
     esp_hal::gpio::Level::Low,
