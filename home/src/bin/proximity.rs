@@ -5,10 +5,18 @@ extern crate alloc;
 
 use esp_backtrace as _;
 use esp_hal::{
-    gpio::{Level, Output, OutputConfig},
+    gpio::{AnyPin,Level, Output, Input, InputConfig, OutputConfig},
     timer::timg::TimerGroup,
 };
-use freemdu_home;
+
+const TESTED_RX_PIN: u8 = match core::primitive::u8::from_str_radix(env!("PIN_OPTICAL_RX"), 10) {
+    Ok(pin) => pin,
+    Err(_) => panic!("A PIN_OPTICAL_RX is not valid."),
+};
+const TESTED_TX_PIN: u8 = match core::primitive::u8::from_str_radix(env!("PIN_OPTICAL_TX"), 10) {
+    Ok(pin) => pin,
+    Err(_) => panic!("A PIN_OPTICAL_RX is not valid."),
+};
 
 esp_bootloader_esp_idf::esp_app_desc!();
 
@@ -24,23 +32,29 @@ async fn main(_spawner: embassy_executor::Spawner) {
         esp_hal::interrupt::software::SoftwareInterruptControl::new(peripherals.SW_INTERRUPT);
     esp_rtos::start(timg0.timer0, sw_int.software_interrupt0);
 
-    // UART1 inicializálása.
-    // Ez konfigurálja a GPIO20-at UART RX-nek.
-    let _port = freemdu_home::new_optical_port(peripherals.UART1).unwrap();
+    // GPIO kimenet
+    let _gpioforout = Output::new(
+        unsafe { AnyPin::steal(TESTED_TX_PIN) },
+        Level::High,
+        OutputConfig::default(),
+    );
 
-    // GPIO10 kimenet
+    let _gpioforinput = Input::new(
+        unsafe { AnyPin::steal(TESTED_RX_PIN) },
+        InputConfig::default()
+    );
+
     let mut gpio10 = Output::new(
         peripherals.GPIO10,
         Level::Low,
         OutputConfig::default(),
     );
 
-    // GPIO regiszter blokk
-    let gpio = esp_hal::peripherals::GPIO::regs();
+    let gpios = esp_hal::peripherals::GPIO::regs();
 
     loop {
-        // GPIO20 állapotának kiolvasása
-        let level = (gpio.in_().read().bits() & (1 << 20)) != 0;
+
+        let level = (gpios.in_().read().bits() & (1 << TESTED_RX_PIN)) != 0;
 
         if level {
             gpio10.set_high();
