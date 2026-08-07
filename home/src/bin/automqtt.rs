@@ -348,9 +348,8 @@ fn init_network(
 
 #[esp_rtos::main]
 async fn main(spawner: Spawner) {
-
     static MQTT_HOST_CELL: static_cell::StaticCell<String> = static_cell::StaticCell::new();
-    
+
     logger::init_logger_from_env();
 
     let peripherals = esp_hal::init(esp_hal::Config::default());
@@ -432,12 +431,14 @@ async fn main(spawner: Spawner) {
 
     info!("DHCP configuration active!");
     info!("Local IP: {}", config.address.address());
-    info!("Gateway IP (MQTT Broker): {}", gateway_ip);
+    // info!("Gateway IP (MQTT Broker): {}", gateway_ip);
+    info!("Gateway IP (MQTT Broker): {gateway_ip}");
 
     // 3. Provide static memory allocation for the dynamic IP string so that it has a 'static lifetime
     // static MQTT_HOST_CELL: static_cell::StaticCell<String> = static_cell::StaticCell::new();
     let mut mqtt_host_string = String::with_capacity(16);
-    write!(&mut mqtt_host_string, "{}", gateway_ip).unwrap();
+    // write!(&mut mqtt_host_string, "{}", gateway_ip).unwrap();
+    write!(&mut mqtt_host_string, "{gateway_ip}").unwrap();
 
     // Initialize the static cell to get a &'static str reference from it
     let mqtt_host_static: &'static String = MQTT_HOST_CELL.init(mqtt_host_string);
