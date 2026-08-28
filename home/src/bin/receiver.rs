@@ -5,11 +5,11 @@
 extern crate alloc;
 
 use core::str::FromStr;
-use embedded_io_async::{ErrorType, Read, ReadExactError, Write};
+//use embedded_io_async::{ErrorType, Read, ReadExactError, Write};
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer, WithTimeout};
-use esp_backtrace as _;
-use esp_alloc as _; // <- Ez biztosítja a #[global_allocator] meglétét
+//use esp_backtrace as _;
+use esp_alloc as _;
 use esp_hal::{
     Async,
     gpio::{AnyPin, Input, InputConfig, Level, Output, OutputConfig},
@@ -132,7 +132,11 @@ async fn main(_spawner: Spawner) {
     let mut line_len = 0;
 
     loop {
-        match port.read(&mut rx_buf).with_timeout(Duration::from_millis(100)).await {
+        match port
+            .read(&mut rx_buf)
+            .with_timeout(Duration::from_millis(100))
+            .await
+        {
             Ok(Ok(len)) if len > 0 => {
                 let byte = rx_buf[0];
 
@@ -145,8 +149,12 @@ async fn main(_spawner: Spawner) {
                     line_len = 0;
                 }
 
-                if line_len >= 2 && line_buf[line_len - 2] == b'\r' && line_buf[line_len - 1] == b'\n' {
-                    let text = core::str::from_utf8(&line_buf[..line_len - 2]).unwrap_or("<invalid ASCII>");
+                if line_len >= 2
+                    && line_buf[line_len - 2] == b'\r'
+                    && line_buf[line_len - 1] == b'\n'
+                {
+                    let text = core::str::from_utf8(&line_buf[..line_len - 2])
+                        .unwrap_or("<invalid ASCII>");
                     info!("Received line: {text}");
 
                     status_led.set_low();

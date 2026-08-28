@@ -5,10 +5,10 @@ extern crate alloc;
 
 use alloc::format;
 use core::str::FromStr;
-use embedded_io_async::{ErrorType, Read, ReadExactError, Write};
+// use embedded_io_async::{ErrorType, Read, ReadExactError, Write};
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
-use esp_backtrace as _;
+// use esp_backtrace as _;
 use esp_alloc as _;
 use esp_hal::{
     Async,
@@ -56,18 +56,25 @@ impl Read for OpticalPort<'_> {
     }
 }
 
-use embassy_time::WithTimeout; // Ezt a meglévő embassy_time use-hoz kell adni
+use embassy_time::WithTimeout;
 
 impl Write for OpticalPort<'_> {
     async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+        // 1. Send the entire buffer at once (handled by hardware, no pause between bytes)
         // 1. Kiküldjük a teljes puffert egyszerre (a hardver intézi, nem lesz szünet a bájtok között)
         self.0.write_async(buf).await?;
 
-        // 2. Ha az optikai tükröződés miatt ki akarod üríteni a vételi puffert,
-        // azt a teljes sor kiküldése után teszed meg, nem bájtonként:
+        // 2. If you want to flush the RX buffer due to optical reflection, do so after sending the full line, not byte-by-byte:
+        // 2. Ha az optikai tükröződés miatt ki akarod üríteni a vételi puffert, azt a teljes sor kiküldése után teszed meg, nem bájtonként:
         let mut dummy = [0u8; 1];
-        while let Ok(Ok(len)) = self.read(&mut dummy).with_timeout(Duration::from_millis(2)).await {
-            if len == 0 { break; }
+        while let Ok(Ok(len)) = self
+            .read(&mut dummy)
+            .with_timeout(Duration::from_millis(2))
+            .await
+        {
+            if len == 0 {
+                break;
+            }
         }
 
         Ok(buf.len())
@@ -145,12 +152,12 @@ async fn main(_spawner: Spawner) {
 
     // --- LOOP SECTION ---
     loop {
-        // Megformázzuk a sort az Arduino minta kimenetének megfelelően
         let line = format!(
             "{}, dec: {}, hex: {:X}, oct: {:o}, bin: {:b}\r\n",
             this_byte as char, this_byte, this_byte, this_byte, this_byte
         );
 
+        // Send with byte-by-byte reflection suppression
         // Küldés bájtonkénti tükröződés-elnyeléssel
         if let Err(e) = port.write(line.as_bytes()).await {
             error!("Write error: {e:?}");
@@ -158,11 +165,13 @@ async fn main(_spawner: Spawner) {
             let _ = port.flush().await;
         }
 
+        // Status LED flash on send (Active Low)
         // Status LED felvillanása küldéskor (Active Low)
         status_led.set_low();
         Timer::after(Duration::from_millis(50)).await;
         status_led.set_high();
 
+        // Cycle: between 33..=126
         // Léptetés: 33..=126 között
         if this_byte == 126 {
             this_byte = 33;

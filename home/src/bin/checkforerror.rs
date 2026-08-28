@@ -4,10 +4,10 @@
 extern crate alloc;
 
 use core::str::FromStr;
-use embedded_io_async::{ErrorType, Read, ReadExactError, Write};
+//use embedded_io_async::{ErrorType, Read, ReadExactError, Write};
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer, WithTimeout};
-use esp_backtrace as _;
+//use esp_backtrace as _;
 use esp_alloc as _;
 use esp_hal::{
     Async,
@@ -130,11 +130,16 @@ async fn main(_spawner: Spawner) {
     let mut line_buf = [0u8; 256];
     let mut line_len = 0;
 
+    // Enforce expected next character (None: accepts any valid character for the very first line)
     // Az elvárt következő karakter tartása (None: az legelső sornál még bármilyen érvényes karaktert elfogad)
     let mut expected_char: Option<u8> = None;
 
     loop {
-        match port.read(&mut rx_buf).with_timeout(Duration::from_millis(100)).await {
+        match port
+            .read(&mut rx_buf)
+            .with_timeout(Duration::from_millis(100))
+            .await
+        {
             Ok(Ok(len)) if len > 0 => {
                 let byte = rx_buf[0];
 
@@ -145,14 +150,20 @@ async fn main(_spawner: Spawner) {
                     line_len = 0;
                 }
 
+                // Check for CR + LF (\r\n) termination
                 // CR + LF (\r\n) lezárás figyelése
-                if line_len >= 2 && line_buf[line_len - 2] == b'\r' && line_buf[line_len - 1] == b'\n' {
+                if line_len >= 2
+                    && line_buf[line_len - 2] == b'\r'
+                    && line_buf[line_len - 1] == b'\n'
+                {
                     let payload = &line_buf[..line_len - 2];
                     let text = core::str::from_utf8(payload).unwrap_or("");
 
+                    // 1. Check basic ASCII range (32..=126)
                     // 1. Alapvető ASCII tartomány ellenőrzése (32..=126)
                     let valid_ascii = payload.iter().all(|&b| (32..=126).contains(&b));
 
+                    // 2. Get line internal consistency and its start character
                     // 2. A sor belső konzisztenciájának és a kezdőkarakterének lekérése
                     let current_char = if valid_ascii {
                         check_line_consistency(text)
@@ -160,6 +171,7 @@ async fn main(_spawner: Spawner) {
                         None
                     };
 
+                    // 3. Check sequence (33 -> 126 -> 33)
                     // 3. Sorrendiség ellenőrzése (33 -> 126 -> 33)
                     let mut is_valid_sequence = false;
 
@@ -169,33 +181,39 @@ async fn main(_spawner: Spawner) {
                                 is_valid_sequence = true;
                             }
                         } else {
+                            // For the very first line, accept if in the range 33..=126
                             // Legelső sor esetén elfogadjuk, ha 33..=126 tartományban van
                             if (33..=126).contains(&c) {
                                 is_valid_sequence = true;
                             }
                         }
 
+                        // Calculate next expected character (33 after 126)
                         // Következő várható karakter kiszámítása (126 után 33)
                         let next_expected = if c >= 126 { 33 } else { c + 1 };
                         expected_char = Some(next_expected);
                     } else {
+                        // If the line was invalid, sequence continuity is also broken
                         // Ha a sor hibás volt, a sorrendiség folytonossága is megszakad
                         expected_char = None;
                     }
 
+                    // 4. Log output
                     // 4. Kiírás a logba
                     if is_valid_sequence {
                         info!("Received line: {text}");
                     } else {
-                        info!("A CR+LF karakterekig vett adatsor hibat tartalmazott.");
+                        info!("Missing line or data line up to CR+LF contained an error.");
                     }
 
+                    // 5. Flash status LED (Active Low)
                     // 5. Status LED villantása (Active Low)
                     status_led.set_low();
                     Timer::after(Duration::from_millis(100)).await;
                     status_led.set_high();
                     Timer::after(Duration::from_millis(100)).await;
 
+                    // Flush buffer
                     // Puffer ürítése
                     line_len = 0;
                 }
@@ -208,10 +226,12 @@ async fn main(_spawner: Spawner) {
     }
 }
 
+/// Check row internal consistency and return the start character code if valid.
 /// Ellenőrzi a sor belső konzisztenciáját és visszatér a kezdőkarakter kódjával, ha helyes.
 fn check_line_consistency(line: &str) -> Option<u8> {
     let mut parts = line.split(',');
 
+    // 1. Start character
     // 1. Kezdő karakter
     let first_part = parts.next()?.trim();
     if first_part.chars().count() != 1 {
@@ -220,12 +240,14 @@ fn check_line_consistency(line: &str) -> Option<u8> {
     let target_char = first_part.chars().next()? as u8;
     let target_val = target_char as u32;
 
+    // Read the following fields.
     // A következő mezők beolvasása
     let dec_part = parts.next()?;
     let hex_part = parts.next()?;
     let oct_part = parts.next()?;
     let bin_part = parts.next()?;
 
+    // Trim prefixes and parse
     // Prefikszek levágása és parse-olás
     let parse_val = |part: &str, prefix: &str, radix: u32| -> Option<u32> {
         let val_str = part.trim().strip_prefix(prefix)?;
@@ -237,8 +259,13 @@ fn check_line_consistency(line: &str) -> Option<u8> {
     let oct_val = parse_val(oct_part, "oct:", 8)?;
     let bin_val = parse_val(bin_part, "bin:", 2)?;
 
+    // Check internal numeral system consistency
     // Belső számrendszeri egyezőségek ellenőrzése
-    if target_val == dec_val && target_val == hex_val && target_val == oct_val && target_val == bin_val {
+    if target_val == dec_val
+        && target_val == hex_val
+        && target_val == oct_val
+        && target_val == bin_val
+    {
         Some(target_char)
     } else {
         None
