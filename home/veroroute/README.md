@@ -2,18 +2,23 @@
 
 **2026-AUG-28** - Some experiments
 
-I have made two paneles, similar to those are below. One is working by **150k x 22pf** feedback, other is working by **330k x 10pf**. They were tested by **checkforerror**. It shows that the second have twice more sensitivite and still stable. It was no problem if I pushed the sensor in front of the LED or leaving distance. I also wached input signal (TX pin) on oscilloscope, and the picture was good for me.
-Instead of using fix resistor value for setting the non-invering input of opamp I used a 10k potentiometer. 
-I read back the setting:
+I fabricated two PCB prototypes using feedback configurations similar to the ones shown below: one with a 150 kΩ / 22 pF network, and the other with a 330 kΩ / 10 pF network.
+
+Both boards were evaluated using the **checkforerror** firmware. Results indicate that the second configuration doubles the overall sensitivity while maintaining stability. It performed reliably regardless of sensor placement—whether positioned directly against the LED or set further back. I also monitored the input signal at the TX pin using an oscilloscope, and the signal integrity looked solid.
+
+Instead of using fixed resistors to bias the op-amp's non-inverting input, I installed a 10 kΩ potentiometer. The measured calibration values are as follows:
 
 ```
-first (150k x 22p):  9,36k - 9,14k - 290 
-second (330k x 10p): 9,41k - 9,17k - 291
+First board (150 kΩ / 22 pF): 9.36 kΩ – 9.14 kΩ – 290
+
+Second board (330 kΩ / 10 pF): 9.41 kΩ – 9.17 kΩ – 291
 ```
 
-At this moment I think that 4k7 with 100 ohm is not the best choice.
+Based on these findings, the previously suggested 4.7 kΩ and 100 Ω resistor network does not appear to be optimal. 100 Ω replaced by 150 Ω looks better.
 
-Next step is checking again with a washing machine.
+For benchmarking, a standard red LED (with series resistor) can be connected to the TX pin (GPIO-1) of an ESP32-C3 SuperMini running the **asciisending** firmware.
+
+The next step will be to re-evaluate performance under real-world conditions on a washing machine.
 
 [veroroute](https://sourceforge.net/projects/veroroute/)
 
