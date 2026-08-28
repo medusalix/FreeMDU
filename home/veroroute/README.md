@@ -11,6 +11,8 @@ first (150k x 22p):  9,36k - 9,14k - 290
 second (330k x 10p): 9,41k - 9,17k - 291
 ```
 
+At this moment I think that 4k7 with 100 ohm is not the best choice.
+
 Next step is checking again with a washing machine.
 
 [veroroute](https://sourceforge.net/projects/veroroute/)
