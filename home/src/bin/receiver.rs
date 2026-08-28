@@ -127,8 +127,8 @@ async fn main(_spawner: Spawner) {
 
     info!("UART1 initialized. Listening for CR+LF terminated lines...");
 
-    let mut rx_buf = [0u8; 1]; // Karakterenként olvasunk
-    let mut line_buf = [0u8; 256]; // Belső sorpuffer
+    let mut rx_buf = [0u8; 1];
+    let mut line_buf = [0u8; 256];
     let mut line_len = 0;
 
     loop {
@@ -136,31 +136,24 @@ async fn main(_spawner: Spawner) {
             Ok(Ok(len)) if len > 0 => {
                 let byte = rx_buf[0];
 
-                // Karakterenkénti hexadecimális kiírás az info-ba (pl.: Rx byte: 0x57)
                 info!("Rx byte: 0x{byte:02X}");
 
-                // Puffer túlcsordulás elleni védelem
                 if line_len < line_buf.len() {
                     line_buf[line_len] = byte;
                     line_len += 1;
                 } else {
-                    // Túlcsordulás esetén ürítjük a puffert
                     line_len = 0;
                 }
 
-                // Ellenőrizzük, hogy a puffer végén ott van-e a CR + LF (\r\n)
                 if line_len >= 2 && line_buf[line_len - 2] == b'\r' && line_buf[line_len - 1] == b'\n' {
-                    // A lezáró \r\n nélkül formázzuk a szöveget
                     let text = core::str::from_utf8(&line_buf[..line_len - 2]).unwrap_or("<invalid ASCII>");
                     info!("Received line: {text}");
 
-                    // LED felvillanás és 100ms szünet
                     status_led.set_low();
                     Timer::after(Duration::from_millis(100)).await;
                     status_led.set_high();
                     Timer::after(Duration::from_millis(100)).await;
 
-                    // Puffer törlése a következő sorhoz
                     line_len = 0;
                 }
             }
