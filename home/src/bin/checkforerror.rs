@@ -101,7 +101,8 @@ pub fn new_status_led<'a>() -> Output<'a> {
 }
 
 #[esp_rtos::main]
-async fn main(_spawner: Spawner) {
+#[allow(unused_variables)]
+async fn main(spawner: Spawner) {
     logger::init_logger_from_env();
     esp_alloc::heap_allocator!(size: 32 * 1024);
 
@@ -238,7 +239,7 @@ fn check_line_consistency(line: &str) -> Option<u8> {
         return None;
     }
     let target_char = first_part.chars().next()? as u8;
-    let target_val = target_char as u32;
+    let target_val = u32::from(target_char);
 
     // Read the following fields.
     // A következő mezők beolvasása

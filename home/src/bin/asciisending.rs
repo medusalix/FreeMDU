@@ -117,7 +117,8 @@ pub fn new_status_led<'a>() -> Output<'a> {
 }
 
 #[esp_rtos::main]
-async fn main(_spawner: Spawner) {
+#[allow(unused_variables)]
+async fn main(spawner: Spawner) {
     logger::init_logger_from_env();
     esp_alloc::heap_allocator!(size: 32 * 1024);
 

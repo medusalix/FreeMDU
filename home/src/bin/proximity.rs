@@ -11,7 +11,7 @@ const TESTED_RX_PIN: u8 = match core::primitive::u8::from_str_radix(env!("PIN_OP
 };
 const TESTED_TX_PIN: u8 = match core::primitive::u8::from_str_radix(env!("PIN_OPTICAL_TX"), 10) {
     Ok(pin) => pin,
-    Err(_) => panic!("A PIN_OPTICAL_RX is not valid."),
+    Err(_) => panic!("A PIN_OPTICAL_TX is not valid."),
 };
 
 esp_bootloader_esp_idf::esp_app_desc!();
