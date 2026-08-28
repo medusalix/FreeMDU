@@ -4,11 +4,11 @@
 extern crate alloc;
 
 use core::str::FromStr;
-//use embedded_io_async::{ErrorType, Read, ReadExactError, Write};
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer, WithTimeout};
-//use esp_backtrace as _;
+use embedded_io_async::{ErrorType, Read, ReadExactError, Write};
 use esp_alloc as _;
+use esp_backtrace as _;
 use esp_hal::{
     Async,
     gpio::{AnyPin, Input, InputConfig, Level, Output, OutputConfig},
