@@ -135,6 +135,7 @@ echo "Creating new container..."
 docker run -dit \
     --name "$CONTAINER_NAME" \
     --user "$(id -u):$(id -g)" \
+    -e HOME="$WORKDIR" \
     --group-add $(getent group dialout | cut -d: -f3) \
     -v "$PWD":"$WORKDIR" \
     -w "$WORKDIR" \
@@ -145,26 +146,26 @@ docker run -dit \
 docker exec -w /usr/src/myapp/home "$CONTAINER_NAME" bash /usr/src/myapp/home/generate_compilescripts.sh
 
 echo "Installing espflash (first-time setup)..."
-docker exec "$CONTAINER_NAME" cargo install espflash --locked    
+echo "docker exec "$CONTAINER_NAME" cargo install espflash --locked    "
 
 echo "Setting up Bash history..."
-docker exec "$CONTAINER_NAME" bash -c 'cat << "EOF" >> ~/.bash_history
-cd /usr/src/myapp/home
-cd /usr/src/myapp/protocol
-cd /usr/src/myapp/tui
-compile_c3_automqtt.sh
-compile_c3_bridge.sh
-compile_c3_proximity.sh
-compile_c3_standalone.sh
-compile_c6_automqtt.sh
-compile_c6_bridge.sh
-compile_c6_proximity.sh
-compile_c6_standalone.sh
-cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin asciisending
-cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin checkforerror
-cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin proximity
-cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin receiver
-EOF'
+printf '%s\n' \
+"cd /usr/src/myapp/home" \
+"cd /usr/src/myapp/protocol" \
+"cd /usr/src/myapp/tui" \
+"compile_c3_automqtt.sh" \
+"compile_c3_bridge.sh" \
+"compile_c3_proximity.sh" \
+"compile_c3_standalone.sh" \
+"compile_c6_automqtt.sh" \
+"compile_c6_bridge.sh" \
+"compile_c6_proximity.sh" \
+"compile_c6_standalone.sh" \
+"cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin asciisending" \
+"cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin checkforerror" \
+"cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin proximity" \
+"cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin receiver" \
+| docker exec -i "$CONTAINER_NAME" bash -c 'cat >> ~/.bash_history'
 
 exec docker exec -it \
     -w "$WORKDIR" \
