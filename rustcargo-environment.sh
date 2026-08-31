@@ -99,24 +99,7 @@ echo "Project: $PWD"
 
 if container_running; then
     echo "Container is already running."
-    echo "Setting up Bash history..."
-    printf '%s\n' \
-    "cd /usr/src/myapp/home" \
-    "cd /usr/src/myapp/protocol" \
-    "cd /usr/src/myapp/tui" \
-    "compile_c3_automqtt.sh" \
-    "compile_c3_bridge.sh" \
-    "compile_c3_proximity.sh" \
-    "compile_c3_standalone.sh" \
-    "compile_c6_automqtt.sh" \
-    "compile_c6_bridge.sh" \
-    "compile_c6_proximity.sh" \
-    "compile_c6_standalone.sh" \
-    "cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin asciisending" \
-    "cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin checkforerror" \
-    "cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin proximity" \
-    "cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin receiver" \
-    | docker exec -i -w "$WORKDIR" "$CONTAINER_NAME" bash -c 'cat >> .bash_history'
+
     exec docker exec -it \
         -w "$WORKDIR" \
         "$CONTAINER_NAME" bash
@@ -146,7 +129,7 @@ docker run -dit \
 docker exec -w /usr/src/myapp/home "$CONTAINER_NAME" bash /usr/src/myapp/home/generate_compilescripts.sh
 
 echo "Installing espflash (first-time setup)..."
-echo "docker exec "$CONTAINER_NAME" cargo install espflash --locked    "
+docker exec "$CONTAINER_NAME" cargo install espflash --locked
 
 echo "Setting up Bash history..."
 printf '%s\n' \
