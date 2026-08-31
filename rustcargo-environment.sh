@@ -99,7 +99,7 @@ echo "Project: $PWD"
 
 if container_running; then
     echo "Container is already running."
-    docker exec -w /usr/src/myapp/home "$CONTAINER_NAME" bash /usr/src/myapp/home/generate_compilescripts.sh
+    docker exec "$CONTAINER_NAME" bash -c 'cat << "EOF" >> ~/.bash_history    
     exec docker exec -it \
         -w "$WORKDIR" \
         "$CONTAINER_NAME" bash
