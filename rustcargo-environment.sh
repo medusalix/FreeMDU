@@ -35,17 +35,31 @@ WORKDIR="/usr/src/myapp"
 
 ACTION=""
 
-while getopts "o:" opt; do
+while getopts ":o:" opt; do
     case "$opt" in
         o)
             ACTION="$OPTARG"
             ;;
-        *)
-            echo "Usage: $0 [-o delete|new]"
+        \?)
+            echo "Error: Invalid option: -$OPTARG" >&2
+            echo "Usage: $0 [-o delete|new]" >&2
+            exit 1
+            ;;
+        :)
+            echo "Error: Option -$OPTARG requires an argument." >&2
+            echo "Usage: $0 [-o delete|new]" >&2
             exit 1
             ;;
     esac
 done
+
+shift $((OPTIND -1))
+
+if [ $# -gt 0 ]; then
+    echo "Error: Unexpected argument(s): $*" >&2
+    echo "Usage: $0 [-o delete|new]" >&2
+    exit 1
+fi
 
 container_exists() {
     docker ps -a --format '{{.Names}}' | grep -qx "$CONTAINER_NAME"
