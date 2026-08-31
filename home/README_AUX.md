@@ -27,6 +27,12 @@ The replication is at a standstill for now. That is to say, it's waiting. Availa
 
 Other ongoing experiments, the results of which are expected later: The ITR8307 triggered the transmission of the washing machine, so I am experimenting with a BPW34 diode built alongside it, for now on the workbench. If there are results, I will continue here.
 
+**2026-AUG-31** 
+
+In the meantime, the SFH7250 has arrived, so the description of the BPW34 experiment is no longer relevant. A brief summary of the experience: not very encouraging.
+
+The continuation with the SFH7250 is here: [`veroroute/readme.md`](veroroute/readme.md)
+
 
 ### Firmware alternatívák (AUX)
 
@@ -53,4 +59,9 @@ Az utánépítés egyelőre itt áll. Vagyis várakozik. Az **SFH7250** beszerez
 
 Folyamatban levő egyéb kísérlet, amiknek eredménye később várható: Az ITR8307 a mosógép adását beindította, így mellé építve kísérletezek a BPW34 diódával, egyelőre asztalon. Ha lesz eredménye, itt folytatom.
 
+**2026-AUG-31** 
+
+Időközben az SFH7250 megérkezett, így a BPW34 kísérlet leírása már elmarad. Erről röviden a tapasztalat: nem túl biztató. 
+
+Az SFH7250 folytatása itt: [`veroroute/readme.md`](veroroute/readme.md) 
 
