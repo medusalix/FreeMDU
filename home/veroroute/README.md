@@ -50,7 +50,9 @@ Considering that the SFH7250 has a rise and fall time of 7 µs, it is difficult 
 
 Perhaps using a different op-amp could push the speed up to 57600 baud, but I am not going to experiment with that for now. Based on the descriptions so far, it seems that there is no need to go above 19200 baud. This circuit design is able to handle that data rate.
 
-With a 47 kΩ pull-down resistor, the transmission looks like this on the oscilloscope at 9600 baud.
+---
+
+This was the initial state. With a 47 kΩ pull-down resistor, the transmission looks like this on the oscilloscope at 9600 baud.
 
 ![tested at 9600 baud](baud9600.png)
 
