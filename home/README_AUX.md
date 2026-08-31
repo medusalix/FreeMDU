@@ -31,7 +31,7 @@ Other ongoing experiments, the results of which are expected later: The ITR8307 
 
 In the meantime, the SFH7250 has arrived, so the description of the BPW34 experiment is no longer relevant. A brief summary of the experience: not very encouraging.
 
-The continuation with the SFH7250 is here: [`veroroute/readme.md`](veroroute/readme.md)
+The continuation with the SFH7250 is here: [`veroroute/README.md`](veroroute/README.md)
 
 
 ### Firmware alternatívák (AUX)
@@ -63,5 +63,5 @@ Folyamatban levő egyéb kísérlet, amiknek eredménye később várható: Az I
 
 Időközben az SFH7250 megérkezett, így a BPW34 kísérlet leírása már elmarad. Erről röviden a tapasztalat: nem túl biztató. 
 
-Az SFH7250 folytatása itt: [`veroroute/readme.md`](veroroute/readme.md) 
+Az SFH7250 folytatása itt: [`veroroute/README.md`](veroroute/README.md) 
 
