@@ -28,9 +28,15 @@ The next step will be to re-evaluate performance under real-world conditions on 
 
 It seems better to leave the capacitor ( 10 or 22 pF ) out of the circuit. 
 
+**Trasmission speed:** 9600 baud
+
 ![tested at 9600 baud](baud9600tia.png) 
 
+**Trasmission speed:** 19200 baud
+
 ![tested at 19200 baud](baud19200tia.png) 
+
+**Trasmission speed:** 38400 baud
 
 ![tested at 38400 baud](baud38400tia.png)
 
