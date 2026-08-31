@@ -36,5 +36,10 @@ It seems better to leave the capacitor ( 10 or 22 pF ) out of the circuit.
 
 At 38400 baud, the data still just about gets through. However, it is clear that at this speed, achieving error-free communication with this circuit is already difficult.
 
+At 38400 baud, the potentiometer had to be adjusted. The 10 kΩ potentiometer setting of 248 turned out to be ideal. With this setting, I was able to achieve successful data transmission.
+
+**Note:** Since the SFH7250 also responds to ambient light, there is a significant “random” factor in the testing as well.
+
+
 
 
