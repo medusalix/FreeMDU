@@ -124,9 +124,28 @@ docker run -dit \
     "$IMAGE" \
     bash >/dev/null
 
+
 echo "Installing espflash (first-time setup)..."
 docker exec "$CONTAINER_NAME" cargo install espflash --locked    
 docker exec "$CONTAINER_NAME" /usr/src/myapp/home/generate_compilescripts.sh
+echo "Setting up Bash history..."
+docker exec "$CONTAINER_NAME" bash -c 'cat << "EOF" >> ~/.bash_history
+cd /usr/src/myapp/home
+cd /usr/src/myapp/protocol
+cd /usr/src/myapp/tui
+compile_c3_automqtt.sh
+compile_c3_bridge.sh
+compile_c3_proximity.sh
+compile_c3_standalone.sh
+compile_c6_automqtt.sh
+compile_c6_bridge.sh
+compile_c6_proximity.sh
+compile_c6_standalone.sh
+cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin asciisending
+cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin checkforerror
+cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin proximity
+cargo run --features esp32c3 --target riscv32imc-unknown-none-elf --release --bin receiver
+EOF'
 
 exec docker exec -it \
     -w "$WORKDIR" \
