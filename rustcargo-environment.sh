@@ -3,19 +3,23 @@ set -e
 
 # --- Docker check ---
 if ! command -v docker &>/dev/null; then
-    echo "Error: Docker is not installed on the system!"
+    echo "Warning: The Docker command was not found. Docker may not be installed, so please check your Docker installation."
     echo "To continue, install Docker with the following command (Debian/Ubuntu):"
+    echo
     echo "  sudo apt update && sudo apt install docker.io"
     echo "  sudo apt install docker-cli"
     echo
-    echo " and start it: sudo systemctl start docker
+    echo "Check it and/or start it:" 
+    echo
+    echo "    sudo systemctl status docker"
+    echo "    sudo systemctl start docker"
     echo
     echo "# 1. Create the 'docker' group (if the installer has not already created it)"
     echo "sudo groupadd docker"
-
+    echo
     echo "# 2. Add the current user ($USER) to the docker group"
     echo "sudo usermod -aG docker $USER"
-
+    echo
     echo "# 3. Refresh the group memberships in the current session (or log out and log back in)"
     echo "newgrp docker"
     echo
