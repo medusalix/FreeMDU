@@ -82,6 +82,9 @@ docker run -dit \
     "$IMAGE" \
     bash >/dev/null
 
+echo "Installing espflash (first-time setup)..."
+docker exec "$CONTAINER_NAME" cargo install espflash --locked    
+
 exec docker exec -it \
     -w "$WORKDIR" \
     "$CONTAINER_NAME" bash
