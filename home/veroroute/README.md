@@ -24,3 +24,11 @@ The next step will be to re-evaluate performance under real-world conditions on 
 
 ![examples for ESP32-C3 and ESP32-C6](examples.png)
 
+It seems better to leave the capacitor ( 10 or 22 pF ) out of the circuit. 
+
+![tested at 9600 baud](baud9600tia.png) ![tested at 19200 baud](baud19200tia.png) ![tested at 38400 baud](baud38400tia.png)
+
+At 38400 baud, the data still just about gets through. However, it is clear that at this speed, achieving error-free communication with this circuit is already difficult.
+
+
+
