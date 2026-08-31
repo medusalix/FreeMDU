@@ -23,6 +23,8 @@ if ! command -v docker &>/dev/null; then
     echo "# 3. Refresh the group memberships in the current session (or log out and log back in)"
     echo "newgrp docker"
     echo
+    echo "Make sure that your ESP32-C3 or ESP32-C6 device is connected via USB before running the script again."
+    echo
     
     exit 1
 fi
