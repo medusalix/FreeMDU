@@ -126,6 +126,7 @@ docker run -dit \
 
 echo "Installing espflash (first-time setup)..."
 docker exec "$CONTAINER_NAME" cargo install espflash --locked    
+docker exec "$CONTAINER_NAME" /usr/src/myapp/home/generate_compilescripts.sh
 
 exec docker exec -it \
     -w "$WORKDIR" \
