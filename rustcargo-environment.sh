@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+# --- Docker check ---
+if ! command -v docker &>/dev/null; then
+    echo "Error: Docker is not installed on the system!"
+    echo "To continue, install Docker with the following command (Debian/Ubuntu):"
+    echo "  sudo apt update && sudo apt install docker.io"
+    exit 1
+fi
+
 CONTAINER_NAME="rust-dev"
 IMAGE="rust:latest"
 WORKDIR="/usr/src/myapp"
