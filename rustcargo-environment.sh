@@ -99,7 +99,7 @@ echo "Project: $PWD"
 
 if container_running; then
     echo "Container is already running."
-    docker exec "$CONTAINER_NAME" bash /usr/src/myapp/home/generate_compilescripts.sh
+    docker exec -w /usr/src/myapp/home "$CONTAINER_NAME" bash /usr/src/myapp/home/generate_compilescripts.sh
     exec docker exec -it \
         -w "$WORKDIR" \
         "$CONTAINER_NAME" bash
@@ -125,7 +125,7 @@ docker run -dit \
     "$IMAGE" \
     bash >/dev/null
 
-docker exec "$CONTAINER_NAME" bash /usr/src/myapp/home/generate_compilescripts.sh
+docker exec -w /usr/src/myapp/home "$CONTAINER_NAME" bash /usr/src/myapp/home/generate_compilescripts.sh
 
 echo "Installing espflash (first-time setup)..."
 docker exec "$CONTAINER_NAME" cargo install espflash --locked    
