@@ -28,7 +28,7 @@ The next step will be to re-evaluate performance under real-world conditions on 
 
 It seems better to leave the capacitor ( 10 or 22 pF ) out of the circuit. 
 
-![circuit](receiver.png)
+![circuit](receiver.png)  
 
 **Trasmission speed:** 9600 baud
 
