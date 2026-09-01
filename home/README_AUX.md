@@ -1,0 +1,67 @@
+### Firmware alternatives (AUX)
+
+![ESP32-C3-Super-Mini-GPIO-Pins.png](ESP32-C3-Super-Mini-GPIO-Pins.png)
+
+**automqtt:** Modified **standalone mode**. The core of the modification is that regardless of the configuration in [`.cargo/config.toml`](https://www.google.com/search?q=.cargo/config.toml), the MQTT server address will be the same as the DHCP server address, assuming that the MQTT service will run on it as well. For testing, an Android phone's Wi-Fi hotspot function can be used this way. HomeAssistant and the Mosquitto broker can be run under Termux; good solutions exist for these. Similarly, a Raspberry Pi (not tested) or an Orange Pi can also be suitable when properly configured. In this case, the essential parts of the cargo settings are WIFI_SSID and WIFI_PASSWORD. The MQTT_HOSTNAME does not matter. If Mosquitto allows anonymous usage, the following two lines are not essential either.
+
+The **proximity** mode can help with testing the hardware connection. The state of the input pin (RX) is mirrored to the output status LED. The (TX) pin is enabled, so the operation of the infrared LED can be checked with a mobile phone camera (older phones were better at this, as the infrared spectrum was less filtered); in this case, the camera should be placed very close to the infrared light source (LED). The operation of the infrared phototransistor can be checked in two ways. One is if you have a remote control at hand. Pressing buttons on the remote control will cause the status LED to flicker, indicating signal reception. The other option is to bring a reflective surface close to the optical transceiver unit. At a distance of a few millimeters, the status LED switches off (goes dark), indicating the proximity of the surface.  
+*Remember! The status LED gives an inverted signal, active low operation.*
+
+**asciisending:** A rewrite of an Arduino code that repeatedly sends printable ASCII characters over the serial interface. An LED connected to a standalone ESP32-C3 TX output (GPIO-1) via a current-limiting resistor serves as a practical signal source.
+
+**checkforerror:** Receives the signal from asciisending and logs the data received over the serial interface (RX input GPIO-0). It can be used to verify the operation of the optical coupler. The program monitors the incoming data structure and signals any detected discrepancies.
+
+**receiver:** Also used for testing the optical receiver. The hexadecimal value of the received data is logged.
+
+Both **checkforerror** and **receiver** use the status LED to indicate serial reception with a brief flash.
+
+### Replication / Rebuilding:
+
+I can report little success so far. The Wi-Fi connection of the **ESP32-C3 SuperMini** board is unstable. Solutions can be found in several places to help the device establish a Wi-Fi connection more easily, which requires modifying the antenna (on the printed circuit board, it is usually red and marked with C3). I was previously unfamiliar with this Wi-Fi connection issue. All the ESP components I have encountered so far connected to Wi-Fi perfectly, and some ESP8266s even brought big surprises in terms of connection distance. The C3 SuperMini confused me because of this, as I thought the connection error was caused by a wiring mistake I had made. This assumption was reinforced by the fact that when I connected the optical component to the UART0 outputs, the error disappeared and the **C3** connected. This false assumption led further in the direction of incorrectly assuming the **UART1** designation. In previous devices, only UART0 was used, mainly for programming the device. Since the **C3** does not contain a USB-to-UART converter, I thought there might be a mistake in the UART numbering. **I can confirm that the UART1 mentioned in the description is not a mistake and indeed connects to the optical unit at the gpio-0 and gpio-1 points.**
+
+The next mistake stemmed from the fact that I was unable to source the **SFH7250** component at the local electronics store. I looked for a replacement component that was similar in function to the original, and that is how I found the ITR8307. It is also similar in size to the originally specified one. **After I properly connected the component to UART1** and tested it with the device, I reached the point where the washing machine's PC LED started flashing. The initial excitement then faded as I looked at the UART1-RX pin to see what the controller was supposed to process. What could be seen on the oscilloscope screen was a signal heavily filtered by an RC circuit. Here I began to compare the replacement component more thoroughly with the original and concluded that the $T_r$ and $T_d$ values were too high: 7 µs for the SFH7250 and 20 µs for the ITR8307. Using circuit techniques, I finally managed to increase the steepness of the signal, but then came another surprise. Alongside the infrared remote control, I also tried a standard red LED for testing. However, the ITR8307 did not react to it—the straight line on the oscilloscope display barely bent. Reading the datasheet again, I found it: equipped with a daylight filter. The SFH7250 has a transparent casing in the photo, so it consequently reacts to red light as well.
+
+The series of mistakes does not end here. I received a washing machine panel from which I could desolder the communication LED. Assuming that one of the LEDs next to the SFH7250 on the control panel flashes red at the start of communication, I wired up the component as shown in the datasheet. First test: the **proximity** program variant did not work. Test with an infrared remote control: works. Test with a camera: no infrared light. A multimeter diode test shows that it needs to be connected in reverse and shines with a **RED** light. So this is not an SFH7250. But what is it then? Testing the component with its appropriate wiring, communication did not work out.
+
+The replication is at a standstill for now. That is to say, it's waiting. Availability of the **SFH7250** can be seen in two places. One is Mouser, where it might arrive sometime in October (it is currently August), and the other is Farnell, where it is available in a 2000-piece bulk package at a unit price of around €1, meaning the total sum would be nearly €2000. So I ordered from eBay, which will also take a long time to arrive, but at least not at an astronomical price. To expand further experimental possibilities, I also ordered a few C6s from eBay, hoping to have a better experience with them.
+
+Other ongoing experiments, the results of which are expected later: The ITR8307 triggered the transmission of the washing machine, so I am experimenting with a BPW34 diode built alongside it, for now on the workbench. If there are results, I will continue here.
+
+**2026-AUG-31** 
+
+In the meantime, the SFH7250 has arrived, so the description of the BPW34 experiment is no longer relevant. A brief summary of the experience: not very encouraging.
+
+The continuation with the SFH7250 is here: [`veroroute/README.md`](veroroute/README.md)
+
+
+### Firmware alternatívák (AUX)
+
+**automqtt:**  Módosított **standalone mode**. A módosítás lényege, hogy a beállítástól függetlenül [`.cargo/config.toml`](.cargo/config.toml) az MQTT szerver címe ugyanaz lesz, mint a DHCP kiszolgáló címe, feltételezve, hogy azon fut majd az MQTT szolgáltatás is. Teszteléshez így alkalmazható egy Android telefon Wifi hotspot funkciója. A HomeAssistant és a Mosquitto broker Termux alatt futtatható, ezekre léteznek jó megoldások. Ugyanígy egy Raspberry (nem próbáltam) vagy egy OrangePi szintén alkalmas lehet megfelelően konfigurálva. A cargo beállításokból ilyenkor a lényeges rész az WIFI_SSID és a WIFI_PASSWORD. Az MQTT_HOSTNAME nem számít. Ha a Mosquitto engedi az anonim használatot, akkor a következő két sort sem lényeges
+
+A **proximity** a hardwer összeköttetés teszteléséhez adhat segítséget. A bemeneti láb (RX) állapota másolódik a kimeneti státusz ledre. A (TX) láb bekapcsolva, így egy mobiltelefon kamerájával ellenőrizhető az infra led működése (a régebbi telefonok ebben jobbak voltak, kevésbé volt szűrve az infra tartomány), ilyenkor a kamerát jó közel kell tenni az infra fényforráshoz (led). A infra detektor tranzisztor működése kétféle módon ellenőrizhető. Az egyik ha kéznél van egy távirányító. A távirányító gombjait nyomogatva a státusz led villódzása mutatja a vételt. A másik lehetőség ha egy tükröződő felületet közelítünk az adó-vevő optikai egységhez. Néhány miliméter távolságban a státusz led átvált (sötét lesz), jelezve a felület közelségét.  
+*Ne feledd! A státusz led invertált jelet ad, aktív alacsony szintű működés.*
+
+**asciisending:** Egy arduino kód átirata, amely a soros vonalon a nyomtatható ASCII karakterek kiküldését ismétli. Egy különálló ESP32-C3 TX kimenetre (GPIO-1) áramkorlátozó ellenállással LED kötve jól használható jelforrásként. 
+
+**checkforerror:** A asciisending jelét vételezve kiírja a soros vonalon vett adatokat (RX bemenet GPIO-0). Az optikai csatoló működése ellenőrizhető vele. A program figyeli az érkező adatstruktúrát és ha eltérés tapasztalható, azt jelzi.
+
+**receiver:** Szintén az optikai vevő ellenőrzésére használható. A vett adat hexadecimális értéke kerül a naplóba.
+
+A **checkforerror** és a **receiver** is használja a státusz led-ed a soros vétel jelzésére egy-egy felvillanással.
+
+### Utánépítés:
+
+Kevés sikerről tudok beszámolni egyelőre. Az ESP32-C3 supermini lapka WIFI kapcsolata bizonytalan. Több helyen található megoldás arra, hogy a WIFI kapcsolatot az eszköz könnyebben felépítse, amihez az antenna módosítása szükséges (a nyomtatott áramköri lapon általában piros színű és C3 felirat látható rajta). A WIFI csatlakozási hibát korábban nem ismertem. Az eddig megismert összes ESP alkatrész tökéletesen csatlakozott a WIFI, némelyik ESP8266 pedig még a kapcsolódási távolságban is nagy meglepetéseket hozott. A C3 supermini emiatt megzavart, mert úgy gondoltam, hogy a kapcsolódási hibát az általam elkövetett kötési hiba okozza. Ezt a feltételezést erősítette, hogy az UART0 kimenetekre kötve az optikai alkatrészt, a hiba megszűnt és a C3 kapcsolódott. Ez a téves feltételezés ment tovább abba az irányba, hogy tévesen feltételeztem az **UART1** megnevezést. A korábbi eszközökben csak a UART0 volt használva, főként az eszköz felprogramozásához. Mivel a C3 nem tartalmaz USB-UART átalakítót, arra gondoltam, hogy az UART számozásában tévedés lehet. ** Megerősíthetem, hogy a leírásban szereplő UART1 nem tévedés és valóban a gpio-0 és gpio-1 pontokon csatlakoznak az optikai egységhez. ** 
+A következő tévedés abból származott, hogy a helyi kereskedésben nem sikerült beszereznem az **SFH7250** alkatrészt. Kerestem kiváltó alkatrészt, amelyik funkciójában hasonló az eredetihez és így találtam rá az ITR8307-re. Méretben is hasonló az eredetileg megadotthoz. **Miután már jól bekötöttem az UART1-re az alkatrészt** és készülékkel teszteltem, odáig jutottam, hogy a mosógép PC ledje villogni kezdett. A kezdeti öröm aztán alábbhagyott, ahogyan a UART1-RX lábán megnéztem, mit kellene feldolgoznia a vezérlőnek. Amit lehetett látni az oszcilloszkóp képen, az egy RC taggal erősen szűrt jel. Itt kezdtem alaposabban összevetni az eredeti alkatrésszel a kiváltót és arra jutottom, hogy $T_r$ és $T_d$ értékek túl magasak. Az SFH7250 esetén 7us, az ITR8307-nél 20us. Kapcsolástechnikával végül sikerült a jel meredekségén növelni, de itt jött az újabb meglepetés. Az infra távirányító mellett kipróbáltam egy hagyományos piros ledet is a teszteléshez. Az ITR8307 viszont nem reagált rá, szinte láthatatlanul görbült az egyenes az oszcilloszkóp kijelzőjén. Újbóli adatlap olvasásnál megleltem: fényszűrővel ellátva. Az SFH7250 a fényképen átlátszó borítással rendelkezik, következésképpen a piros fényre is reagál.
+A tévedések sora itt még nem fejeződik be. Kaptam egy mosógép panelt, amiről leszerelhettem a kommunikációs LED-et. Feltételezve, hogy a vezérlőpanelen az SFH7250 mellett valamelyik led villog pirossal a kommunikáció kezdetén, be is kötöttem az alkatrészt, ahogyan az adatlapból kiderül. Első teszt, a **proximity** programváltozat nem működött. Tesztelés infra távirányítóval - működik. Tesztelés kamerával - nincs infra fény. Multiméter diódateszt kimutatja, hogy fordítva kell bekötni és **PIROS** fénnyel világít. Tehát ez nem egy SFH7250. De akkor mi? Az alkatrészt a neki megfelelő bekötéssel tesztelve nem jött össze a kommunikáció.
+
+Az utánépítés egyelőre itt áll. Vagyis várakozik. Az **SFH7250** beszerezhetősége két helyen látszik. Az egyik a mouser, ahová majd talán valamikor októberben érkezik (most augusztus van), a másik pedig a farnell, ahol 2000db-os egységcsomagban kapható nagyjából 1€ darabáron, azaz közel 2000€ lenne a végösszeg. Úgyhogy megrendeltem az ebay-ről ami szintén sok idő múlva érkezik, de legalább nem csillagászati áron. A további kísérleti lehetőségeket bővíteni megrendeltem szintén az ebay-ről néhány C6-ot, hátha azzal jobb tapasztalat lesz.
+
+Folyamatban levő egyéb kísérlet, amiknek eredménye később várható: Az ITR8307 a mosógép adását beindította, így mellé építve kísérletezek a BPW34 diódával, egyelőre asztalon. Ha lesz eredménye, itt folytatom.
+
+**2026-AUG-31** 
+
+Időközben az SFH7250 megérkezett, így a BPW34 kísérlet leírása már elmarad. Erről röviden a tapasztalat: nem túl biztató. 
+
+Az SFH7250 folytatása itt: [`veroroute/README.md`](veroroute/README.md) 
+
