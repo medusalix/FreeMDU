@@ -116,6 +116,16 @@ async fn mqtt_message_task(
 
 async fn publish_device(port: &mut OpticalPort<'_>, hostname: &str) -> Result<()> {
     let mut dev = connect_to_device(port).await?;
+    let dryer = if dev.software_id() == 498 {
+        Some(
+            device::id498::Snapshot::read(dev.interface())
+                .with_timeout(DEVICE_TIMEOUT)
+                .await
+                .map_err(|_| anyhow::anyhow!("Dryer snapshot timeout"))??,
+        )
+    } else {
+        None
+    };
     let dev_kind = dev.kind().to_string();
     let props = dev
         .properties()
@@ -129,11 +139,14 @@ async fn publish_device(port: &mut OpticalPort<'_>, hostname: &str) -> Result<()
 
     // Query properties first, as publishing them immediately might lead to timeout
     for prop in props.clone() {
-        let val = dev
-            .query_property(prop)
-            .with_timeout(DEVICE_TIMEOUT)
-            .await
-            .map_err(|err| anyhow::anyhow!("Failed to query property: {err:?}"))??;
+        let val = if let Some(snapshot) = dryer {
+            snapshot.value::<core::convert::Infallible>(prop)?
+        } else {
+            dev.query_property(prop)
+                .with_timeout(DEVICE_TIMEOUT)
+                .await
+                .map_err(|err| anyhow::anyhow!("Failed to query property: {err:?}"))??
+        };
 
         info!("Queried property {prop:?} with value {val:?}");
         vals.push(val);
