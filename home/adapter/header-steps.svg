@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="245" viewBox="0 0 720 245" role="img" aria-labelledby="hdr-steps-t">
+<style>
+:root { --bg: #F1F4F3; --surface: #FFFFFF; --ink: #18201F; --muted: #586462; --line: #D3DBD9; --accent: #0B7A63; --accent-soft: #DCEFE9; --ir: #B3263E; --warn-bg: #FFF4E0; --warn-ink: #6B4100; --w-yellow: #C99700; --w-black: #222827; --w-green: #1E9150; --w-red: #D12A2A; --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root { --bg: #101514; --surface: #182120; --ink: #E4EBE9; --muted: #98A6A3; --line: #2B3634; --accent: #3CC3A1; --accent-soft: #163A31; --ir: #F2677E; --warn-bg: #3A2A0E; --warn-ink: #F6D193; --w-yellow: #F0C232; --w-black: #C8D1CF; --w-green: #3CCB74; --w-red: #FF5C5C; } }
+text { font-family: var(--body); fill: var(--ink); }
+.t-mono { font-family: var(--mono); }
+.t-muted { fill: var(--muted); }
+.t-accent { fill: var(--accent); }
+.blk { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+.blk-strong { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.ln { stroke: var(--ink); stroke-width: 1.5; fill: none; }
+.ln-muted { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.res { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.ir { stroke: var(--ir); stroke-width: 1.5; fill: none; }
+.ir-fill { fill: var(--ir); }
+.w-y { stroke: var(--w-yellow); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-k { stroke: var(--w-black); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-g { stroke: var(--w-green); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-r { stroke: var(--w-red); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.f-y { fill: var(--w-yellow); }
+.f-k { fill: var(--w-black); }
+.f-g { fill: var(--w-green); }
+.f-r { fill: var(--w-red); }
+.node { fill: var(--ink); }
+.pad { fill: var(--surface); stroke: var(--muted); stroke-width: 1.2; }
+.hl { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.hl-fill { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.tape { fill: var(--ink); opacity: 0.18; }
+.ph-route { fill: none; stroke: #E8203A; stroke-width: 4; stroke-dasharray: 10 6; stroke-linecap: round; stroke-linejoin: round; }
+.ph-ring { fill: none; stroke: #E8203A; stroke-width: 4; }
+.ph-board { fill: #1B1B1B; stroke: #E8203A; stroke-width: 2; }
+.ph-keepout { fill: none; stroke: #FFFFFF; stroke-width: 3; stroke-dasharray: 5 4; }
+.ph-label-bg { fill: rgba(16,21,20,0.82); }
+.ph-label { fill: #FFFFFF; font-size: 16px; font-weight: 600; font-family: var(--body); }
+.on-pcb { fill: #FFFFFF; }
+.pcb { fill: #2E7D5B; stroke: #1F5A41; stroke-width: 1.5; }
+.hole { fill: #D9B36C; stroke: #8A6A2E; stroke-width: 1; }
+.joint { fill: #C9CED1; stroke: #6B7276; stroke-width: 1; }
+.ghost { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.xiao-pcb { fill: #1E2422; stroke: var(--muted); stroke-width: 1; }
+.usb { fill: #B9C0C4; stroke: #6B7276; stroke-width: 1; }
+.chip { fill: #3A403E; }
+.hdr { fill: #141716; stroke: var(--muted); stroke-width: 1; }
+.pin { stroke: #D4A82C; stroke-width: 3; }
+.solder { fill: #C9CED1; stroke: #8E9599; stroke-width: 0.8; }
+.cut { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
+.sfh-body { fill: #F2F2EC; stroke: #6B7276; stroke-width: 1; }
+.lens { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.cable { stroke: #8E9599; stroke-width: 6; stroke-linecap: round; fill: none; }
+.dim { stroke: var(--ink); stroke-width: 1; }
+.sfh-pad { fill: #E8C27A; stroke: #FFFFFF; stroke-width: 1.5; }
+.patch { fill: #111; opacity: 0.55; }
+.res-ghost { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.ph-cable { stroke: #EDEDED; stroke-width: 7; stroke-linecap: round; }
+.ph-usb { fill: #9AA0A6; stroke: #333; stroke-width: 1; }
+.ph-sensor { fill: #F5F5F0; stroke: #E8203A; stroke-width: 3; }
+.ph-tape { fill: rgba(255,255,255,0.28); stroke: #FFFFFF; stroke-width: 2; stroke-dasharray: 6 4; }
+.ph-on-board { fill: #FFFFFF; font-size: 14px; font-weight: 600; font-family: var(--mono); }
+.ph-big { font-size: 24px; }
+.ph-leader { stroke: #FFFFFF; stroke-width: 2; }
+</style>
+<title id="hdr-steps-t">Assembly with headers: strips with the short ends in the XIAO and the long ends through the perfboard, solder on top and below, trim the protrusions below flush</title>
+<text x="115" y="28" text-anchor="middle" font-size="13" font-weight="600">1 · headers on the XIAO</text>
+<rect x="40" y="86" width="150" height="9" class="xiao-pcb"/>
+<rect x="44" y="70" width="34" height="16" rx="2" class="usb"/>
+<rect x="100" y="76" width="30" height="10" class="chip"/>
+<text x="115" y="62" text-anchor="middle" font-size="11" class="t-muted">XIAO</text>
+<rect x="46" y="95" width="138" height="20" class="hdr"/>
+<line x1="55" y1="78" x2="55" y2="86" class="pin"/>
+<line x1="55" y1="95" x2="55" y2="165" class="pin"/>
+<line x1="75" y1="78" x2="75" y2="86" class="pin"/>
+<line x1="75" y1="95" x2="75" y2="165" class="pin"/>
+<line x1="95" y1="78" x2="95" y2="86" class="pin"/>
+<line x1="95" y1="95" x2="95" y2="165" class="pin"/>
+<line x1="115" y1="78" x2="115" y2="86" class="pin"/>
+<line x1="115" y1="95" x2="115" y2="165" class="pin"/>
+<line x1="135" y1="78" x2="135" y2="86" class="pin"/>
+<line x1="135" y1="95" x2="135" y2="165" class="pin"/>
+<line x1="155" y1="78" x2="155" y2="86" class="pin"/>
+<line x1="155" y1="95" x2="155" y2="165" class="pin"/>
+<line x1="175" y1="78" x2="175" y2="86" class="pin"/>
+<line x1="175" y1="95" x2="175" y2="165" class="pin"/>
+<text x="115" y="196" text-anchor="middle" font-size="11" class="t-muted">long ends down</text>
+<text x="115" y="232" text-anchor="middle" font-size="11" class="t-muted"></text>
+<text x="355" y="28" text-anchor="middle" font-size="13" font-weight="600">2 · into the perfboard</text>
+<rect x="280" y="86" width="150" height="9" class="xiao-pcb"/>
+<rect x="284" y="70" width="34" height="16" rx="2" class="usb"/>
+<rect x="340" y="76" width="30" height="10" class="chip"/>
+<text x="355" y="62" text-anchor="middle" font-size="11" class="t-muted">XIAO</text>
+<rect x="286" y="95" width="138" height="20" class="hdr"/>
+<line x1="295" y1="78" x2="295" y2="86" class="pin"/>
+<line x1="295" y1="95" x2="295" y2="165" class="pin"/>
+<line x1="315" y1="78" x2="315" y2="86" class="pin"/>
+<line x1="315" y1="95" x2="315" y2="165" class="pin"/>
+<line x1="335" y1="78" x2="335" y2="86" class="pin"/>
+<line x1="335" y1="95" x2="335" y2="165" class="pin"/>
+<line x1="355" y1="78" x2="355" y2="86" class="pin"/>
+<line x1="355" y1="95" x2="355" y2="165" class="pin"/>
+<line x1="375" y1="78" x2="375" y2="86" class="pin"/>
+<line x1="375" y1="95" x2="375" y2="165" class="pin"/>
+<line x1="395" y1="78" x2="395" y2="86" class="pin"/>
+<line x1="395" y1="95" x2="395" y2="165" class="pin"/>
+<line x1="415" y1="78" x2="415" y2="86" class="pin"/>
+<line x1="415" y1="95" x2="415" y2="165" class="pin"/>
+<rect x="270" y="115" width="170" height="14" class="pcb"/>
+<text x="355" y="196" text-anchor="middle" font-size="11" class="t-muted">perfboard</text>
+<text x="355" y="232" text-anchor="middle" font-size="11" class="t-muted">plastic rests on the perfboard</text>
+<text x="595" y="28" text-anchor="middle" font-size="13" font-weight="600">3 · solder and trim</text>
+<rect x="520" y="86" width="150" height="9" class="xiao-pcb"/>
+<rect x="524" y="70" width="34" height="16" rx="2" class="usb"/>
+<rect x="580" y="76" width="30" height="10" class="chip"/>
+<text x="595" y="62" text-anchor="middle" font-size="11" class="t-muted">XIAO</text>
+<rect x="526" y="95" width="138" height="20" class="hdr"/>
+<line x1="535" y1="80" x2="535" y2="86" class="pin"/>
+<line x1="535" y1="95" x2="535" y2="129" class="pin"/>
+<line x1="555" y1="80" x2="555" y2="86" class="pin"/>
+<line x1="555" y1="95" x2="555" y2="129" class="pin"/>
+<line x1="575" y1="80" x2="575" y2="86" class="pin"/>
+<line x1="575" y1="95" x2="575" y2="129" class="pin"/>
+<line x1="595" y1="80" x2="595" y2="86" class="pin"/>
+<line x1="595" y1="95" x2="595" y2="129" class="pin"/>
+<line x1="615" y1="80" x2="615" y2="86" class="pin"/>
+<line x1="615" y1="95" x2="615" y2="129" class="pin"/>
+<line x1="635" y1="80" x2="635" y2="86" class="pin"/>
+<line x1="635" y1="95" x2="635" y2="129" class="pin"/>
+<line x1="655" y1="80" x2="655" y2="86" class="pin"/>
+<line x1="655" y1="95" x2="655" y2="129" class="pin"/>
+<rect x="510" y="115" width="170" height="14" class="pcb"/>
+<text x="595" y="196" text-anchor="middle" font-size="11" class="t-muted">perfboard</text>
+<path d="M529 86 Q535 76 541 86 Z" class="solder"/>
+<path d="M529 129 Q535 137 541 129 Z" class="solder"/>
+<path d="M549 86 Q555 76 561 86 Z" class="solder"/>
+<path d="M549 129 Q555 137 561 129 Z" class="solder"/>
+<path d="M569 86 Q575 76 581 86 Z" class="solder"/>
+<path d="M569 129 Q575 137 581 129 Z" class="solder"/>
+<path d="M589 86 Q595 76 601 86 Z" class="solder"/>
+<path d="M589 129 Q595 137 601 129 Z" class="solder"/>
+<path d="M609 86 Q615 76 621 86 Z" class="solder"/>
+<path d="M609 129 Q615 137 621 129 Z" class="solder"/>
+<path d="M629 86 Q635 76 641 86 Z" class="solder"/>
+<path d="M629 129 Q635 137 641 129 Z" class="solder"/>
+<path d="M649 86 Q655 76 661 86 Z" class="solder"/>
+<path d="M649 129 Q655 137 661 129 Z" class="solder"/>
+<line x1="506" y1="140" x2="684" y2="140" class="cut"/>
+<text x="595" y="214" text-anchor="middle" font-size="11" class="t-accent" font-weight="600">trim flush below</text>
+<text x="595" y="232" text-anchor="middle" font-size="11" class="t-muted">solder on top and below</text>
+<path d="M220 120 h16 m-6 -5 l6 5 l-6 5" class="ln"/>
+<path d="M460 120 h16 m-6 -5 l6 5 l-6 5" class="ln"/>
+</svg>

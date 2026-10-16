@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="320" viewBox="0 0 360 320" role="img" aria-labelledby="xiao-t">
+<style>
+:root { --bg: #F1F4F3; --surface: #FFFFFF; --ink: #18201F; --muted: #586462; --line: #D3DBD9; --accent: #0B7A63; --accent-soft: #DCEFE9; --ir: #B3263E; --warn-bg: #FFF4E0; --warn-ink: #6B4100; --w-yellow: #C99700; --w-black: #222827; --w-green: #1E9150; --w-red: #D12A2A; --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root { --bg: #101514; --surface: #182120; --ink: #E4EBE9; --muted: #98A6A3; --line: #2B3634; --accent: #3CC3A1; --accent-soft: #163A31; --ir: #F2677E; --warn-bg: #3A2A0E; --warn-ink: #F6D193; --w-yellow: #F0C232; --w-black: #C8D1CF; --w-green: #3CCB74; --w-red: #FF5C5C; } }
+text { font-family: var(--body); fill: var(--ink); }
+.t-mono { font-family: var(--mono); }
+.t-muted { fill: var(--muted); }
+.t-accent { fill: var(--accent); }
+.blk { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+.blk-strong { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.ln { stroke: var(--ink); stroke-width: 1.5; fill: none; }
+.ln-muted { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.res { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.ir { stroke: var(--ir); stroke-width: 1.5; fill: none; }
+.ir-fill { fill: var(--ir); }
+.w-y { stroke: var(--w-yellow); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-k { stroke: var(--w-black); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-g { stroke: var(--w-green); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-r { stroke: var(--w-red); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.f-y { fill: var(--w-yellow); }
+.f-k { fill: var(--w-black); }
+.f-g { fill: var(--w-green); }
+.f-r { fill: var(--w-red); }
+.node { fill: var(--ink); }
+.pad { fill: var(--surface); stroke: var(--muted); stroke-width: 1.2; }
+.hl { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.hl-fill { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.tape { fill: var(--ink); opacity: 0.18; }
+.ph-route { fill: none; stroke: #E8203A; stroke-width: 4; stroke-dasharray: 10 6; stroke-linecap: round; stroke-linejoin: round; }
+.ph-ring { fill: none; stroke: #E8203A; stroke-width: 4; }
+.ph-board { fill: #1B1B1B; stroke: #E8203A; stroke-width: 2; }
+.ph-keepout { fill: none; stroke: #FFFFFF; stroke-width: 3; stroke-dasharray: 5 4; }
+.ph-label-bg { fill: rgba(16,21,20,0.82); }
+.ph-label { fill: #FFFFFF; font-size: 16px; font-weight: 600; font-family: var(--body); }
+.on-pcb { fill: #FFFFFF; }
+.pcb { fill: #2E7D5B; stroke: #1F5A41; stroke-width: 1.5; }
+.hole { fill: #D9B36C; stroke: #8A6A2E; stroke-width: 1; }
+.joint { fill: #C9CED1; stroke: #6B7276; stroke-width: 1; }
+.ghost { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.xiao-pcb { fill: #1E2422; stroke: var(--muted); stroke-width: 1; }
+.usb { fill: #B9C0C4; stroke: #6B7276; stroke-width: 1; }
+.chip { fill: #3A403E; }
+.hdr { fill: #141716; stroke: var(--muted); stroke-width: 1; }
+.pin { stroke: #D4A82C; stroke-width: 3; }
+.solder { fill: #C9CED1; stroke: #8E9599; stroke-width: 0.8; }
+.cut { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
+.sfh-body { fill: #F2F2EC; stroke: #6B7276; stroke-width: 1; }
+.lens { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.cable { stroke: #8E9599; stroke-width: 6; stroke-linecap: round; fill: none; }
+.dim { stroke: var(--ink); stroke-width: 1; }
+.sfh-pad { fill: #E8C27A; stroke: #FFFFFF; stroke-width: 1.5; }
+.patch { fill: #111; opacity: 0.55; }
+.res-ghost { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.ph-cable { stroke: #EDEDED; stroke-width: 7; stroke-linecap: round; }
+.ph-usb { fill: #9AA0A6; stroke: #333; stroke-width: 1; }
+.ph-sensor { fill: #F5F5F0; stroke: #E8203A; stroke-width: 3; }
+.ph-tape { fill: rgba(255,255,255,0.28); stroke: #FFFFFF; stroke-width: 2; stroke-dasharray: 6 4; }
+.ph-on-board { fill: #FFFFFF; font-size: 14px; font-weight: 600; font-family: var(--mono); }
+.ph-big { font-size: 24px; }
+.ph-leader { stroke: #FFFFFF; stroke-width: 2; }
+</style>
+          <title id="xiao-t">XIAO ESP32-C6 from the top, USB-C up: D0–D6 on the left, 5V, GND, 3V3, D10–D7 on the right</title>
+          <rect class="blk-strong" x="110" y="40" width="140" height="262" rx="12"/>
+          <rect class="blk" x="157" y="26" width="46" height="22" rx="6"/>
+          <text x="180" y="20" text-anchor="middle" font-size="11" class="t-muted">USB-C</text>
+          <rect class="blk" x="140" y="130" width="80" height="80" rx="4"/>
+          <text x="180" y="174" text-anchor="middle" class="t-mono t-muted" font-size="11">ESP32-C6</text>
+          <!-- left column D0..D6 -->
+          <circle cx="110" cy="72" r="7" class="f-g"/>
+          <circle cx="110" cy="106" r="7" class="f-y"/>
+          <circle cx="110" cy="140" r="6" class="pad"/>
+          <circle cx="110" cy="174" r="6" class="pad"/>
+          <circle cx="110" cy="208" r="6" class="pad"/>
+          <circle cx="110" cy="242" r="6" class="pad"/>
+          <circle cx="110" cy="276" r="6" class="pad"/>
+          <text x="94" y="76" text-anchor="end" class="t-mono" font-size="12" font-weight="500">D0 · GPIO0</text>
+          <text x="94" y="110" text-anchor="end" class="t-mono" font-size="12" font-weight="500">D1 · GPIO1</text>
+          <text x="94" y="144" text-anchor="end" class="t-mono t-muted" font-size="12">D2</text>
+          <text x="94" y="178" text-anchor="end" class="t-mono t-muted" font-size="12">D3</text>
+          <text x="94" y="212" text-anchor="end" class="t-mono t-muted" font-size="12">D4</text>
+          <text x="94" y="246" text-anchor="end" class="t-mono t-muted" font-size="12">D5</text>
+          <text x="94" y="280" text-anchor="end" class="t-mono t-muted" font-size="12">D6</text>
+          <!-- right column 5V GND 3V3 D10 D9 D8 D7 -->
+          <circle cx="250" cy="72" r="6" class="pad"/>
+          <circle cx="250" cy="106" r="7" class="f-k"/>
+          <circle cx="250" cy="140" r="7" class="f-r"/>
+          <circle cx="250" cy="174" r="6" class="pad"/>
+          <circle cx="250" cy="208" r="6" class="pad"/>
+          <circle cx="250" cy="242" r="6" class="pad"/>
+          <circle cx="250" cy="276" r="6" class="pad"/>
+          <text x="266" y="76" class="t-mono t-muted" font-size="12">5V</text>
+          <text x="266" y="110" class="t-mono" font-size="12" font-weight="500">GND</text>
+          <text x="266" y="144" class="t-mono" font-size="12" font-weight="500">3V3</text>
+          <text x="266" y="178" class="t-mono t-muted" font-size="12">D10</text>
+          <text x="266" y="212" class="t-mono t-muted" font-size="12">D9</text>
+          <text x="266" y="246" class="t-mono t-muted" font-size="12">D8</text>
+          <text x="266" y="280" class="t-mono t-muted" font-size="12">D7</text>
+        </svg>

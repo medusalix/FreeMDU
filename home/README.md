@@ -12,6 +12,8 @@ The firmware currently supports only the Espressif **ESP32-C3** and **ESP32-C6**
 
 Because $R_P$ determines the phototransistor's sensitivity, an appropriate resistance must be selected. In most cases, a value of approximately $`47\,\text{k}\Omega`$ works well.
 
+A step-by-step build guide with pinouts, a wired and a single-perfboard build, mounting tips and notes for the Seeed XIAO ESP32-C6 is in [`adapter.md`](adapter.md).
+
 By default, the firmware uses the `UART1` peripheral for infrared communication, with pin `0` as RX and `1` as TX. Pin `10` can be connected to an active-low status LED. All pin assignments can be modified in the [`.cargo/config.toml`](.cargo/config.toml) file.
 
 ### Firmware modes
