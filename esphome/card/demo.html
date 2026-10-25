@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FreeMDU panel card demo</title>
+<!--
+  Shows freemdu-panel-card with made-up states, without Home Assistant. The card itself is in
+  the component's directory, so serve esphome/ (python3 -m http.server) and open card/demo.html.
+  To try a preset for another software ID, add a scenario below with that ID and the states its
+  package produces.
+-->
+<style>
+  :root {
+    --primary-text-color: #212121; --secondary-text-color: #727272; --divider-color: #e0e0e0;
+    --ha-card-background: #fff; --page: #f3f3f3;
+    --error-color: #db4437; --warning-color: #ff9800; --success-color: #43a047;
+  }
+  :root[data-theme="dark"] {
+    --primary-text-color: #e1e1e1; --secondary-text-color: #9b9b9b; --divider-color: #3b3b3b;
+    --ha-card-background: #1c1c1c; --page: #111;
+  }
+  body { margin: 0; padding: 16px; background: var(--page); font-family: Roboto, system-ui, sans-serif; color: var(--primary-text-color); }
+  header { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+  h2 { font-size: 0.9em; font-weight: 500; margin: 0 0 6px; color: var(--secondary-text-color); }
+  ha-card { display: block; background: var(--ha-card-background); border-radius: 12px; border: 1px solid var(--divider-color); }
+</style>
+</head>
+<body>
+<header>
+  <b>freemdu-panel-card</b>
+  <button id="theme">Toggle dark</button>
+</header>
+<div class="grid" id="grid"></div>
+<script>
+  customElements.define("ha-card", class extends HTMLElement {});
+</script>
+<script src="../components/freemdu/freemdu-panel-card.js"></script>
+<script>
+  const minutes = (n) => String(n);
+  const W471 = {
+    software_id: "457", connected: "on", status: "Running", operating_state: "ProgramRunning",
+    program: "Cottons 60 °C", program_type: "Cottons", options: "", spin_setting: "Maximum",
+    phase: "Main wash", display_contents: "1.05", display_indicator: "Remaining time",
+    remaining_time: minutes(65), temperature: "38", program_temperature: "60",
+    program_spin_speed: "1600", drum_speed: "52", drum_speed_target: "55", water_level: "84",
+    load_level: "4", program_max_load: "6", estimated_power: "2250", door_locked: "on",
+    spinning: "off", detergent_overdose: "off", active_actuators: "Heater", last_program_energy: "0.82",
+  };
+  const W925 = {
+    software_id: "132", connected: "on", program: "Cottons 60 °C", options: "Water plus",
+    spin_setting: "1200 rpm", phase: "Main wash", display_contents: "1 51",
+    remaining_time: minutes(111), start_delay: "unknown", target_temperature: "47",
+    water_level: "0", water_level_target: "1", drum_speed: "0", drum_speed_target: "0",
+    door_interlock: "on", spinning: "off", fault_f5_detergent_overdose: "off",
+    fault_f6_water_inlet: "off", fault_f7_drainage: "off",
+  };
+  const SCENARIOS = [
+    ["W 471 (ID 457): main wash", "w471", W471],
+    ["W 471: before the start, load shown", "w471", { ...W471, status: "Ready", phase: "Not started", program: "Cottons 40 °C",
+      display_contents: "67", display_indicator: "Load %", remaining_time: "unknown", options: "Pre wash, Water plus",
+      spin_setting: "High", program_spin_speed: "1200", temperature: "19", program_temperature: "40", drum_speed: "0",
+      drum_speed_target: "0", water_level: "0", estimated_power: "0", door_locked: "off", active_actuators: "" }],
+    ["W 925 (ID 132): delayed start", "w925", { ...W925, phase: "Delayed start", display_contents: "29",
+      remaining_time: "unknown", start_delay: "29", door_interlock: "off", water_level_target: "0" }],
+    ["W 471: final spin, overdose lamp", "w471", { ...W471, phase: "Final spin", display_contents: "3", remaining_time: "3",
+      spinning: "on", drum_speed: "1588", drum_speed_target: "1600", water_level: "0", estimated_power: "550",
+      detergent_overdose: "on", active_actuators: "Drain pump" }],
+    ["W 471: finished", "w471", { ...W471, status: "Finished", phase: "Anti-crease/finish", display_contents: "0",
+      remaining_time: "0", drum_speed: "0", drum_speed_target: "0", water_level: "0", estimated_power: "0",
+      active_actuators: "", door_locked: "off", temperature: "31" }],
+    ["W 925: main wash, door button held", "w925", { ...W925, options: "Water plus, Door button" }],
+    ["W 471: switched off", "w471", { ...W471, connected: "off", status: "unknown", program: "unknown", phase: "unknown",
+      display_contents: "unknown" }],
+    ["Unknown machine (generic)", "other", { software_id: "999", connected: "on", program: "Cottons 40 °C",
+      phase: "Rinse 2", display_contents: "0.24", options: "Soak", spin_setting: "Medium", remaining_time: "24",
+      water_level: "2", fault_f6_water_inlet: "on" }],
+  ];
+
+  const DOMAINS = { connected: "binary_sensor", door_locked: "binary_sensor", door_interlock: "binary_sensor", spinning: "binary_sensor" };
+  const UNITS = { remaining_time: "min", start_delay: "min", temperature: "°C", program_temperature: "°C", target_temperature: "°C",
+    program_spin_speed: "rpm", drum_speed: "rpm", drum_speed_target: "rpm", water_level: "mmH₂O", load_level: "kg",
+    program_max_load: "kg", estimated_power: "W" };
+
+  function hassFor(prefix, values, i) {
+    const states = {};
+    for (const [key, state] of Object.entries(values)) {
+      const domain = DOMAINS[key] ?? (key.startsWith("fault_") || key === "detergent_overdose" ? "binary_sensor" : "sensor");
+      const id = `${domain}.${prefix}_${key}`;
+      const name = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      states[id] = { entity_id: id, state, last_updated: String(i),
+        attributes: { friendly_name: `Washing Machine ${name}`, unit_of_measurement: UNITS[key] } };
+    }
+    if (prefix === "w925") delete states["sensor.w925_water_level"].attributes.unit_of_measurement;
+    return { states, entities: {}, devices: {}, locale: { language: "en-GB" }, themes: { darkMode: DARK } };
+  }
+
+  const DARK = location.search.includes("dark");
+  if (DARK) document.documentElement.dataset.theme = "dark";
+  const grid = document.getElementById("grid");
+  SCENARIOS.forEach(([title, prefix, values], i) => {
+    const wrap = document.createElement("div");
+    wrap.innerHTML = `<h2>${title}</h2>`;
+    const card = document.createElement("freemdu-panel-card");
+    card.setConfig({ prefix, name: "Washing Machine" });
+    card.hass = hassFor(prefix, values, i);
+    wrap.appendChild(card);
+    grid.appendChild(wrap);
+  });
+
+  // The card reads dark mode from hass.themes, so switching reloads the page
+  document.getElementById("theme").onclick = () => { location.search = DARK ? "" : "?dark"; };
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Energy estimate for machines without a meter; see README, "Estimating energy use".
+# For a software ID that estimates its own power (457), include it as it is. For any other, give
+# the heater's rating as a variable:
+#
+#   - path: esphome/packages/energy.yaml
+#     vars:
+#       heater_power: 2100W
+#
+# running_power, standby_power and drum_power_per_1000_rpm are optional variables
+# and default to 0 W, as in the component; the three are ignored while heater_power is 0 W.
+
+substitutions:
+  heater_power: 0W
+  running_power: 0W
+  standby_power: 0W
+  drum_power_per_1000_rpm: 0W
+
+freemdu:
+  energy:
+    heater_power: ${heater_power}
+    running_power: ${running_power}
+    standby_power: ${standby_power}
+    drum_power_per_1000_rpm: ${drum_power_per_1000_rpm}
+    power:
+      id: mdu_estimated_power
+      name: Estimated Power
+    energy:
+      id: mdu_estimated_energy
+      name: Estimated Energy
+    program_energy:
+      id: mdu_last_program_energy
+      name: Last Program Energy

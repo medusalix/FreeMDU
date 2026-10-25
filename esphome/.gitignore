@@ -1,0 +1,4 @@
+local/
+ffi/target/
+.esphome/
+__pycache__/

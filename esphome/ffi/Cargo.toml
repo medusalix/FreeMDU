@@ -1,0 +1,28 @@
+[package]
+name = "freemdu-ffi"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85.0"
+description = "C interface to the FreeMDU protocol crate, used by the ESPHome component."
+repository = "https://github.com/medusalix/FreeMDU"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+embedded-io-async = "0.7.0"
+freemdu = { path = "../../protocol" }
+log = "0.4.29"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+
+[profile.dev]
+panic = "abort"
+
+# Not part of any workspace
+[workspace]

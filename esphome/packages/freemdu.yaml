@@ -1,0 +1,78 @@
+# Common part of every device package: the component itself and the adapter's own entities.
+# Device packages include it; there is no need to list it separately.
+#
+# Expects a UART with the ID mdu_uart, which the board packages provide.
+
+substitutions:
+  # Where the component is built from. Override both to test a branch.
+  freemdu_url: https://github.com/bubenkoff/FreeMDU
+  freemdu_ref: esphome
+  # How often ESPHome fetches the component again; `always` while testing a branch
+  freemdu_refresh: 1d
+  # How often the appliance is polled. A poll of every property takes a few seconds at
+  # 2400 baud; a poll that is still running when the next is due is skipped.
+  update_interval: 10s
+  # How long values are kept when polls fail, before they turn unknown
+  hold_time: 30s
+  # "true" installs the front panel card in Home Assistant at every build (with the ESPHome
+  # add-on); off unless asked for, since it writes into Home Assistant's configuration
+  dashboard_card: "false"
+
+external_components:
+  - source:
+      type: git
+      url: ${freemdu_url}
+      ref: ${freemdu_ref}
+      path: esphome/components
+    refresh: ${freemdu_refresh}
+    components: [freemdu]
+
+# Logs over the network; protocol_log and memory_log write here. DEBUG is ESPHome's default level.
+logger:
+
+freemdu:
+  id: mdu
+  uart_id: mdu_uart
+  update_interval: ${update_interval}
+  hold_time: ${hold_time}
+  dashboard_card: ${dashboard_card}
+
+binary_sensor:
+  - platform: freemdu
+    connected: true
+    id: mdu_connected
+    name: Connected
+  # For a board LED during the adapter test (see the board packages)
+  - platform: freemdu
+    echo: true
+    id: mdu_echo
+    internal: true
+
+button:
+  - platform: freemdu
+    adapter_test: true
+    id: mdu_adapter_test
+    name: Adapter Test
+
+text_sensor:
+  - platform: freemdu
+    info: status
+    id: mdu_adapter_status
+    name: Adapter Status
+    entity_category: diagnostic
+  - platform: freemdu
+    info: adapter_test
+    id: mdu_adapter_test_result
+    name: Adapter Test Result
+    entity_category: diagnostic
+  - platform: freemdu
+    info: software_id
+    id: mdu_software_id
+    name: Software ID
+    entity_category: diagnostic
+
+sensor:
+  - platform: wifi_signal
+    id: mdu_wifi_signal
+    name: WiFi Signal
+    update_interval: 60s

@@ -1,0 +1,29 @@
+# Seeed XIAO ESP32-C6 with an SFH 7250 on the optical interface of a Miele W 471 (software ID 457).
+# Everything but your network comes from the packages, the energy estimate included: software
+# ID 457 estimates its own power. See README, "Installation with packages".
+
+esphome:
+  name: washing-machine
+  friendly_name: Washing Machine
+
+packages:
+  freemdu:
+    url: https://github.com/bubenkoff/FreeMDU
+    ref: esphome
+    files:
+      - esphome/packages/xiao-esp32c6.yaml
+      - esphome/packages/id457.yaml
+      - esphome/packages/energy.yaml
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  # Uses the API encryption key; uploads must be encrypted
+  - platform: esphome
+    encryption: {}

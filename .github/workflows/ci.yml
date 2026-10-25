@@ -21,6 +21,18 @@ jobs:
             target: riscv32imac-unknown-none-elf
             features: esp32c6
             test: false
+          - dir: esphome/ffi
+            target: x86_64-unknown-linux-gnu
+            features: ''
+            test: true
+          - dir: esphome/ffi
+            target: riscv32imc-unknown-none-elf
+            features: ''
+            test: false
+          - dir: esphome/ffi
+            target: riscv32imac-unknown-none-elf
+            features: ''
+            test: false
     name: CI (${{ matrix.task.dir }}, ${{ matrix.task.target }}, ${{ matrix.task.features || 'none' }})
     uses: ./.github/workflows/build.yml
     with:

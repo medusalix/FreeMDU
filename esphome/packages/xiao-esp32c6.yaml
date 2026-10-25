@@ -1,0 +1,62 @@
+# Board package: Seeed XIAO ESP32-C6 with the SFH 7250 on D0 (GPIO0, receive) and
+# D1 (GPIO1, transmit), as in the FreeMDU home firmware. Use it with a device package, which
+# provides the Connected sensor that the LED follows.
+
+esp32:
+  board: seeed_xiao_esp32c6
+  variant: esp32c6
+  framework:
+    type: esp-idf
+
+# The board's LED lights while the appliance answers, so the sensor can be aligned by eye, and
+# during the adapter test while the echo is clean, so a loose contact shows as it is touched.
+# Like ESPHome's status LED, it blinks instead on an error or warning (no Wi-Fi, for one).
+light:
+  - platform: status_led
+    id: mdu_link_led
+    name: Link LED
+    internal: true
+    restore_mode: ALWAYS_OFF
+    pin:
+      number: GPIO15
+      inverted: true
+
+binary_sensor:
+  - id: !extend mdu_connected
+    on_state:
+      - light.control:
+          id: mdu_link_led
+          state: !lambda return id(mdu_connected).state || id(mdu_echo).state;
+  - id: !extend mdu_echo
+    on_state:
+      - light.control:
+          id: mdu_link_led
+          state: !lambda return id(mdu_connected).state || id(mdu_echo).state;
+
+# The XIAO ESP32-C6 routes its antenna through an RF switch: GPIO3 low powers it,
+# GPIO14 low selects the onboard antenna. Without this the signal is about 40 dB weaker.
+switch:
+  - platform: gpio
+    pin: GPIO3
+    id: rf_switch_power
+    restore_mode: ALWAYS_OFF
+    internal: true
+  - platform: gpio
+    pin: GPIO14
+    id: rf_antenna_select
+    restore_mode: ALWAYS_OFF
+    internal: true
+
+# The phototransistor pulls the line low when it sees light, hence the inversion.
+uart:
+  id: mdu_uart
+  rx_pin:
+    number: GPIO0
+    inverted: true
+  tx_pin:
+    number: GPIO1
+    inverted: true
+  baud_rate: 2400
+  data_bits: 8
+  parity: EVEN
+  stop_bits: 1

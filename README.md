@@ -15,6 +15,7 @@ The project is split into three main components:
 - [**Protocol**](protocol): core protocol library and device implementations
 - [**TUI**](tui): terminal-based device diagnostic and testing tool
 - [**Home**](home): communication adapter firmware with MQTT integration for Home Assistant
+- [**ESPHome**](esphome): ESPHome component built on the protocol library, an alternative to the home firmware's standalone mode
 
 More details about the proprietary diagnostic interface and the reverse-engineering process behind this project can be found in this [**blog post**](https://medusalix.github.io/posts/miele-interface).
 
@@ -33,6 +34,7 @@ The following table lists the software IDs and device/board combinations that ha
 | 324         | W 980          | EDPW 213   | Mitsubishi M37451MC       | *Check inlet (PC)* indicator | 🟢 Fully supported |
 | 360         | Bare board     | EDPW 223-A | Mitsubishi M38078MC-065FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
 | 419         | Bare board     | EDPW 206   | Mitsubishi M37451MC-804FP | *Check inlet (PC)* indicator | 🟢 Fully supported |
+| 457         | W 471          | Unknown    | Unknown                   | *Check inlet (PC)* indicator | 🟡 Read-only       |
 | 469         | W 487 S        | EDPW 228-A | Mitsubishi M38078MF       | *Check inlet (PC)* indicator | 🟢 Fully supported |
 | 517         | G 7804         | EGPL 061   | Mitsubishi M38079EFFP     | *(PC) DOS* indicator         | 🟢 Fully supported |
 | 605         | G 651 I PLUS-3 | EGPL 542-C | Mitsubishi M38027M8       | *Salt (PC)* indicator        | 🟢 Fully supported |
@@ -63,6 +65,8 @@ If you want to repair or test your appliance:
 If you want to integrate your appliance into **Home Assistant** or another home automation system:
 
 1. Flash the [home](home) firmware in **standalone mode** onto your communication adapter and attach it to your device.
+
+   If you already use **ESPHome**, the [ESPHome component](esphome) is an alternative with over-the-air updates and the native Home Assistant API.
 
 ### Building custom tools
 
