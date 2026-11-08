@@ -548,11 +548,14 @@ dependencies = [
  "async-trait",
  "bitflags 2.11.1",
  "bitflags-derive",
+ "clap",
  "embedded-io-adapters",
  "embedded-io-async",
+ "env_logger",
  "log",
  "serial2-tokio",
  "strum",
+ "tokio",
 ]
 
 [[package]]
