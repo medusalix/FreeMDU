@@ -9,8 +9,7 @@ use embassy_time::{self, Duration, TimeoutError};
 use embedded_io_async::{Read, Write};
 use esp_alloc as _;
 use esp_hal::{
-    Async, Config, gpio::Output, interrupt::software::SoftwareInterruptControl,
-    timer::timg::TimerGroup, usb_serial_jtag::UsbSerialJtag,
+    Async, Config, gpio::Output, timer::timg::TimerGroup, usb::usb_serial_jtag::UsbSerialJtag,
 };
 use freemdu_home::OpticalPort;
 
@@ -68,9 +67,8 @@ async fn bridge_task(
 async fn main(spawner: Spawner) {
     let peripherals = esp_hal::init(Config::default());
     let timg0 = TimerGroup::new(peripherals.TIMG0);
-    let sw_int = SoftwareInterruptControl::new(peripherals.SW_INTERRUPT);
 
-    esp_rtos::start(timg0.timer0, sw_int.software_interrupt0);
+    esp_rtos::start(timg0.timer0, peripherals.FROM_CPU_INTR0);
 
     let led = freemdu_home::new_status_led();
     let serial = UsbSerialJtag::new(peripherals.USB_DEVICE).into_async();

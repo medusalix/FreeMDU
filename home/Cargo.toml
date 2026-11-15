@@ -6,7 +6,7 @@ repository = "https://github.com/medusalix/FreeMDU"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-anyhow = { version = "1.0.102", default-features = false }
+anyhow = { version = "1.0.104", default-features = false }
 embassy-executor = { version = "0.10.0", features = ["log"] }
 embassy-futures = { version = "0.1.2", features = ["log"] }
 embassy-net = { version = "0.9.1", features = [
@@ -16,31 +16,32 @@ embassy-net = { version = "0.9.1", features = [
 embassy-sync = { version = "0.8.0", features = ["log"] }
 embassy-time = { version = "0.5.1", features = ["log"] }
 embedded-io-async = "0.7.0"
-esp-alloc = "0.10.0"
-esp-backtrace = { version = "0.19.0", features = [
+esp-alloc = "0.11.0"
+esp-backtrace = { version = "0.20.0", features = [
   "panic-handler",
   "println",
 ] }
-esp-bootloader-esp-idf = { version = "0.5.0", features = ["log-04"] }
-esp-hal = { version = "1.1.0", features = ["log-04", "unstable"] }
-esp-println = { version = "0.17.0", features = ["log-04"] }
-esp-rtos = { version = "0.3.0", features = [
+esp-bootloader-esp-idf = { version = "0.6.0", features = ["log-04"] }
+esp-hal = { version = "1.2.2", features = ["log-04", "unstable"] }
+esp-println = { version = "0.18.0", features = ["log-04"] }
+esp-rtos = { version = "0.4.0", features = [
   "embassy",
   "esp-radio",
   "log-04",
 ] }
-esp-radio = { version = "0.18.0", features = [
+esp-radio = { version = "1.0.0-beta.1", features = [
   "log-04",
   "unstable",
   "wifi",
 ] }
 freemdu = { path = "../protocol" }
-log = "0.4.29"
+log = "0.4.35"
 mcutie = { version = "0.4.0", features = ["log"] }
 static_cell = "2.1.1"
 
 [features]
 esp32c3 = [
+  "esp-alloc/esp32c3",
   "esp-backtrace/esp32c3",
   "esp-bootloader-esp-idf/esp32c3",
   "esp-hal/esp32c3",
@@ -49,6 +50,7 @@ esp32c3 = [
   "esp-rtos/esp32c3",
 ]
 esp32c6 = [
+  "esp-alloc/esp32c6",
   "esp-backtrace/esp32c6",
   "esp-bootloader-esp-idf/esp32c6",
   "esp-hal/esp32c6",

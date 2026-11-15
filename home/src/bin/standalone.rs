@@ -17,14 +17,11 @@ use embassy_net::{DhcpConfig, Runner, Stack, StackResources};
 use embassy_time::{Duration, Ticker, WithTimeout};
 use esp_alloc as _;
 use esp_backtrace as _;
-use esp_hal::{
-    efuse, gpio::Output, interrupt::software::SoftwareInterruptControl, peripherals::WIFI,
-    rng::Rng, timer::timg::TimerGroup,
-};
+use esp_hal::{efuse, gpio::Output, peripherals::WIFI, rng::Rng, timer::timg::TimerGroup};
 use esp_println::logger;
 use esp_radio::wifi::{
-    self, ControllerConfig, CountryInfo, Interface, OperatingClass, WifiController,
-    sta::StationConfig,
+    self, AuthenticationMethodConfig, ControllerConfig, CountryInfo, Interface, OperatingClass,
+    WifiController, sta::StationConfig,
 };
 use freemdu::device::{self, Action, ActionKind, Date, Property, PropertyKind, Value};
 use freemdu_home::OpticalPort;
@@ -280,7 +277,7 @@ async fn connect_to_device<'a, 'b>(
 }
 
 #[embassy_executor::task]
-async fn network_stack_task(mut runner: Runner<'static, Interface<'static>>) -> ! {
+async fn network_stack_task(mut runner: Runner<'static, Interface>) -> ! {
     runner.run().await;
 }
 
@@ -307,17 +304,19 @@ fn init_network(
 ) -> Result<(
     WifiController<'static>,
     Stack<'static>,
-    Runner<'static, Interface<'static>>,
+    Runner<'static, Interface>,
 )> {
     static RESOURCES: StaticCell<StackResources<3>> = StaticCell::new();
 
-    let (controller, intfs) = wifi::new(
+    let controller = WifiController::new(
         wifi,
         ControllerConfig::default()
             .with_initial_config(wifi::Config::Station(
                 StationConfig::default()
-                    .with_ssid(env!("WIFI_SSID"))
-                    .with_password(env!("WIFI_PASSWORD").into()),
+                    .with_ssid(env!("WIFI_SSID").try_into()?)
+                    .with_authentication(AuthenticationMethodConfig::Wpa2Personal(
+                        env!("WIFI_PASSWORD").try_into()?,
+                    )),
             ))
             .with_country_info(
                 CountryInfo::from(*b"01").with_operating_class(OperatingClass::Indoors),
@@ -332,7 +331,7 @@ fn init_network(
     cfg.hostname = Some(hostname.try_into().context("Failed to set DHCP hostname")?);
 
     let (stack, runner) = embassy_net::new(
-        intfs.station,
+        Interface::station(),
         embassy_net::Config::dhcpv4(cfg),
         RESOURCES.init(StackResources::new()),
         seed,
@@ -350,9 +349,8 @@ async fn main(spawner: Spawner) {
     esp_alloc::heap_allocator!(size: 128 * 1024);
 
     let timg0 = TimerGroup::new(peripherals.TIMG0);
-    let sw_int = SoftwareInterruptControl::new(peripherals.SW_INTERRUPT);
 
-    esp_rtos::start(timg0.timer0, sw_int.software_interrupt0);
+    esp_rtos::start(timg0.timer0, peripherals.FROM_CPU_INTR0);
 
     let mut hostname = String::with_capacity(32);
 
