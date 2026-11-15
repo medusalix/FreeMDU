@@ -18,7 +18,7 @@ jobs:
         working-directory: ${{ inputs.dir }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
