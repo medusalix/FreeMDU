@@ -14,6 +14,7 @@ pub mod id2895;
 pub mod id324;
 pub mod id360;
 pub mod id419;
+pub mod id457;
 pub mod id469;
 pub mod id517;
 pub mod id605;
@@ -412,6 +413,19 @@ pub trait Device<P: Read + Write>: private::Sealed {
 
     /// Returns a mutable reference to the underlying diagnostic interface.
     fn interface(&mut self) -> &mut Interface<P>;
+
+    /// Returns a human-readable name for a value of the specified property, if the
+    /// device implementation provides one.
+    ///
+    /// [`Device::query_property`] reports enumerated values by their identifiers, e.g.
+    /// `ProgramRunning`, which stay stable for programs that compare against them.
+    /// This returns the matching display name, e.g. `Running`.
+    /// The default implementation provides no names.
+    fn value_name(&self, prop: &Property, val: &Value) -> Option<&'static str> {
+        let _ = (prop, val);
+
+        None
+    }
 }
 
 /// Connects to a device asynchronously, based on the detected software ID.
@@ -453,6 +467,9 @@ pub async fn connect<'a, P: 'a + Read + Write>(
         }
         id419::compatible_software_ids!() => {
             Ok(Box::new(id419::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
+        }
+        id457::compatible_software_ids!() => {
+            Ok(Box::new(id457::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
         }
         id469::compatible_software_ids!() => {
             Ok(Box::new(id469::WashingMachine::initialize(intf, id).await?) as Box<dyn Device<P>>)
