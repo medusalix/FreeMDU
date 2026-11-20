@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="305" viewBox="0 0 720 305" role="img" aria-labelledby="hdr-sec-t">
+<style>
+:root { --bg: #F1F4F3; --surface: #FFFFFF; --ink: #18201F; --muted: #586462; --line: #D3DBD9; --accent: #0B7A63; --accent-soft: #DCEFE9; --ir: #B3263E; --warn-bg: #FFF4E0; --warn-ink: #6B4100; --w-yellow: #C99700; --w-black: #222827; --w-green: #1E9150; --w-red: #D12A2A; --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root { --bg: #101514; --surface: #182120; --ink: #E4EBE9; --muted: #98A6A3; --line: #2B3634; --accent: #3CC3A1; --accent-soft: #163A31; --ir: #F2677E; --warn-bg: #3A2A0E; --warn-ink: #F6D193; --w-yellow: #F0C232; --w-black: #C8D1CF; --w-green: #3CCB74; --w-red: #FF5C5C; } }
+text { font-family: var(--body); fill: var(--ink); }
+.t-mono { font-family: var(--mono); }
+.t-muted { fill: var(--muted); }
+.t-accent { fill: var(--accent); }
+.blk { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+.blk-strong { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.ln { stroke: var(--ink); stroke-width: 1.5; fill: none; }
+.ln-muted { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.res { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.ir { stroke: var(--ir); stroke-width: 1.5; fill: none; }
+.ir-fill { fill: var(--ir); }
+.w-y { stroke: var(--w-yellow); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-k { stroke: var(--w-black); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-g { stroke: var(--w-green); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-r { stroke: var(--w-red); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.f-y { fill: var(--w-yellow); }
+.f-k { fill: var(--w-black); }
+.f-g { fill: var(--w-green); }
+.f-r { fill: var(--w-red); }
+.node { fill: var(--ink); }
+.pad { fill: var(--surface); stroke: var(--muted); stroke-width: 1.2; }
+.hl { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.hl-fill { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.tape { fill: var(--ink); opacity: 0.18; }
+.ph-route { fill: none; stroke: #E8203A; stroke-width: 4; stroke-dasharray: 10 6; stroke-linecap: round; stroke-linejoin: round; }
+.ph-ring { fill: none; stroke: #E8203A; stroke-width: 4; }
+.ph-board { fill: #1B1B1B; stroke: #E8203A; stroke-width: 2; }
+.ph-keepout { fill: none; stroke: #FFFFFF; stroke-width: 3; stroke-dasharray: 5 4; }
+.ph-label-bg { fill: rgba(16,21,20,0.82); }
+.ph-label { fill: #FFFFFF; font-size: 16px; font-weight: 600; font-family: var(--body); }
+.on-pcb { fill: #FFFFFF; }
+.pcb { fill: #2E7D5B; stroke: #1F5A41; stroke-width: 1.5; }
+.hole { fill: #D9B36C; stroke: #8A6A2E; stroke-width: 1; }
+.joint { fill: #C9CED1; stroke: #6B7276; stroke-width: 1; }
+.ghost { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.xiao-pcb { fill: #1E2422; stroke: var(--muted); stroke-width: 1; }
+.usb { fill: #B9C0C4; stroke: #6B7276; stroke-width: 1; }
+.chip { fill: #3A403E; }
+.hdr { fill: #141716; stroke: var(--muted); stroke-width: 1; }
+.pin { stroke: #D4A82C; stroke-width: 3; }
+.solder { fill: #C9CED1; stroke: #8E9599; stroke-width: 0.8; }
+.cut { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
+.sfh-body { fill: #F2F2EC; stroke: #6B7276; stroke-width: 1; }
+.lens { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.cable { stroke: #8E9599; stroke-width: 6; stroke-linecap: round; fill: none; }
+.dim { stroke: var(--ink); stroke-width: 1; }
+.sfh-pad { fill: #E8C27A; stroke: #FFFFFF; stroke-width: 1.5; }
+.patch { fill: #111; opacity: 0.55; }
+.res-ghost { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.ph-cable { stroke: #EDEDED; stroke-width: 7; stroke-linecap: round; }
+.ph-usb { fill: #9AA0A6; stroke: #333; stroke-width: 1; }
+.ph-sensor { fill: #F5F5F0; stroke: #E8203A; stroke-width: 3; }
+.ph-tape { fill: rgba(255,255,255,0.28); stroke: #FFFFFF; stroke-width: 2; stroke-dasharray: 6 4; }
+.ph-on-board { fill: #FFFFFF; font-size: 14px; font-weight: 600; font-family: var(--mono); }
+.ph-big { font-size: 24px; }
+.ph-leader { stroke: #FFFFFF; stroke-width: 2; }
+</style>
+<title id="hdr-sec-t">Sandwich in cross-section: the XIAO on headers, 2.5 mm plastic, 1.6 mm perfboard, the SFH 7250 below with its lens on the PC window; header protrusions trimmed flush</title>
+<rect x="60" y="232" width="600" height="14" class="blk-strong"/>
+<text x="360" y="268" text-anchor="middle" font-size="12" class="t-muted">machine’s panel</text>
+<rect x="505" y="232" width="30" height="14" class="hl-fill"/>
+<text x="520" y="262" text-anchor="middle" font-size="11" class="t-muted">PC window</text>
+<rect x="110" y="201" width="500" height="14" class="pcb"/>
+<rect x="506" y="215" width="28" height="17" rx="2" class="sfh-body"/>
+<path d="M510 232 Q520 226 530 232" class="lens"/>
+<path d="M505 215 Q508 211 511 215 Z" class="solder"/>
+<path d="M529 215 Q532 211 535 215 Z" class="solder"/>
+<rect x="130" y="179" width="290" height="22" class="hdr"/>
+<rect x="110" y="170" width="330" height="9" class="xiao-pcb"/>
+<rect x="110" y="142" width="54" height="28" rx="3" class="usb"/>
+<rect x="250" y="158" width="60" height="12" class="chip"/>
+<text x="300" y="138" text-anchor="middle" font-size="12">XIAO ESP32-C6</text>
+<line x1="150" y1="162" x2="150" y2="215" class="pin"/>
+<path d="M144 170 Q150 160 156 170 Z" class="solder"/>
+<path d="M144 215 Q150 221 156 215 Z" class="solder"/>
+<line x1="190" y1="162" x2="190" y2="215" class="pin"/>
+<path d="M184 170 Q190 160 196 170 Z" class="solder"/>
+<path d="M184 215 Q190 221 196 215 Z" class="solder"/>
+<line x1="230" y1="162" x2="230" y2="215" class="pin"/>
+<path d="M224 170 Q230 160 236 170 Z" class="solder"/>
+<path d="M224 215 Q230 221 236 215 Z" class="solder"/>
+<line x1="270" y1="162" x2="270" y2="215" class="pin"/>
+<path d="M264 170 Q270 160 276 170 Z" class="solder"/>
+<path d="M264 215 Q270 221 276 215 Z" class="solder"/>
+<line x1="310" y1="162" x2="310" y2="215" class="pin"/>
+<path d="M304 170 Q310 160 316 170 Z" class="solder"/>
+<path d="M304 215 Q310 221 316 215 Z" class="solder"/>
+<line x1="350" y1="162" x2="350" y2="215" class="pin"/>
+<path d="M344 170 Q350 160 356 170 Z" class="solder"/>
+<path d="M344 215 Q350 221 356 215 Z" class="solder"/>
+<line x1="390" y1="162" x2="390" y2="215" class="pin"/>
+<path d="M384 170 Q390 160 396 170 Z" class="solder"/>
+<path d="M384 215 Q390 221 396 215 Z" class="solder"/>
+<line x1="470" y1="201" x2="470" y2="190" class="ln"/><line x1="580" y1="201" x2="580" y2="190" class="ln"/>
+<line x1="470" y1="190" x2="490" y2="190" class="ln"/><line x1="560" y1="190" x2="580" y2="190" class="ln"/>
+<rect x="490" y="183" width="70" height="14" rx="6" class="res"/>
+<text x="525" y="176" text-anchor="middle" font-size="11" class="t-mono">resistor</text>
+<path d="M110 156 H40" class="cable"/>
+<text x="20" y="138" font-size="11" class="t-muted">USB-C cable</text>
+<line x1="96" y1="179" x2="96" y2="201" class="dim"/><line x1="92" y1="179" x2="100" y2="179" class="dim"/><line x1="92" y1="201" x2="100" y2="201" class="dim"/><text x="88" y="194.0" text-anchor="end" font-size="11">plastic 2.5 mm</text>
+<line x1="96" y1="201" x2="96" y2="215" class="dim"/><line x1="92" y1="201" x2="100" y2="201" class="dim"/><line x1="92" y1="215" x2="100" y2="215" class="dim"/><text x="88" y="212.0" text-anchor="end" font-size="11">perfboard 1.6 mm</text>
+<line x1="550" y1="215" x2="550" y2="232" class="dim"/><line x1="546" y1="215" x2="554" y2="215" class="dim"/><line x1="546" y1="232" x2="554" y2="232" class="dim"/><text x="558" y="227.5" text-anchor="start" font-size="11">SFH ≈ 1.9 mm</text>
+<text x="360" y="292" text-anchor="middle" font-size="12" class="t-accent" font-weight="600">header protrusions trimmed flush: nothing sticks out lower than the SFH</text>
+</svg>

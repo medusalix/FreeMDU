@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="380" height="230" viewBox="0 0 380 230" role="img" aria-labelledby="side-t">
+<style>
+:root { --bg: #F1F4F3; --surface: #FFFFFF; --ink: #18201F; --muted: #586462; --line: #D3DBD9; --accent: #0B7A63; --accent-soft: #DCEFE9; --ir: #B3263E; --warn-bg: #FFF4E0; --warn-ink: #6B4100; --w-yellow: #C99700; --w-black: #222827; --w-green: #1E9150; --w-red: #D12A2A; --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root { --bg: #101514; --surface: #182120; --ink: #E4EBE9; --muted: #98A6A3; --line: #2B3634; --accent: #3CC3A1; --accent-soft: #163A31; --ir: #F2677E; --warn-bg: #3A2A0E; --warn-ink: #F6D193; --w-yellow: #F0C232; --w-black: #C8D1CF; --w-green: #3CCB74; --w-red: #FF5C5C; } }
+text { font-family: var(--body); fill: var(--ink); }
+.t-mono { font-family: var(--mono); }
+.t-muted { fill: var(--muted); }
+.t-accent { fill: var(--accent); }
+.blk { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+.blk-strong { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.ln { stroke: var(--ink); stroke-width: 1.5; fill: none; }
+.ln-muted { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.res { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.ir { stroke: var(--ir); stroke-width: 1.5; fill: none; }
+.ir-fill { fill: var(--ir); }
+.w-y { stroke: var(--w-yellow); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-k { stroke: var(--w-black); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-g { stroke: var(--w-green); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-r { stroke: var(--w-red); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.f-y { fill: var(--w-yellow); }
+.f-k { fill: var(--w-black); }
+.f-g { fill: var(--w-green); }
+.f-r { fill: var(--w-red); }
+.node { fill: var(--ink); }
+.pad { fill: var(--surface); stroke: var(--muted); stroke-width: 1.2; }
+.hl { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.hl-fill { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.tape { fill: var(--ink); opacity: 0.18; }
+.ph-route { fill: none; stroke: #E8203A; stroke-width: 4; stroke-dasharray: 10 6; stroke-linecap: round; stroke-linejoin: round; }
+.ph-ring { fill: none; stroke: #E8203A; stroke-width: 4; }
+.ph-board { fill: #1B1B1B; stroke: #E8203A; stroke-width: 2; }
+.ph-keepout { fill: none; stroke: #FFFFFF; stroke-width: 3; stroke-dasharray: 5 4; }
+.ph-label-bg { fill: rgba(16,21,20,0.82); }
+.ph-label { fill: #FFFFFF; font-size: 16px; font-weight: 600; font-family: var(--body); }
+.on-pcb { fill: #FFFFFF; }
+.pcb { fill: #2E7D5B; stroke: #1F5A41; stroke-width: 1.5; }
+.hole { fill: #D9B36C; stroke: #8A6A2E; stroke-width: 1; }
+.joint { fill: #C9CED1; stroke: #6B7276; stroke-width: 1; }
+.ghost { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.xiao-pcb { fill: #1E2422; stroke: var(--muted); stroke-width: 1; }
+.usb { fill: #B9C0C4; stroke: #6B7276; stroke-width: 1; }
+.chip { fill: #3A403E; }
+.hdr { fill: #141716; stroke: var(--muted); stroke-width: 1; }
+.pin { stroke: #D4A82C; stroke-width: 3; }
+.solder { fill: #C9CED1; stroke: #8E9599; stroke-width: 0.8; }
+.cut { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
+.sfh-body { fill: #F2F2EC; stroke: #6B7276; stroke-width: 1; }
+.lens { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.cable { stroke: #8E9599; stroke-width: 6; stroke-linecap: round; fill: none; }
+.dim { stroke: var(--ink); stroke-width: 1; }
+.sfh-pad { fill: #E8C27A; stroke: #FFFFFF; stroke-width: 1.5; }
+.patch { fill: #111; opacity: 0.55; }
+.res-ghost { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.ph-cable { stroke: #EDEDED; stroke-width: 7; stroke-linecap: round; }
+.ph-usb { fill: #9AA0A6; stroke: #333; stroke-width: 1; }
+.ph-sensor { fill: #F5F5F0; stroke: #E8203A; stroke-width: 3; }
+.ph-tape { fill: rgba(255,255,255,0.28); stroke: #FFFFFF; stroke-width: 2; stroke-dasharray: 6 4; }
+.ph-on-board { fill: #FFFFFF; font-size: 14px; font-weight: 600; font-family: var(--mono); }
+.ph-big { font-size: 24px; }
+.ph-leader { stroke: #FFFFFF; stroke-width: 2; }
+</style>
+        <title id="side-t">Side view: the sensor's lens flush against the indicator window, black tape over it</title>
+        <text x="96" y="24" text-anchor="middle" font-size="12" class="t-muted">inside the machine</text>
+        <text x="290" y="24" text-anchor="middle" font-size="12" class="t-muted">outside</text>
+        <rect x="150" y="36" width="22" height="170" class="blk-strong"/>
+        <rect x="150" y="104" width="22" height="22" class="hl-fill"/>
+        <circle cx="112" cy="115" r="9" class="ir-fill"/>
+        <text x="112" y="146" text-anchor="middle" font-size="11">machine’s IR</text>
+        <path class="ir" d="M124 109 h20 M124 121 h20"/>
+        <rect x="174" y="102" width="16" height="26" class="blk-strong"/>
+        <path d="M174 108 q-4 7 0 14" class="ln"/>
+        <line class="w-y" x1="190" y1="106" x2="320" y2="74"/>
+        <line class="w-k" x1="190" y1="112" x2="320" y2="90"/>
+        <line class="w-r" x1="190" y1="118" x2="320" y2="140"/>
+        <line class="w-g" x1="190" y1="124" x2="320" y2="156"/>
+        <text x="328" y="118" font-size="11" class="t-muted">to XIAO</text>
+        <rect class="tape" x="174" y="84" width="40" height="62" rx="3"/>
+        <text x="200" y="186" font-size="11">SFH 7250, lens on the window,</text>
+        <text x="200" y="202" font-size="11">black tape over it</text>
+        <text x="161" y="224" text-anchor="middle" font-size="11" class="t-muted">panel</text>
+      </svg>

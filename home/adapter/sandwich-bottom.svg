@@ -1,0 +1,219 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="430" viewBox="0 0 420 430" role="img" aria-labelledby="sw-b-t">
+<style>
+:root { --bg: #F1F4F3; --surface: #FFFFFF; --ink: #18201F; --muted: #586462; --line: #D3DBD9; --accent: #0B7A63; --accent-soft: #DCEFE9; --ir: #B3263E; --warn-bg: #FFF4E0; --warn-ink: #6B4100; --w-yellow: #C99700; --w-black: #222827; --w-green: #1E9150; --w-red: #D12A2A; --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root { --bg: #101514; --surface: #182120; --ink: #E4EBE9; --muted: #98A6A3; --line: #2B3634; --accent: #3CC3A1; --accent-soft: #163A31; --ir: #F2677E; --warn-bg: #3A2A0E; --warn-ink: #F6D193; --w-yellow: #F0C232; --w-black: #C8D1CF; --w-green: #3CCB74; --w-red: #FF5C5C; } }
+text { font-family: var(--body); fill: var(--ink); }
+.t-mono { font-family: var(--mono); }
+.t-muted { fill: var(--muted); }
+.t-accent { fill: var(--accent); }
+.blk { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+.blk-strong { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.ln { stroke: var(--ink); stroke-width: 1.5; fill: none; }
+.ln-muted { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.res { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.ir { stroke: var(--ir); stroke-width: 1.5; fill: none; }
+.ir-fill { fill: var(--ir); }
+.w-y { stroke: var(--w-yellow); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-k { stroke: var(--w-black); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-g { stroke: var(--w-green); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.w-r { stroke: var(--w-red); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.f-y { fill: var(--w-yellow); }
+.f-k { fill: var(--w-black); }
+.f-g { fill: var(--w-green); }
+.f-r { fill: var(--w-red); }
+.node { fill: var(--ink); }
+.pad { fill: var(--surface); stroke: var(--muted); stroke-width: 1.2; }
+.hl { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.hl-fill { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.tape { fill: var(--ink); opacity: 0.18; }
+.ph-route { fill: none; stroke: #E8203A; stroke-width: 4; stroke-dasharray: 10 6; stroke-linecap: round; stroke-linejoin: round; }
+.ph-ring { fill: none; stroke: #E8203A; stroke-width: 4; }
+.ph-board { fill: #1B1B1B; stroke: #E8203A; stroke-width: 2; }
+.ph-keepout { fill: none; stroke: #FFFFFF; stroke-width: 3; stroke-dasharray: 5 4; }
+.ph-label-bg { fill: rgba(16,21,20,0.82); }
+.ph-label { fill: #FFFFFF; font-size: 16px; font-weight: 600; font-family: var(--body); }
+.on-pcb { fill: #FFFFFF; }
+.pcb { fill: #2E7D5B; stroke: #1F5A41; stroke-width: 1.5; }
+.hole { fill: #D9B36C; stroke: #8A6A2E; stroke-width: 1; }
+.joint { fill: #C9CED1; stroke: #6B7276; stroke-width: 1; }
+.ghost { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.xiao-pcb { fill: #1E2422; stroke: var(--muted); stroke-width: 1; }
+.usb { fill: #B9C0C4; stroke: #6B7276; stroke-width: 1; }
+.chip { fill: #3A403E; }
+.hdr { fill: #141716; stroke: var(--muted); stroke-width: 1; }
+.pin { stroke: #D4A82C; stroke-width: 3; }
+.solder { fill: #C9CED1; stroke: #8E9599; stroke-width: 0.8; }
+.cut { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
+.sfh-body { fill: #F2F2EC; stroke: #6B7276; stroke-width: 1; }
+.lens { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.cable { stroke: #8E9599; stroke-width: 6; stroke-linecap: round; fill: none; }
+.dim { stroke: var(--ink); stroke-width: 1; }
+.sfh-pad { fill: #E8C27A; stroke: #FFFFFF; stroke-width: 1.5; }
+.patch { fill: #111; opacity: 0.55; }
+.res-ghost { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.ph-cable { stroke: #EDEDED; stroke-width: 7; stroke-linecap: round; }
+.ph-usb { fill: #9AA0A6; stroke: #333; stroke-width: 1; }
+.ph-sensor { fill: #F5F5F0; stroke: #E8203A; stroke-width: 3; }
+.ph-tape { fill: rgba(255,255,255,0.28); stroke: #FFFFFF; stroke-width: 2; stroke-dasharray: 6 4; }
+.ph-on-board { fill: #FFFFFF; font-size: 14px; font-weight: 600; font-family: var(--mono); }
+.ph-big { font-size: 24px; }
+.ph-leader { stroke: #FFFFFF; stroke-width: 2; }
+</style>
+<title id="sw-b-t">Sandwich from below: the SFH 7250 centred between four holes, each pin on its own pad, wires to D0 and D1 on the right, to GND and 3V3 on the left; header rows 6 holes apart</title>
+<rect x="96" y="36" width="224" height="336" rx="4" class="pcb"/>
+<circle cx="110" cy="50" r="5" class="hole"/>
+<circle cx="138" cy="50" r="5" class="hole"/>
+<circle cx="166" cy="50" r="5" class="hole"/>
+<circle cx="194" cy="50" r="5" class="hole"/>
+<circle cx="222" cy="50" r="5" class="hole"/>
+<circle cx="250" cy="50" r="5" class="hole"/>
+<circle cx="278" cy="50" r="5" class="hole"/>
+<circle cx="306" cy="50" r="5" class="hole"/>
+<circle cx="110" cy="78" r="5" class="hole"/>
+<circle cx="138" cy="78" r="5" class="hole"/>
+<circle cx="166" cy="78" r="5" class="hole"/>
+<circle cx="194" cy="78" r="5" class="hole"/>
+<circle cx="222" cy="78" r="5" class="hole"/>
+<circle cx="250" cy="78" r="5" class="hole"/>
+<circle cx="278" cy="78" r="5" class="hole"/>
+<circle cx="306" cy="78" r="5" class="hole"/>
+<circle cx="110" cy="106" r="5" class="hole"/>
+<circle cx="138" cy="106" r="5" class="hole"/>
+<circle cx="166" cy="106" r="5" class="hole"/>
+<circle cx="194" cy="106" r="5" class="hole"/>
+<circle cx="222" cy="106" r="5" class="hole"/>
+<circle cx="250" cy="106" r="5" class="hole"/>
+<circle cx="278" cy="106" r="5" class="hole"/>
+<circle cx="306" cy="106" r="5" class="hole"/>
+<circle cx="110" cy="134" r="5" class="hole"/>
+<circle cx="138" cy="134" r="5" class="hole"/>
+<circle cx="166" cy="134" r="5" class="hole"/>
+<circle cx="194" cy="134" r="5" class="hole"/>
+<circle cx="222" cy="134" r="5" class="hole"/>
+<circle cx="250" cy="134" r="5" class="hole"/>
+<circle cx="278" cy="134" r="5" class="hole"/>
+<circle cx="306" cy="134" r="5" class="hole"/>
+<circle cx="110" cy="162" r="5" class="hole"/>
+<circle cx="138" cy="162" r="5" class="hole"/>
+<circle cx="166" cy="162" r="5" class="hole"/>
+<circle cx="194" cy="162" r="5" class="hole"/>
+<circle cx="222" cy="162" r="5" class="hole"/>
+<circle cx="250" cy="162" r="5" class="hole"/>
+<circle cx="278" cy="162" r="5" class="hole"/>
+<circle cx="306" cy="162" r="5" class="hole"/>
+<circle cx="110" cy="190" r="5" class="hole"/>
+<circle cx="138" cy="190" r="5" class="hole"/>
+<circle cx="166" cy="190" r="5" class="hole"/>
+<circle cx="194" cy="190" r="5" class="hole"/>
+<circle cx="222" cy="190" r="5" class="hole"/>
+<circle cx="250" cy="190" r="5" class="hole"/>
+<circle cx="278" cy="190" r="5" class="hole"/>
+<circle cx="306" cy="190" r="5" class="hole"/>
+<circle cx="110" cy="218" r="5" class="hole"/>
+<circle cx="138" cy="218" r="5" class="hole"/>
+<circle cx="166" cy="218" r="5" class="hole"/>
+<circle cx="194" cy="218" r="5" class="hole"/>
+<circle cx="222" cy="218" r="5" class="hole"/>
+<circle cx="250" cy="218" r="5" class="hole"/>
+<circle cx="278" cy="218" r="5" class="hole"/>
+<circle cx="306" cy="218" r="5" class="hole"/>
+<circle cx="110" cy="246" r="5" class="hole"/>
+<circle cx="138" cy="246" r="5" class="hole"/>
+<circle cx="166" cy="246" r="5" class="hole"/>
+<circle cx="194" cy="246" r="5" class="hole"/>
+<circle cx="222" cy="246" r="5" class="hole"/>
+<circle cx="250" cy="246" r="5" class="hole"/>
+<circle cx="278" cy="246" r="5" class="hole"/>
+<circle cx="306" cy="246" r="5" class="hole"/>
+<circle cx="110" cy="274" r="5" class="hole"/>
+<circle cx="138" cy="274" r="5" class="hole"/>
+<circle cx="166" cy="274" r="5" class="hole"/>
+<circle cx="194" cy="274" r="5" class="hole"/>
+<circle cx="222" cy="274" r="5" class="hole"/>
+<circle cx="250" cy="274" r="5" class="hole"/>
+<circle cx="278" cy="274" r="5" class="hole"/>
+<circle cx="306" cy="274" r="5" class="hole"/>
+<circle cx="110" cy="302" r="5" class="hole"/>
+<circle cx="138" cy="302" r="5" class="hole"/>
+<circle cx="166" cy="302" r="5" class="hole"/>
+<circle cx="194" cy="302" r="5" class="hole"/>
+<circle cx="222" cy="302" r="5" class="hole"/>
+<circle cx="250" cy="302" r="5" class="hole"/>
+<circle cx="278" cy="302" r="5" class="hole"/>
+<circle cx="306" cy="302" r="5" class="hole"/>
+<circle cx="110" cy="330" r="5" class="hole"/>
+<circle cx="138" cy="330" r="5" class="hole"/>
+<circle cx="166" cy="330" r="5" class="hole"/>
+<circle cx="194" cy="330" r="5" class="hole"/>
+<circle cx="222" cy="330" r="5" class="hole"/>
+<circle cx="250" cy="330" r="5" class="hole"/>
+<circle cx="278" cy="330" r="5" class="hole"/>
+<circle cx="306" cy="330" r="5" class="hole"/>
+<circle cx="110" cy="358" r="5" class="hole"/>
+<circle cx="138" cy="358" r="5" class="hole"/>
+<circle cx="166" cy="358" r="5" class="hole"/>
+<circle cx="194" cy="358" r="5" class="hole"/>
+<circle cx="222" cy="358" r="5" class="hole"/>
+<circle cx="250" cy="358" r="5" class="hole"/>
+<circle cx="278" cy="358" r="5" class="hole"/>
+<circle cx="306" cy="358" r="5" class="hole"/>
+<rect x="124" y="26" width="196" height="230" rx="10" class="ghost"/>
+<text x="222" y="20" text-anchor="middle" font-size="11" class="t-muted">XIAO on the other side, USB-C at the top</text>
+<circle cx="138" cy="50" r="7" class="joint"/>
+<text x="90" y="54" text-anchor="end" class="t-mono t-muted" font-size="12">5V</text>
+<circle cx="138" cy="78" r="7" class="f-k"/>
+<text x="90" y="82" text-anchor="end" class="t-mono" font-size="12" font-weight="600">GND</text>
+<circle cx="138" cy="106" r="7" class="f-r"/>
+<text x="90" y="110" text-anchor="end" class="t-mono" font-size="12" font-weight="600">3V3</text>
+<circle cx="138" cy="134" r="7" class="joint"/>
+<text x="90" y="138" text-anchor="end" class="t-mono t-muted" font-size="12">D10</text>
+<circle cx="138" cy="162" r="7" class="joint"/>
+<text x="90" y="166" text-anchor="end" class="t-mono t-muted" font-size="12">D9</text>
+<circle cx="138" cy="190" r="7" class="joint"/>
+<text x="90" y="194" text-anchor="end" class="t-mono t-muted" font-size="12">D8</text>
+<circle cx="138" cy="218" r="7" class="joint"/>
+<text x="90" y="222" text-anchor="end" class="t-mono t-muted" font-size="12">D7</text>
+<circle cx="306" cy="50" r="7" class="f-g"/>
+<text x="334" y="54" text-anchor="start" class="t-mono" font-size="12" font-weight="600">D0</text>
+<circle cx="306" cy="78" r="7" class="f-y"/>
+<text x="334" y="82" text-anchor="start" class="t-mono" font-size="12" font-weight="600">D1</text>
+<circle cx="306" cy="106" r="7" class="joint"/>
+<text x="334" y="110" text-anchor="start" class="t-mono t-muted" font-size="12">D2</text>
+<circle cx="306" cy="134" r="7" class="joint"/>
+<text x="334" y="138" text-anchor="start" class="t-mono t-muted" font-size="12">D3</text>
+<circle cx="306" cy="162" r="7" class="joint"/>
+<text x="334" y="166" text-anchor="start" class="t-mono t-muted" font-size="12">D4</text>
+<circle cx="306" cy="190" r="7" class="joint"/>
+<text x="334" y="194" text-anchor="start" class="t-mono t-muted" font-size="12">D5</text>
+<circle cx="306" cy="218" r="7" class="joint"/>
+<text x="334" y="222" text-anchor="start" class="t-mono t-muted" font-size="12">D6</text>
+<circle cx="194" cy="302" r="9" class="sfh-pad"/>
+<circle cx="194" cy="330" r="9" class="sfh-pad"/>
+<circle cx="222" cy="302" r="9" class="sfh-pad"/>
+<circle cx="222" cy="330" r="9" class="sfh-pad"/>
+<rect x="191" y="300" width="34" height="32" rx="2" class="blk-strong"/>
+<path d="M217 332 L225 324" class="ln"/>
+<circle cx="208" cy="316" r="11" class="hl-fill"/>
+<rect x="186" y="304" width="7" height="7" class="pad"/>
+<rect x="186" y="321" width="7" height="7" class="pad"/>
+<rect x="223" y="304" width="7" height="7" class="pad"/>
+<rect x="223" y="321" width="7" height="7" class="pad"/>
+<text x="176" y="306" text-anchor="end" class="t-mono on-pcb" font-size="11">3</text>
+<text x="176" y="334" text-anchor="end" class="t-mono on-pcb" font-size="11">2</text>
+<text x="240" y="306" class="t-mono on-pcb" font-size="11">4</text>
+<text x="240" y="334" class="t-mono on-pcb" font-size="11">1</text>
+<rect x="156" y="266" width="104" height="16" rx="3" class="res-ghost"/>
+<text x="228" y="262" text-anchor="middle" class="t-mono on-pcb" font-size="11">47 kΩ (on top)</text>
+<rect x="262" y="350" width="34" height="16" rx="3" class="res-ghost"/>
+<text x="279" y="388" text-anchor="middle" class="t-mono" font-size="11">100 Ω (on top)</text>
+<circle cx="138" cy="274" r="5.5" class="node"/>
+<circle cx="278" cy="274" r="5.5" class="node"/>
+<circle cx="250" cy="358" r="5.5" class="node"/>
+<circle cx="306" cy="358" r="5.5" class="node"/>
+<polyline class="w-g" points="230,296 278,274 278,50 299,50"/>
+<polyline class="w-k" points="186,334 150,334 138,274 124,260 124,78 131,78"/>
+<polyline class="w-r" points="186,296 158,246 158,106 145,106"/>
+<polyline class="w-y" points="230,334 250,358"/>
+<polyline class="w-y" points="306,358 316,330 316,78 313,78"/>
+<text x="208" y="420" text-anchor="middle" font-size="11" class="t-muted">SFH centred between four holes · lens facing you</text>
+</svg>
